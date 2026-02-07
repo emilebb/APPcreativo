@@ -4,22 +4,29 @@ CREATE TABLE IF NOT EXISTS profiles (
   preferred_language text DEFAULT 'es',
   creative_mode text DEFAULT 'calm',
   onboarding_completed boolean DEFAULT false,
-    avatar_color text DEFAULT '#111111',
-    last_seen timestamp with time zone,
+  avatar_url text,
+  avatar_color text DEFAULT '#111111',
+  last_seen timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
   PRIMARY KEY (id)
 );
 
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_color text DEFAULT '#111111';
+
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
 CREATE POLICY "Users can read own profile"
 ON profiles FOR SELECT
 USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile"
 ON profiles FOR INSERT
 WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile"
 ON profiles FOR UPDATE
 USING (auth.uid() = id);

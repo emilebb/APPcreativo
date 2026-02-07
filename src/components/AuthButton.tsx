@@ -9,7 +9,7 @@ import AuthModal from "@/components/AuthModal";
 
 export default function AuthButton() {
   const { session, loading } = useAuth();
-    const { profile } = useProfile();
+  const { profile } = useProfile();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
@@ -30,10 +30,18 @@ export default function AuthButton() {
       <div className="relative">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex items-center justify-center h-10 w-10 rounded-full text-white text-sm font-medium shadow-sm transition hover:shadow-md"
-            style={{ backgroundColor: profile?.avatar_color || "#111111" }}
+          className="flex items-center justify-center h-10 w-10 rounded-full text-white text-sm font-medium shadow-sm transition hover:shadow-md overflow-hidden"
+          style={{ backgroundColor: profile?.avatar_color || "#111111" }}
         >
-            {profile?.email?.[0]?.toUpperCase() || "?"}
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt="Avatar"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            profile?.email?.[0]?.toUpperCase() || "?"
+          )}
         </button>
 
         {isMenuOpen && (

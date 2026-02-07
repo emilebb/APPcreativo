@@ -6,7 +6,8 @@ export type Profile = {
   preferred_language: string;
   creative_mode: CreativeMode;
   onboarding_completed: boolean;
-    avatar_color: string;
+  avatar_url?: string | null;
+  avatar_color: string;
   last_seen: string | null;
   created_at: string;
 };

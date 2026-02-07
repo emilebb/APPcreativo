@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
 import { useProfile } from "@/lib/useProfile";
+import { uploadAvatar } from "@/lib/uploadAvatar";
 import type { CreativeMode } from "@/types/profile";
 
 export default function SettingsPage() {
@@ -69,17 +70,51 @@ export default function SettingsPage() {
         {/* Avatar */}
         <div className="flex items-center gap-4 p-4 bg-neutral-50 rounded-lg border border-neutral-200">
           <div
-            className="h-16 w-16 rounded-full flex items-center justify-center text-white text-2xl font-medium flex-shrink-0"
+            className="h-14 w-14 rounded-full overflow-hidden bg-neutral-200 flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: profile.avatar_color }}
           >
-            {profile.email?.[0]?.toUpperCase() || "?"}
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Avatar"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-lg font-medium text-white">
+                {profile.email?.[0]?.toUpperCase() || "?"}
+              </span>
+            )}
           </div>
-          <div>
-            <p className="text-sm text-neutral-900 font-medium">
-              Esto es solo para ti.
-            </p>
+          <div className="space-y-1">
+            <label className="text-sm text-neutral-600 cursor-pointer">
+              Cambiar imagen
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  if (file.size > 1024 * 1024) {
+                    alert("La imagen es demasiado grande.");
+                    return;
+                  }
+
+                  try {
+                    setSaving(true);
+                    await uploadAvatar(file, profile.id);
+                    window.location.reload();
+                  } catch (err) {
+                    console.error("Error uploading avatar:", err);
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              />
+            </label>
             <p className="text-xs text-neutral-500">
-              Para reconocer tu espacio.
+              Esto es solo para reconocer tu espacio.
             </p>
           </div>
         </div>
