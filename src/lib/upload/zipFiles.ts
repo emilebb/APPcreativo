@@ -8,6 +8,8 @@ export async function zipFiles(files: File[]) {
     entries[f.name] = buf
   }
   
+  // El fix: extraemos el resultado de zipSync
   const zipped = zipSync(entries, { level: 6 })
-  return new Blob([zipped], { type: "application/zip" })
+  // Forzamos a que lo vea como un Uint8Array plano, que es compatible con BlobPart
+  return new Blob([new Uint8Array(zipped)], { type: "application/zip" })
 }
