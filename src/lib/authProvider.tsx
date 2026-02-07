@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
+import { migrateLocalToSupabase } from "@/lib/migrateLocal";
 
 type AuthContextType = {
   session: Session | null;
@@ -69,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (event === "SIGNED_IN" && session?.user) {
         await createProfileIfNeeded(session.user.id, session.user.email);
+        await migrateLocalToSupabase(session.user.id);
       }
     });
 

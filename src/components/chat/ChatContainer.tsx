@@ -5,6 +5,7 @@ import ChatMessage from "@/components/chat/ChatMessage";
 import ChatOptions from "@/components/chat/ChatOptions";
 import ChatInput from "@/components/chat/ChatInput";
 import MentalStateIndicator from "@/components/chat/MentalStateIndicator";
+import { useProfile } from "@/lib/useProfile";
 import engine from "@/data/creativeEngine.json";
 import {
   brain,
@@ -45,6 +46,8 @@ type ExerciseResult = {
 };
 
 export default function ChatContainer() {
+  const { profile } = useProfile();
+
   const [sessionMemory, setSessionMemory] = useState<LocalMemory>(
     getDefaultMemory()
   );
@@ -110,7 +113,7 @@ export default function ChatContainer() {
           }));
 
           setIsThinking(true);
-          await new Promise((resolve) => setTimeout(resolve, 600));
+          await new Promise((resolve) => setTimeout(resolve, getDelay(600)));
           setIsThinking(false);
 
           const { step } = getNextProtocolStep(newProtocolState);
@@ -157,12 +160,20 @@ export default function ChatContainer() {
     ]);
   }
 
+  // Helper: calcular delay basado en perfil del usuario
+  const getDelay = (baseDelay: number): number => {
+    if (profile?.creative_mode === "direct") {
+      return Math.round(baseDelay * 0.3); // 3x más rápido
+    }
+    return baseDelay; // calm = ritmo estándar
+  };
+
   // Agregar mensajes del sistema con micro-pausas para ritmo humano
   async function addSystemMessagesWithPacing(msgs: string[]) {
     for (let i = 0; i < msgs.length; i++) {
       if (i > 0) {
-        // Micro-pausa entre mensajes: 400-600ms
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Micro-pausa entre mensajes: ajustada por perfil
+        await new Promise((resolve) => setTimeout(resolve, getDelay(500)));
       }
       setMessages((prev) => [
         ...prev,
@@ -184,7 +195,8 @@ export default function ChatContainer() {
   }
 
   async function thinkAndRespond(output: ReturnType<typeof brain>) {
-    const delay = ctx.mental.energy === "low" ? 600 : 800;
+    const baseDelay = ctx.mental.energy === "low" ? 600 : 800;
+    const delay = getDelay(baseDelay);
     setIsThinking(true);
     await new Promise((resolve) => setTimeout(resolve, delay));
     setIsThinking(false);
@@ -277,7 +289,8 @@ export default function ChatContainer() {
 
   async function requestExercise(blockageId: string, lastTechnique?: string) {
     setIsThinking(true);
-    const delay = ctx.mental.energy === "low" ? 600 : 800;
+    const baseDelay = ctx.mental.energy === "low" ? 600 : 800;
+    const delay = getDelay(baseDelay);
     await new Promise((resolve) => setTimeout(resolve, delay));
 
     const res = await fetch("/api/exercise", {
