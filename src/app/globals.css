@@ -10,6 +10,12 @@
   --card: #fff9ef;
 }
 
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
 html {
   color-scheme: light;
 }
@@ -20,6 +26,12 @@ body {
     linear-gradient(120deg, #f7f1e6 0%, #f0d9b8 100%);
   background-attachment: fixed;
   color: var(--ink);
+  font-family: var(--font-display), system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+main {
   min-height: 100vh;
 }
 
@@ -30,10 +42,4 @@ body {
 
 .card-shadow {
   box-shadow: 0 18px 40px rgba(31, 31, 31, 0.12);
-}
-
-@supports (font-family: var(--font-display)) {
-  body {
-    font-family: var(--font-display), system-ui, sans-serif;
-  }
 }

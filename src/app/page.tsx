@@ -4,7 +4,7 @@ import ChatContainer from "@/components/chat/ChatContainer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen text-neutral-900">
+    <main className="text-neutral-900">
       <div>
         <section className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 py-14">
           <div className="space-y-6">
