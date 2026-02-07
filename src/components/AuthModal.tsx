@@ -8,8 +8,9 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "confirm">("login");
   const [success, setSuccess] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   if (!supabase) {
     return (
@@ -50,9 +51,76 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
     if (authError) {
       setError(authError.message);
     } else {
-      setSuccess(true);
-      setError("Revisa tu email para confirmar. Luego podrás entrar.");
+      setMode("confirm");
     }
+  }
+
+  async function handleResendEmail() {
+    if (!supabase) return;
+    setResendLoading(true);
+    setError(null);
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email,
+    });
+    setResendLoading(false);
+    if (resendError) {
+      setError(resendError.message);
+    } else {
+      setError("Email reenviado. Revisa tu bandeja.");
+    }
+  }
+
+  // Estado: pendiente confirmación de email
+  if (mode === "confirm") {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="space-y-2">
+          <div className="text-4xl">📧</div>
+          <h3 className="text-lg font-semibold text-neutral-900">
+            Te enviamos un email
+          </h3>
+          <p className="text-sm text-neutral-600">
+            Confirma tu cuenta en {email} para continuar
+          </p>
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+            <p className="text-xs text-emerald-700">{error}</p>
+          </div>
+        )}
+
+        <div className="space-y-2 pt-2">
+          <button
+            onClick={() => {
+              setMode("login");
+              setEmail("");
+              setPassword("");
+              setError(null);
+            }}
+            className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
+          >
+            Dije que lo revisei
+          </button>
+
+          <button
+            onClick={handleResendEmail}
+            disabled={resendLoading}
+            className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-100 hover:border-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {resendLoading ? "Enviando..." : "¿No te llegó? Reenviar"}
+          </button>
+
+          <button
+            onClick={() => onClose?.()}
+            className="w-full text-xs text-neutral-500 hover:text-neutral-900"
+          >
+            Seguir sin cuenta por ahora
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (success) {
@@ -60,7 +128,7 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
       <div className="space-y-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-center">
         <div className="text-2xl">✓</div>
         <p className="text-sm font-medium text-emerald-900">
-          {mode === "login" ? "¡Bienvenido de vuelta!" : "Revisa tu email para confirmar"}
+          ¡Bienvenido de vuelta!
         </p>
       </div>
     );
