@@ -15,13 +15,13 @@ export default function AuthButton() {
   const [avatarError, setAvatarError] = useState(false);
   const router = useRouter();
 
-  if (loading) {
-    return null;
-  }
-
   useEffect(() => {
     setAvatarError(false);
   }, [profile?.avatar_url]);
+
+  if (loading) {
+    return null;
+  }
 
   const handleLogout = async () => {
     if (supabase) {
