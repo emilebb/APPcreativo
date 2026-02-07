@@ -21,6 +21,7 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
   }
 
   async function handleLogin() {
+    if (!supabase) return;
     setLoading(true);
     setError(null);
     const { error: authError } = await supabase.auth.signInWithPassword({
@@ -36,6 +37,7 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
   }
 
   async function handleSignup() {
+    if (!supabase) return;
     setLoading(true);
     setError(null);
     const { error: authError } = await supabase.auth.signUp({
