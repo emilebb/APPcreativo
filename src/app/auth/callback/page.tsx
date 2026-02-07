@@ -29,6 +29,16 @@ export default function AuthCallback() {
           return;
         }
 
+        // Crear perfil automáticamente si no existe
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          await supabase.from('profiles').upsert({
+            id: userData.user.id,
+            email: userData.user.email,
+            last_seen: new Date().toISOString()
+          });
+        }
+
         setStatus("success");
         setMessage("¡Cuenta confirmada!");
 
