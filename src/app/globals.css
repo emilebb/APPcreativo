@@ -1,3 +1,42 @@
+@layer base {
+  :root {
+    --chat-bg: #ffffff;
+    --chat-user-msg: #f4f4f4;
+    --chat-ai-msg: #ffffff;
+    --border-subtle: rgba(0,0,0,0.1);
+  }
+
+  [data-theme='dark'] {
+    --chat-bg: #212121;
+    --chat-user-msg: #2f2f2f;
+    --chat-ai-msg: #212121;
+    --border-subtle: rgba(255,255,255,0.1);
+  }
+
+  [data-theme='night'] {
+    --chat-bg: #050707;
+    --chat-user-msg: #0b0f0e;
+    --chat-ai-msg: #050707;
+    --border-subtle: rgba(255,255,255,0.05);
+  }
+}
+
+body {
+  background-color: var(--chat-bg);
+  @apply antialiased text-sm md:text-base;
+}
+
+/* Animación de cursor para typing */
+.typing-cursor::after {
+  content: " ●";
+  animation: blink 1s infinite;
+  @apply text-zinc-400;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
 @import "tailwindcss";
 
 :root {
