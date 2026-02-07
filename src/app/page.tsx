@@ -4,8 +4,8 @@ import ChatContainer from "@/components/chat/ChatContainer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-neutral-50 text-neutral-900">
-      <div className="bg-[radial-gradient(circle_at_top,_rgba(255,248,240,0.6),_transparent_60%)]">
+    <main className="min-h-screen text-neutral-900">
+      <div>
         <section className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 py-14">
           <div className="space-y-6">
             <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">
