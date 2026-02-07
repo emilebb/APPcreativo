@@ -13,10 +13,12 @@ export default function AuthButton() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     setAvatarError(false);
+    setAvatarLoaded(false);
   }, [profile?.avatar_url]);
 
   if (loading) {
@@ -30,24 +32,34 @@ export default function AuthButton() {
     }
   };
 
+  const initial = profile?.email?.[0]?.toUpperCase() || "?";
+  const showImage = Boolean(profile?.avatar_url) && !avatarError;
+  const hideInitial = showImage && avatarLoaded;
+
   if (session) {
     return (
       <div className="relative">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="flex items-center justify-center h-10 w-10 rounded-full text-white text-sm font-medium shadow-sm transition hover:shadow-md overflow-hidden"
+          className="relative flex items-center justify-center h-10 w-10 rounded-full text-white text-sm font-medium shadow-sm transition hover:shadow-md overflow-hidden"
           style={{ backgroundColor: profile?.avatar_color || "#111111" }}
         >
-          {profile?.avatar_url && !avatarError ? (
+          <span className="relative z-10" style={{ opacity: hideInitial ? 0 : 1 }}>
+            {initial}
+          </span>
+          {showImage ? (
             <img
-              src={profile.avatar_url}
+              src={profile?.avatar_url || ""}
               alt="Avatar"
-              className="h-full w-full object-cover"
-              onError={() => setAvatarError(true)}
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ opacity: avatarLoaded ? 1 : 0 }}
+              onLoad={() => setAvatarLoaded(true)}
+              onError={() => {
+                setAvatarError(true);
+                setAvatarLoaded(false);
+              }}
             />
-          ) : (
-            profile?.email?.[0]?.toUpperCase() || "?"
-          )}
+          ) : null}
         </button>
 
         {isMenuOpen && (
