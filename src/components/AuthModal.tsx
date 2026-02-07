@@ -10,6 +10,16 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"login" | "signup">("login");
 
+  if (!supabase) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className="text-xs text-neutral-500">
+          Supabase no está configurado. Contáctanos para más información.
+        </p>
+      </div>
+    );
+  }
+
   async function handleLogin() {
     setLoading(true);
     setError(null);
