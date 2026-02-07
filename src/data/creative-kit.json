@@ -1,0 +1,117 @@
+{
+  "blockages": [
+    {
+      "id": "hoja_en_blanco",
+      "label": "Hoja en blanco",
+      "description": "No se me ocurre absolutamente nada",
+      "goal": "Generar un punto de inicio sin presion",
+      "recommendedTechniques": [
+        "pregunta_divergente",
+        "combinacion_forzada",
+        "primer_paso_pequeno"
+      ]
+    },
+    {
+      "id": "falta_de_enfoque",
+      "label": "Falta de enfoque",
+      "description": "Tengo ideas, pero estan difusas",
+      "goal": "Clarificar y concretar una direccion",
+      "recommendedTechniques": [
+        "reduccion_extrema",
+        "pregunta_divergente"
+      ]
+    },
+    {
+      "id": "exceso_de_ideas",
+      "label": "Exceso de ideas",
+      "description": "Tengo demasiadas ideas y no se cual elegir",
+      "goal": "Priorizar y elegir una sola direccion",
+      "recommendedTechniques": [
+        "reduccion_extrema",
+        "cambio_de_perspectiva"
+      ]
+    },
+    {
+      "id": "perfeccionismo",
+      "label": "Perfeccionismo",
+      "description": "Nada es suficientemente bueno",
+      "goal": "Reducir la exigencia y avanzar",
+      "recommendedTechniques": [
+        "primer_paso_pequeno",
+        "cambio_de_perspectiva"
+      ]
+    },
+    {
+      "id": "cansancio_creativo",
+      "label": "Cansancio creativo",
+      "description": "Estoy saturado o mentalmente cansado",
+      "goal": "Reactivar la creatividad con ejercicios ligeros",
+      "recommendedTechniques": [
+        "combinacion_forzada",
+        "pregunta_divergente"
+      ]
+    }
+  ],
+  "techniques": [
+    {
+      "id": "pregunta_divergente",
+      "name": "Pregunta divergente guiada",
+      "origin": "Creative coaching / Design Thinking",
+      "description": "Rompe patrones habituales mediante preguntas provocadoras",
+      "exerciseTemplates": [
+        "?Y si lo hicieras completamente al reves?",
+        "?Que pasaria si eliminaras la mitad?",
+        "?Como lo explicarias a alguien que no sabe nada del tema?",
+        "?Que es lo mas extrano que podrias intentar?"
+      ]
+    },
+    {
+      "id": "combinacion_forzada",
+      "name": "Combinacion forzada",
+      "origin": "Publicidad / IDEO",
+      "description": "Fuerza conexiones inesperadas entre conceptos",
+      "exerciseTemplates": [
+        "Explica tu idea como si fuera un meme en solo 7 palabras.",
+        "Combina tu idea con algo totalmente ajeno (ej: cocina, deporte, cine).",
+        "Describe tu idea usando solo verbos.",
+        "Convierte tu idea en un juego."
+      ]
+    },
+    {
+      "id": "reduccion_extrema",
+      "name": "Reduccion extrema",
+      "origin": "UX writing / Copywriting",
+      "description": "Reduce el problema a su esencia para ganar claridad",
+      "exerciseTemplates": [
+        "Resume la idea en 5 palabras.",
+        "Define el objetivo en una sola frase.",
+        "Elimina todo lo que no sea esencial.",
+        "Si solo pudieras comunicar una cosa, ?cual seria?"
+      ]
+    },
+    {
+      "id": "cambio_de_perspectiva",
+      "name": "Cambio de perspectiva",
+      "origin": "Pensamiento lateral (Edward de Bono)",
+      "description": "Observa el problema desde otro rol o punto de vista",
+      "exerciseTemplates": [
+        "?Como lo haria un nino?",
+        "?Como lo resolveria un experto?",
+        "?Como lo haria alguien que odia este tema?",
+        "?Que haria alguien sin ningun recurso?"
+      ]
+    },
+    {
+      "id": "primer_paso_pequeno",
+      "name": "Primer paso ridiculamente pequeno",
+      "origin": "Psicologia creativa / Atomic Habits",
+      "description": "Rompe el bloqueo reduciendo la accion al minimo",
+      "exerciseTemplates": [
+        "Escribe solo el titulo, nada mas.",
+        "Escribe una version mala a proposito.",
+        "Empieza con una frase incompleta.",
+        "Trabaja solo 2 minutos y detente."
+      ]
+    }
+  ]
+}

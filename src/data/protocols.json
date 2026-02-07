@@ -1,0 +1,377 @@
+{
+  "protocols": [
+    {
+      "id": "mapa_minimo_proyecto",
+      "name": "Mapa mínimo del proyecto",
+      "forBlockages": ["hoja_en_blanco", "falta_de_enfoque", "exceso_de_ideas"],
+      "forScale": "large",
+      "duration": "4 min",
+      "steps": [
+        {
+          "type": "system",
+          "text": "Esto es grande.\nVamos a bajarlo a algo manejable."
+        },
+        {
+          "type": "prompt",
+          "text": "En una frase simple:\n¿qué tipo de proyecto es?",
+          "placeholder": "ej: marca de ropa urbana, empresa local, proyecto personal"
+        },
+        {
+          "type": "prompt",
+          "text": "Piensa en una persona concreta.\n¿Para quién sería esto?",
+          "placeholder": "una sola persona, no \"todo el mundo\""
+        },
+        {
+          "type": "prompt",
+          "text": "Si esto funcionara,\n¿qué te gustaría que esa persona dijera?",
+          "placeholder": "no lo que haga, lo que diga"
+        },
+        {
+          "type": "prompt",
+          "text": "Ahora lo importante:\n¿qué parte te genera más duda?",
+          "placeholder": "aquí aparece el verdadero bloqueo"
+        },
+        {
+          "type": "system",
+          "text": "Bien.\nYa no es solo una idea en la cabeza."
+        }
+      ],
+      "output": "forma_inicial_proyecto"
+    },
+    {
+      "id": "primeros_7_dias",
+      "name": "Primeros 7 días (sin presión)",
+      "forBlockages": ["hoja_en_blanco", "falta_de_enfoque", "exceso_de_ideas"],
+      "forScale": "large",
+      "followsProtocol": "mapa_minimo_proyecto",
+      "duration": "7 días",
+      "steps": [
+        {
+          "type": "system",
+          "text": "No vamos a hacer todo.\nSolo una semana posible."
+        },
+        {
+          "type": "system",
+          "text": "Empecemos con hoy.\n\n🟢 Día 1 — Ponerle palabras"
+        },
+        {
+          "type": "system",
+          "text": "Hoy solo una cosa.\nPonerle palabras."
+        },
+        {
+          "type": "prompt",
+          "text": "Termina esta frase:\n\"Este proyecto es para…\"",
+          "placeholder": "Este proyecto es para..."
+        },
+        {
+          "type": "system",
+          "text": "Suficiente por hoy.\nEsto ya es avance."
+        },
+        {
+          "type": "system",
+          "text": "🟢 Día 2 — Mirar afuera"
+        },
+        {
+          "type": "system",
+          "text": "No para copiar.\nSolo para notar."
+        },
+        {
+          "type": "prompt",
+          "text": "Busca 3 proyectos parecidos.\nAnota qué te llama la atención.",
+          "placeholder": "Proyecto 1: ...\nProyecto 2: ...\nProyecto 3: ..."
+        },
+        {
+          "type": "system",
+          "text": "Listo por hoy.\nGuardé esto para mañana."
+        },
+        {
+          "type": "system",
+          "text": "🟢 Día 3 — Elegir una"
+        },
+        {
+          "type": "system",
+          "text": "No la mejor.\nUna."
+        },
+        {
+          "type": "prompt",
+          "text": "Si solo pudieras probar una idea,\n¿cuál sería?",
+          "placeholder": "Una sola dirección"
+        },
+        {
+          "type": "system",
+          "text": "Suficiente.\nMañana hacemos algo."
+        },
+        {
+          "type": "system",
+          "text": "🟢 Día 4 — Algo pequeño"
+        },
+        {
+          "type": "system",
+          "text": "Algo pequeño.\nPero real."
+        },
+        {
+          "type": "prompt",
+          "text": "Crea algo rápido:\n• Texto corto\n• Boceto\n• Nota con el nombre",
+          "placeholder": "¿Qué hiciste?"
+        },
+        {
+          "type": "system",
+          "text": "Ahí está.\nNo era nada, pero ya empezó."
+        },
+        {
+          "type": "system",
+          "text": "🟢 Día 5 — Decirlo"
+        },
+        {
+          "type": "system",
+          "text": "No es feedback.\nEs contacto."
+        },
+        {
+          "type": "prompt",
+          "text": "Cuéntale la idea a alguien.\n¿Qué preguntó?",
+          "placeholder": "La pregunta que te hizo"
+        },
+        {
+          "type": "system",
+          "text": "Interesante.\nEsto está más claro."
+        },
+        {
+          "type": "system",
+          "text": "🟢 Día 6 — Ajustar"
+        },
+        {
+          "type": "system",
+          "text": "No mejores.\nAclara."
+        },
+        {
+          "type": "prompt",
+          "text": "Cambia una cosa\nbasado en lo que notaste.",
+          "placeholder": "¿Qué ajustaste?"
+        },
+        {
+          "type": "system",
+          "text": "Listo.\nYa hay una forma."
+        },
+        {
+          "type": "system",
+          "text": "🟢 Día 7 — Decidir por ahora"
+        },
+        {
+          "type": "system",
+          "text": "No para siempre.\nPor ahora."
+        },
+        {
+          "type": "prompt",
+          "text": "¿Qué haces con esto?\n• Sigo\n• Cambio el enfoque\n• Lo dejo en pausa",
+          "placeholder": "Tu decisión"
+        },
+        {
+          "type": "system",
+          "text": "Perfecto.\nYa no es solo una idea gigante."
+        }
+      ],
+      "output": "semana_inicial_proyecto"
+    },
+    {
+      "id": "microruta_arranque",
+      "name": "Microruta de arranque",
+      "forBlockages": ["hoja_en_blanco", "perfeccionismo"],
+      "forScale": "small",
+      "duration": "3 min",
+      "steps": [
+        {
+          "type": "system",
+          "text": "No lo hagas bien. Hazlo posible."
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe un título provisional.",
+          "placeholder": "Ej: Ideas para proyecto X"
+        },
+        {
+          "type": "prompt",
+          "text": "Elige una palabra que te dé un poco de curiosidad.",
+          "placeholder": "Solo una palabra"
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe una frase alrededor de esa palabra.",
+          "placeholder": "Una sola frase"
+        },
+        {
+          "type": "system",
+          "text": "Listo. Ya hay algo vivo."
+        }
+      ],
+      "output": "titulo + frase_reescrita"
+    },
+    {
+      "id": "foco_3_capas",
+      "name": "Foco en 3 capas",
+      "forBlockages": ["falta_de_enfoque"],
+      "forScale": "medium",
+      "duration": "4 min",
+      "steps": [
+        {
+          "type": "system",
+          "text": "Vamos a hacerlo sencillo."
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe tu tema en 6 palabras.",
+          "placeholder": "Máximo 6 palabras"
+        },
+        {
+          "type": "prompt",
+          "text": "Elige una persona para quien sería.",
+          "placeholder": "Ej: diseñadores freelance, estudiantes..."
+        },
+        {
+          "type": "prompt",
+          "text": "Elige un verbo de cambio.",
+          "placeholder": "Un solo verbo"
+        },
+        {
+          "type": "system",
+          "text": "Ahora junta todo en 1 frase."
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe esa frase.",
+          "placeholder": "Para [quién], sobre [qué], para [cambio]"
+        },
+        {
+          "type": "system",
+          "text": "Listo. Ya tienes un enfoque claro."
+        }
+      ],
+      "output": "frase_enfoque_brief"
+    },
+    {
+      "id": "selector_direccion",
+      "name": "Selector de dirección",
+      "forBlockages": ["exceso_de_ideas"],
+      "forScale": "medium",
+      "duration": "5 min",
+      "steps": [
+        {
+          "type": "system",
+          "text": "Vamos a elegir una sola dirección."
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe 5 ideas rápidas (1 línea cada una).",
+          "placeholder": "Idea 1\nIdea 2\nIdea 3..."
+        },
+        {
+          "type": "system",
+          "text": "Elige 1: la que más te daría ganas de empezar hoy."
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe cuál elegiste.",
+          "placeholder": "La idea que más te llama"
+        },
+        {
+          "type": "prompt",
+          "text": "Ponle un puntaje 1–5 a impacto / facilidad / emoción.",
+          "placeholder": "Impacto/Facilidad/Emoción"
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe el primer paso en 2 minutos.",
+          "placeholder": "Una acción concreta para arrancar"
+        },
+        {
+          "type": "system",
+          "text": "Listo. Ya tienes una idea y un primer paso."
+        }
+      ],
+      "output": "idea_ganadora + primer_paso"
+    },
+    {
+      "id": "cambio_de_lente",
+      "name": "Cambio de lente",
+      "forBlockages": ["perfeccionismo", "cansancio_creativo"],
+      "forScale": "small",
+      "duration": "3 min",
+      "steps": [
+        {
+          "type": "system",
+          "text": "Probemos otro lente."
+        },
+        {
+          "type": "prompt",
+          "text": "Imagina que esto lo crea alguien sin miedo.\n¿Qué haría?",
+          "placeholder": "Sin juicio, versión valiente"
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe la versión muy simple (una línea).",
+          "placeholder": "Lo más minimalista posible"
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe la versión muy exagerada (una línea).",
+          "placeholder": "Al máximo, sin límites"
+        },
+        {
+          "type": "system",
+          "text": "Ahora mezcla las dos versiones."
+        },
+        {
+          "type": "prompt",
+          "text": "Escribe la mezcla en una línea.",
+          "placeholder": "Combina lo simple con lo exagerado"
+        },
+        {
+          "type": "prompt",
+          "text": "Elige la parte que te quedas sí o sí.",
+          "placeholder": "Lo que no quieres perder"
+        },
+        {
+          "type": "system",
+          "text": "Listo. Ya hay una versión nueva."
+        }
+      ],
+      "output": "version_mezclada"
+    },
+    {
+      "id": "combinacion_inesperada",
+      "name": "Combinación inesperada",
+      "forBlockages": ["hoja_en_blanco", "cansancio_creativo"],
+      "forScale": "small",
+      "duration": "4 min",
+      "steps": [
+        {
+          "type": "system",
+          "text": "Vamos a crear algo rápido."
+        },
+        {
+          "type": "system",
+          "text": "Restricciones:\n• Formato: mini-historia\n• Emoción: curiosidad\n• Límite: 7 palabras máximo por frase"
+        },
+        {
+          "type": "prompt",
+          "text": "Prueba 3 intentos rápidos (1 línea cada uno).",
+          "placeholder": "Intento 1\nIntento 2\nIntento 3"
+        },
+        {
+          "type": "prompt",
+          "text": "Elige 1.",
+          "placeholder": "El que más te guste"
+        },
+        {
+          "type": "prompt",
+          "text": "Solo toca el inicio.",
+          "placeholder": "Reescribe el primer párrafo"
+        },
+        {
+          "type": "system",
+          "text": "Bien. Ahora hay algo para arrancar."
+        }
+      ],
+      "output": "pieza_inicial"
+    }
+  ]
+}
