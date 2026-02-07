@@ -66,6 +66,24 @@ export default function SettingsPage() {
         </p>
       </div>
 
+        {/* Avatar */}
+        <div className="flex items-center gap-4 p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+          <div
+            className="h-16 w-16 rounded-full flex items-center justify-center text-white text-2xl font-medium flex-shrink-0"
+            style={{ backgroundColor: profile.avatar_color }}
+          >
+            {profile.email?.[0]?.toUpperCase() || "?"}
+          </div>
+          <div>
+            <p className="text-sm text-neutral-900 font-medium">
+              Esto es solo para ti.
+            </p>
+            <p className="text-xs text-neutral-500">
+              Para reconocer tu espacio.
+            </p>
+          </div>
+        </div>
+
       <div className="space-y-6">
         {/* Ritmo */}
         <div className="space-y-2">

@@ -11,6 +11,8 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType>({ session: null, loading: true });
+const AVATAR_COLORS = ["#111111", "#6B4EFF", "#0F766E", "#B45309", "#DC2626", "#7C3AED", "#059669"];
+
 
 async function createProfileIfNeeded(userId: string, email: string | undefined) {
   if (!supabase) return;
@@ -24,10 +26,14 @@ async function createProfileIfNeeded(userId: string, email: string | undefined) 
       .single();
 
     if (!existingProfile) {
+        // Generate random avatar color
+        const avatar_color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+      
       // Create profile
       await supabase.from("profiles").insert({
         id: userId,
         email: email || null,
+          avatar_color,
         last_seen: new Date().toISOString(),
       });
     } else {

@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   preferred_language text DEFAULT 'es',
   creative_mode text DEFAULT 'calm',
   onboarding_completed boolean DEFAULT false,
-  last_seen timestamp with time zone,
+    avatar_color text DEFAULT '#111111',
+    last_seen timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
   PRIMARY KEY (id)
 );

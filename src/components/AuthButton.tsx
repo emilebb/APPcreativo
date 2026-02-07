@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
+import { useProfile } from "@/lib/useProfile";
 import { supabase } from "@/lib/supabaseClient";
 import AuthModal from "@/components/AuthModal";
 
 export default function AuthButton() {
   const { session, loading } = useAuth();
+    const { profile } = useProfile();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
@@ -28,10 +30,10 @@ export default function AuthButton() {
       <div className="relative">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 hover:shadow-md"
+            className="flex items-center justify-center h-10 w-10 rounded-full text-white text-sm font-medium shadow-sm transition hover:shadow-md"
+            style={{ backgroundColor: profile?.avatar_color || "#111111" }}
         >
-          <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-          Cuenta
+            {profile?.email?.[0]?.toUpperCase() || "?"}
         </button>
 
         {isMenuOpen && (
