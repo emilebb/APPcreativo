@@ -24,8 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${display.variable} ${serif.variable} antialiased`}>
-        {children}
+      <body
+        className={`${display.variable} ${serif.variable} bg-[#F6F2E9] text-neutral-900 antialiased`}
+      >
+        <div className="min-h-screen">{children}</div>
       </body>
     </html>
   );
