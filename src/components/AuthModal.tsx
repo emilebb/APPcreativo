@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/lib/authProvider";
 
 export default function AuthModal({ onClose }: { onClose?: () => void }) {
+  const { session } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -11,6 +13,16 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
   const [mode, setMode] = useState<"login" | "signup" | "confirm">("login");
   const [success, setSuccess] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+
+  // Si hay sesión activa, cerrar el modal automáticamente
+  useEffect(() => {
+    if (session) {
+      setSuccess(true);
+      setTimeout(() => {
+        onClose?.();
+      }, 1500);
+    }
+  }, [session, onClose]);
 
   if (!supabase) {
     return (
@@ -71,6 +83,22 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
     }
   }
 
+  async function handleCheckConfirmation() {
+    if (!supabase) return;
+    setLoading(true);
+    const { data } = await supabase.auth.getSession();
+    setLoading(false);
+    
+    if (data.session) {
+      setSuccess(true);
+      setTimeout(() => {
+        onClose?.();
+      }, 1500);
+    } else {
+      setError("Aún no has confirmado tu email. Revisa tu bandeja.");
+    }
+  }
+
   // Estado: pendiente confirmación de email
   if (mode === "confirm") {
     return (
@@ -93,15 +121,11 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
 
         <div className="space-y-2 pt-2">
           <button
-            onClick={() => {
-              setMode("login");
-              setEmail("");
-              setPassword("");
-              setError(null);
-            }}
-            className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
+            onClick={handleCheckConfirmation}
+            disabled={loading}
+            className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Dije que lo revisei
+            {loading ? "Verificando..." : "Ya confirmé mi email"}
           </button>
 
           <button
