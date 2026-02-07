@@ -11,8 +11,6 @@ export default function SettingsPage() {
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [modeChanged, setModeChanged] = useState(false);
-  const [newMode, setNewMode] = useState<CreativeMode | null>(null);
 
   // Redirigir si no hay sesión
   useEffect(() => {
@@ -34,13 +32,21 @@ export default function SettingsPage() {
   const handleModeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedMode = e.target.value as CreativeMode;
     setSaving(true);
-    setModeChanged(false);
     
     try {
       await updateProfile({ creative_mode: selectedMode });
-      setNewMode(selectedMode);
-      setModeChanged(true);
-    } finally {
+      
+      // Guardar mensaje para mostrar en el chat
+      const message = selectedMode === "direct" 
+        ? "Vale. Voy a ir más al grano."
+        : "De acuerdo. Vamos despacio.";
+      
+      localStorage.setItem("settings_feedback", message);
+      
+      // Redirigir al chat inmediatamente
+      router.push("/");
+    } catch (err) {
+      console.error("Error updating mode:", err);
       setSaving(false);
     }
   };
@@ -76,18 +82,6 @@ export default function SettingsPage() {
             <option value="direct">Directo</option>
           </select>
         </div>
-
-        {/* Respuesta inmediata cuando cambia el modo */}
-        {modeChanged && newMode && (
-          <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
-            <p className="text-sm text-neutral-600 mb-2">Respuesta del sistema:</p>
-            <p className="text-neutral-900">
-              {newMode === "direct" 
-                ? "Vale. Voy a ir más al grano." 
-                : "De acuerdo. Vamos despacio."}
-            </p>
-          </div>
-        )}
       </div>
 
       {saving && (
