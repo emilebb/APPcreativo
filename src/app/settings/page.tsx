@@ -11,6 +11,8 @@ export default function SettingsPage() {
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [modeChanged, setModeChanged] = useState(false);
+  const [newMode, setNewMode] = useState<CreativeMode | null>(null);
 
   // Redirigir si no hay sesión
   useEffect(() => {
@@ -29,19 +31,15 @@ export default function SettingsPage() {
 
   if (!profile) return null;
 
-  const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSaving(true);
-    try {
-      await updateProfile({ preferred_language: e.target.value });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleModeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedMode = e.target.value as CreativeMode;
     setSaving(true);
+    setModeChanged(false);
+    
     try {
-      await updateProfile({ creative_mode: e.target.value as CreativeMode });
+      await updateProfile({ creative_mode: selectedMode });
+      setNewMode(selectedMode);
+      setModeChanged(true);
     } finally {
       setSaving(false);
     }
@@ -58,27 +56,11 @@ export default function SettingsPage() {
         </button>
         <h1 className="text-xl font-medium text-neutral-900">Ajustes</h1>
         <p className="text-neutral-500 mt-2">
-          Solo lo necesario para que esto se sienta más tuyo.
+          Cambios pequeños. Efecto inmediato.
         </p>
       </div>
 
       <div className="space-y-6">
-        {/* Idioma */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-neutral-700">
-            Idioma
-          </label>
-          <select
-            value={profile.preferred_language}
-            onChange={handleLanguageChange}
-            disabled={saving}
-            className="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-400 disabled:opacity-50 transition"
-          >
-            <option value="es">Español</option>
-            <option value="en">English</option>
-          </select>
-        </div>
-
         {/* Ritmo */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-neutral-700">
@@ -94,6 +76,18 @@ export default function SettingsPage() {
             <option value="direct">Directo</option>
           </select>
         </div>
+
+        {/* Respuesta inmediata cuando cambia el modo */}
+        {modeChanged && newMode && (
+          <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
+            <p className="text-sm text-neutral-600 mb-2">Respuesta del sistema:</p>
+            <p className="text-neutral-900">
+              {newMode === "direct" 
+                ? "Vale. Voy a ir más al grano." 
+                : "De acuerdo. Vamos despacio."}
+            </p>
+          </div>
+        )}
       </div>
 
       {saving && (
