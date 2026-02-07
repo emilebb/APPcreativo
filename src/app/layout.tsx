@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Fraunces } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/authProvider";
 
 const display = Bricolage_Grotesque({
   variable: "--font-display",
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body
         className={`${display.variable} ${serif.variable} bg-[#F6F2E9] text-neutral-900 antialiased`}
       >
-        <div className="min-h-screen">{children}</div>
+        <AuthProvider>
+          <div className="min-h-screen">{children}</div>
+        </AuthProvider>
       </body>
     </html>
   );
