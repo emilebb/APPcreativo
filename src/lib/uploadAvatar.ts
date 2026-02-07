@@ -3,12 +3,12 @@ import { supabase } from "@/lib/supabaseClient";
 export async function uploadAvatar(file: File, userId: string) {
   if (!supabase || !file) return;
 
-  const fileExt = file.name.split(".").pop();
+  const fileExt = file.name.split(".").pop() || "png";
   const filePath = `${userId}.${fileExt}`;
 
   const { error: uploadError } = await supabase.storage
     .from("avatars")
-    .upload(filePath, file, { upsert: true });
+    .upload(filePath, file, { upsert: true, contentType: file.type || "image/png" });
 
   if (uploadError) throw uploadError;
 

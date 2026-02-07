@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
 import { useProfile } from "@/lib/useProfile";
@@ -12,11 +12,16 @@ export default function AuthButton() {
   const { profile } = useProfile();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const router = useRouter();
 
   if (loading) {
     return null;
   }
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [profile?.avatar_url]);
 
   const handleLogout = async () => {
     if (supabase) {
@@ -33,11 +38,12 @@ export default function AuthButton() {
           className="flex items-center justify-center h-10 w-10 rounded-full text-white text-sm font-medium shadow-sm transition hover:shadow-md overflow-hidden"
           style={{ backgroundColor: profile?.avatar_color || "#111111" }}
         >
-          {profile?.avatar_url ? (
+          {profile?.avatar_url && !avatarError ? (
             <img
               src={profile.avatar_url}
               alt="Avatar"
               className="h-full w-full object-cover"
+              onError={() => setAvatarError(true)}
             />
           ) : (
             profile?.email?.[0]?.toUpperCase() || "?"

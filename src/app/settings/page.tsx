@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   // Redirigir si no hay sesión
   useEffect(() => {
@@ -19,6 +20,10 @@ export default function SettingsPage() {
       router.push("/");
     }
   }, [authLoading, session, router]);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [profile?.avatar_url]);
 
   if (authLoading || profileLoading) {
     return (
@@ -73,11 +78,12 @@ export default function SettingsPage() {
             className="h-14 w-14 rounded-full overflow-hidden bg-neutral-200 flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: profile.avatar_color }}
           >
-            {profile.avatar_url ? (
+            {profile.avatar_url && !avatarError ? (
               <img
                 src={profile.avatar_url}
                 alt="Avatar"
                 className="h-full w-full object-cover"
+                onError={() => setAvatarError(true)}
               />
             ) : (
               <span className="text-lg font-medium text-white">
