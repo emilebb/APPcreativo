@@ -11,13 +11,13 @@ export default function Sidebar({ user }: { user: any | null }) {
 
   return (
     <div className="flex flex-col h-full p-3 bg-[#f9f9f9] dark:bg-[#171717]">
-      {/* Botón Acción Principal */}
+      {/* 1. Botón Nuevo Proyecto */}
       <Link href="/projects/new" className="flex items-center gap-3 w-full p-3 rounded-lg bg-white dark:bg-zinc-800 border dark:border-zinc-700 hover:shadow-sm transition-all mb-6">
         <Plus size={18} className="text-zinc-500" />
         <span className="text-sm font-semibold">Nuevo Proyecto</span>
       </Link>
 
-      {/* Herramientas Creativas */}
+      {/* 2-5. Herramientas Creativas */}
       <div className="space-y-1 mb-8">
         <SidebarItem 
           href="/search" icon={<Search size={18}/>} 
@@ -37,7 +37,7 @@ export default function Sidebar({ user }: { user: any | null }) {
         />
       </div>
 
-      {/* Proyectos Recientes (Dinámicos) */}
+      {/* 6. Proyectos Recientes (Dinámicos) */}
       <div className="flex-1 overflow-y-auto">
         <p className="px-3 text-[10px] font-bold text-zinc-500 mb-2 uppercase tracking-widest">Tus Proyectos</p>
         <SidebarItem href="/project/app" icon={<Folder size={18}/>} label="App RBR" />
@@ -45,19 +45,21 @@ export default function Sidebar({ user }: { user: any | null }) {
         <SidebarItem href="/chat/bloqueo" icon={<MessageSquare size={18}/>} label="Creative Coach v1" truncate />
       </div>
 
-      {/* Perfil de Usuario (Abajo) */}
-      <Link href="/settings" className="pt-4 border-t dark:border-zinc-800 mt-auto">
-        <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+      {/* 7-8. Perfil de Usuario y engranaje (ambos clicables) */}
+      <div className="pt-4 border-t dark:border-zinc-800 mt-auto flex items-center gap-2">
+        <Link href="/settings" className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
           <div className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white shadow-inner">
-            {user?.email?.[0].toUpperCase() || 'U'}
+            {user?.email?.[0]?.toUpperCase() || 'U'}
           </div>
           <div className="flex flex-col overflow-hidden">
             <span className="text-sm font-bold truncate">{user?.email?.split('@')[0]}</span>
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase">Plus</span>
           </div>
-          <Settings size={14} className="ml-auto text-zinc-400" />
-        </div>
-      </Link>
+        </Link>
+        <Link href="/settings" className="p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+          <Settings size={20} className="text-zinc-400" />
+        </Link>
+      </div>
     </div>
   )
 }
