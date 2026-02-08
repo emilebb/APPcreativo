@@ -7,23 +7,36 @@
   }
 
   [data-theme='dark'] {
-    --chat-bg: #212121;
-    --chat-user-msg: #2f2f2f;
-    --chat-ai-msg: #212121;
-    --border-subtle: rgba(255,255,255,0.1);
+    --chat-bg: #18181b;
+    --chat-user-msg: #232329;
+    --chat-ai-msg: #18181b;
+    --border-subtle: rgba(255,255,255,0.08);
+    --foreground: #e5e5e5;
+    --text-muted: #bdbdbd;
   }
 
   [data-theme='night'] {
     --chat-bg: #050707;
-    --chat-user-msg: #0b0f0e;
+    --chat-user-msg: #101214;
     --chat-ai-msg: #050707;
-    --border-subtle: rgba(255,255,255,0.05);
+    --border-subtle: rgba(255,255,255,0.04);
+    --foreground: #d1d1d1;
+    --text-muted: #a0a0a0;
   }
 }
 
 body {
   background-color: var(--chat-bg);
+  color: var(--foreground, #18181b);
   @apply antialiased text-sm md:text-base;
+}
+
+.prose, .prose-invert, .dark .prose, .dark .prose-invert {
+  color: var(--foreground, #18181b) !important;
+}
+
+.text-muted {
+  color: var(--text-muted, #bdbdbd);
 }
 
 /* Animación de cursor para typing */
