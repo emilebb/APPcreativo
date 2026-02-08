@@ -48,16 +48,21 @@ export default function Sidebar({ user }: { user: any | null }) {
       {/* 7-8. Perfil de Usuario y engranaje (ambos clicables) */}
       <div className="pt-4 border-t dark:border-zinc-800 mt-auto flex items-center gap-2">
         <Link href="/settings" className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
-          <div className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white shadow-inner">
-            {user?.email?.[0]?.toUpperCase() || 'U'}
+          <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-base font-bold text-white shadow-inner">
+            {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
           </div>
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-bold truncate">{user?.email?.split('@')[0]}</span>
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase">Plus</span>
+            <span className="text-base font-bold truncate">
+              {user?.name || (user?.email ? user.email.split('@')[0] : 'Usuario')}
+            </span>
+            <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">PLUS</span>
+            {user?.email && (
+              <span className="text-[10px] text-zinc-400 truncate">{user.email}</span>
+            )}
           </div>
         </Link>
         <Link href="/settings" className="p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
-          <Settings size={20} className="text-zinc-400" />
+          <Settings size={22} className="text-zinc-400" />
         </Link>
       </div>
     </div>
