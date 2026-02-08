@@ -22,31 +22,30 @@ export const metadata: Metadata = {
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) { return cookieStore.get(name)?.value },
+        get(name: string) { 
+          return cookieStore.get(name)?.value 
+        },
       },
     }
   );
   const { data: { user } } = await supabase.auth.getUser();
   return (
-    <html lang="es">
-      <body className={`${display.variable} ${serif.variable} antialiased`}>
-        <Providers>
-          <div className="flex h-screen bg-white dark:bg-[#212121] text-zinc-900 dark:text-zinc-100">
-            <aside className="w-[260px] h-full bg-[#f9f9f9] dark:bg-[#171717] hidden md:flex flex-col border-r dark:border-zinc-800">
-              <Sidebar user={user} />
-            </aside>
-            <main className="flex-1 flex flex-col relative overflow-hidden">
-              {children}
-            </main>
-          </div>
-        </Providers>
+    <html lang="es" suppressHydrationWarning>
+      <body>
+        <div className="flex h-screen bg-white dark:bg-[#212121]">
+          <aside className="w-[260px] h-full hidden md:flex flex-col border-r dark:border-zinc-800">
+            <Sidebar user={user} />
+          </aside>
+          <main className="flex-1 flex flex-col overflow-hidden">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
