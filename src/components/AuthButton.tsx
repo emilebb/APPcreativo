@@ -66,6 +66,15 @@ export default function AuthButton() {
           <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-lg border border-neutral-200 overflow-hidden z-50">
             <button
               onClick={() => {
+                router.push("/profile");
+                setIsMenuOpen(false);
+              }}
+              className="w-full px-4 py-3 text-left text-sm text-neutral-700 hover:bg-neutral-50 transition"
+            >
+              👤 Perfil
+            </button>
+            <button
+              onClick={() => {
                 router.push("/settings");
                 setIsMenuOpen(false);
               }}
