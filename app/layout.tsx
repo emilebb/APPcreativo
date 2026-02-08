@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
-import ThemeToggle from "@/components/ThemeToggle";
-import AuthButton from "@/components/AuthButton";
+import Sidebar from "@/components/Sidebar";
 
 const display = Bricolage_Grotesque({
   variable: "--font-display",
@@ -29,14 +28,16 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body className={`${display.variable} ${serif.variable} antialiased`}>
         <Providers>
-          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-black/5 bg-white/70 px-4 py-3 backdrop-blur sm:px-8 dark:border-white/10 dark:bg-black/30">
-            <h1 className="text-sm font-semibold tracking-tight">CreativeBlock</h1>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <AuthButton />
-            </div>
-          </header>
-          <div className="min-h-screen">{children}</div>
+          <div className="flex h-screen bg-white dark:bg-[#212121] text-zinc-900 dark:text-zinc-100">
+            {/* Barra Lateral estilo ChatGPT */}
+            <aside className="w-[260px] h-full bg-[#f9f9f9] dark:bg-[#171717] hidden md:flex flex-col border-r dark:border-zinc-800">
+              <Sidebar />
+            </aside>
+            {/* Área de Contenido Principal (Chat/Proyectos) */}
+            <main className="flex-1 flex flex-col relative overflow-hidden">
+              {children}
+            </main>
+          </div>
         </Providers>
       </body>
     </html>
