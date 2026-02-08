@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/authProvider";
 import { useProfile } from "@/lib/useProfile";
 import { uploadAvatar } from "@/lib/uploadAvatar";
 import type { CreativeMode } from "@/types/profile";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function SettingsPage() {
   const { session, loading: authLoading } = useAuth();
@@ -135,7 +136,14 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Selector de tema */}
       <div className="space-y-6">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
+            Tema de la interfaz
+          </label>
+          <ThemeToggle />
+        </div>
         {/* Ritmo */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-neutral-700">
