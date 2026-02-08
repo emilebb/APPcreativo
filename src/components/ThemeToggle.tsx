@@ -22,15 +22,7 @@ export default function ThemeToggle() {
       >
         <Sun size={18} className="text-orange-500" />
       </button>
-      <button
-        onClick={() => setTheme("dark")}
-        className={`p-2 rounded-full transition ${
-          theme === "dark" ? "bg-zinc-700 shadow-sm" : ""}
-        `}
-        aria-label="Tema oscuro"
-      >
-        <Moon size={18} className="text-blue-400" />
-      </button>
+      {/* Modo oscuro eliminado */}
       <button
         onClick={() => setTheme("night")}
         className={`p-2 rounded-full transition ${
