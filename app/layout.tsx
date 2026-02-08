@@ -19,21 +19,29 @@ export const metadata: Metadata = {
   description: "Break creative block with fast AI prompts and ideas.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) { return cookieStore.get(name)?.value },
+      },
+    }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es">
       <body className={`${display.variable} ${serif.variable} antialiased`}>
         <Providers>
           <div className="flex h-screen bg-white dark:bg-[#212121] text-zinc-900 dark:text-zinc-100">
-            {/* Barra Lateral estilo ChatGPT */}
             <aside className="w-[260px] h-full bg-[#f9f9f9] dark:bg-[#171717] hidden md:flex flex-col border-r dark:border-zinc-800">
-              <Sidebar />
+              <Sidebar user={user} />
             </aside>
-            {/* Área de Contenido Principal (Chat/Proyectos) */}
             <main className="flex-1 flex flex-col relative overflow-hidden">
               {children}
             </main>

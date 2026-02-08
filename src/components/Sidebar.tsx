@@ -6,7 +6,7 @@ import {
   FolderPlus, Folder, MessageSquare, UserCircle, Settings 
 } from "lucide-react"
 
-export default function Sidebar({ user }: { user: any }) {
+export default function Sidebar({ user }: { user: any | null }) {
   const pathname = usePathname()
 
   return (
