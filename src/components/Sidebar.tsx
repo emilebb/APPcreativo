@@ -1,16 +1,71 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { 
   Plus, Search, Image as ImageIcon, GitGraph, PencilRuler, 
   FolderPlus, Folder, MessageSquare, UserCircle, Settings,
   Menu, X, Home
 } from "lucide-react"
+import { useAuth } from "@/lib/authProvider"
+import { projectService, type Project } from "@/lib/projectService"
 
 export default function Sidebar({ user }: { user: any | null }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (user?.id) {
+      loadProjects()
+    }
+  }, [user])
+
+  const loadProjects = async () => {
+    if (!user?.id) return
+    
+    try {
+      setLoading(true)
+      const userProjects = await projectService.getProjects(user.id)
+      setProjects(userProjects)
+    } catch (error) {
+      console.error('Error loading projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateProject = async (type: Project['type'] = 'canvas') => {
+    if (!user?.id) {
+      router.push('/auth')
+      return
+    }
+
+    try {
+      const newProject = await projectService.createProject(user.id, type)
+      setIsMobileMenuOpen(false)
+      
+      // Redirect based on project type
+      switch (type) {
+        case 'moodboard':
+          router.push(`/moodboard/${newProject.id}`)
+          break
+        case 'mindmap':
+          router.push(`/mindmap/${newProject.id}`)
+          break
+        case 'canvas':
+          router.push(`/canvas/${newProject.id}`)
+          break
+        default:
+          router.push(`/project/${newProject.id}`)
+      }
+    } catch (error) {
+      console.error('Error creating project:', error)
+      alert('Error al crear proyecto. Intenta nuevamente.')
+    }
+  }
 
   const navigationItems = [
     { href: "/", icon: <Home size={18} />, label: "Inicio", mobileOnly: false },
@@ -38,14 +93,13 @@ export default function Sidebar({ user }: { user: any | null }) {
       )}
 
       {/* Botón Nuevo Proyecto */}
-      <Link 
-        href="/projects/new" 
+      <button 
+        onClick={() => handleCreateProject()}
         className={`flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-zinc-800 border dark:border-zinc-700 hover:shadow-sm transition-all ${isMobile ? 'mb-6' : 'mb-6'}`}
-        onClick={() => isMobile && setIsMobileMenuOpen(false)}
       >
         <Plus size={18} className="text-zinc-500" />
         <span className="text-sm font-semibold">Nuevo Proyecto</span>
-      </Link>
+      </button>
 
       {/* Navegación Principal */}
       <div className={`space-y-1 ${isMobile ? 'mb-6' : 'mb-8'}`}>
@@ -64,10 +118,22 @@ export default function Sidebar({ user }: { user: any | null }) {
       {/* Proyectos Recientes - Solo en desktop */}
       {!isMobile && (
         <div className="flex-1 overflow-y-auto">
-          <p className="px-3 text-[10px] font-bold text-zinc-500 mb-2 uppercase tracking-widest">Tus Proyectos</p>
-          <SidebarItem href="/project/app" icon={<Folder size={18}/>} label="App RBR" />
-          <SidebarItem href="/project/tiktok" icon={<Folder size={18}/>} label="Contenido TikTok" />
-          <SidebarItem href="/chat/bloqueo" icon={<MessageSquare size={18}/>} label="Creative Coach v1" truncate />
+          <p className="px-3 text-[10px] font-bold text-zinc-500 mb-2 uppercase tracking-widest">
+            {loading ? 'Cargando...' : 'Tus Proyectos'}
+          </p>
+          {projects.length === 0 && !loading ? (
+            <p className="px-3 text-sm text-zinc-400">No hay proyectos aún</p>
+          ) : (
+            projects.map((project) => (
+              <SidebarItem 
+                key={project.id}
+                href={`/${project.type === 'canvas' ? 'canvas' : project.type}/${project.id}`} 
+                icon={<Folder size={18}/>} 
+                label={project.title} 
+                truncate 
+              />
+            ))
+          )}
         </div>
       )}
 
