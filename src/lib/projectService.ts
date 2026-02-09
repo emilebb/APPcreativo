@@ -63,6 +63,7 @@ export const projectService = {
       if (supabase) {
       try {
         const projectData = {
+          id: crypto.randomUUID(),
           title: 'Sin título',
           user_id: userId,
           type,
@@ -71,19 +72,29 @@ export const projectService = {
 
         console.log('Attempting Supabase insert with data:', projectData);
         
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('projects')
-          .insert([projectData])
-          .select();
+          .insert([projectData]);
 
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          console.log('Supabase success:', data[0]);
-          return data[0];
+        if (error) {
+          console.error("Insert failed:", error);
+          throw error;
         }
         
-        throw new Error('No data returned from Supabase');
+        console.log("Insert OK");
+        
+        // Return the project with the ID we generated
+        const createdProject: Project = {
+          id: projectData.id,
+          title: projectData.title,
+          user_id: projectData.user_id,
+          type: projectData.type,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        return createdProject;
       } catch (supabaseError) {
         console.log('Supabase failed, using localStorage fallback:', supabaseError);
       }

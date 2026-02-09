@@ -75,7 +75,7 @@ export default function Sidebar() {
       router.push(routes[type])
     } catch (error) {
       console.error('Error creating project:', error)
-      alert('Error al crear proyecto: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      alert('No se pudo crear el proyecto: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setLoading(false)
       creatingRef.current = false;
