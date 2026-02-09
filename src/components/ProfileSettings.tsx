@@ -1,14 +1,13 @@
 "use client"
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
-import { createClient } from "@/lib/supabaseBrowser"
+import { supabase } from "@/lib/supabaseBrowser"
 import { Sun, Moon, Sparkles, Zap, Coffee } from "lucide-react"
 
 export default function ProfileSettings({ userId }: { userId: string }) {
   const { theme, setTheme } = useTheme()
   const [pace, setPace] = useState('calm')
   const [saving, setSaving] = useState(false)
-  const supabase = createClient()
 
   useEffect(() => {
     // Cargar preferencias actuales del usuario
