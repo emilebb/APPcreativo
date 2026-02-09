@@ -59,7 +59,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Error getting session:", error);
+        setLoading(false);
+        return;
+      }
+      
       setSession(session);
       setLoading(false);
 
@@ -72,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
       setSession(session);
 
       if (event === "SIGNED_IN" && session?.user) {

@@ -49,11 +49,11 @@ export default function Sidebar({ user }: { user: any | null }) {
       <div className="pt-4 border-t dark:border-zinc-800 mt-auto flex items-center gap-2">
         <Link href="/settings" className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
           <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-base font-bold text-white shadow-inner">
-            {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+            {user?.email?.[0]?.toUpperCase() || 'U'}
           </div>
           <div className="flex flex-col overflow-hidden">
             <span className="text-base font-bold truncate">
-              {user?.name || (user?.email ? user.email.split('@')[0] : 'Usuario')}
+              {user?.email ? user.email.split('@')[0] : 'Usuario'}
             </span>
             <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">PLUS</span>
             {user?.email && (
