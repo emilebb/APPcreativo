@@ -24,11 +24,23 @@ export default function Sidebar({ user }: { user: any | null }) {
   ]
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className={`flex flex-col h-full ${isMobile ? '' : 'p-3'} bg-[#f9f9f9] dark:bg-[#171717]`}>
+    <div className={`flex flex-col h-full ${isMobile ? 'p-4' : 'p-3'} bg-[#f9f9f9] dark:bg-[#171717]`}>
+      {/* Mobile Close Button */}
+      {isMobile && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+          >
+            <X size={20} className="text-zinc-600 dark:text-zinc-400" />
+          </button>
+        </div>
+      )}
+
       {/* Botón Nuevo Proyecto */}
       <Link 
         href="/projects/new" 
-        className={`flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-zinc-800 border dark:border-zinc-700 hover:shadow-sm transition-all ${isMobile ? 'mb-4' : 'mb-6'}`}
+        className={`flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-zinc-800 border dark:border-zinc-700 hover:shadow-sm transition-all ${isMobile ? 'mb-6' : 'mb-6'}`}
         onClick={() => isMobile && setIsMobileMenuOpen(false)}
       >
         <Plus size={18} className="text-zinc-500" />
@@ -36,7 +48,7 @@ export default function Sidebar({ user }: { user: any | null }) {
       </Link>
 
       {/* Navegación Principal */}
-      <div className={`space-y-1 ${isMobile ? 'mb-4' : 'mb-8'}`}>
+      <div className={`space-y-1 ${isMobile ? 'mb-6' : 'mb-8'}`}>
         {navigationItems.filter(item => !item.mobileOnly || isMobile).map((item) => (
           <SidebarItem 
             key={item.href}
@@ -60,7 +72,7 @@ export default function Sidebar({ user }: { user: any | null }) {
       )}
 
       {/* Perfil de Usuario */}
-      <div className={`pt-4 border-t dark:border-zinc-800 mt-auto flex items-center gap-2 ${isMobile ? 'px-3' : ''}`}>
+      <div className={`pt-4 border-t dark:border-zinc-800 mt-auto flex items-center gap-2 ${isMobile ? 'px-0' : 'px-3'}`}>
         <Link 
           href="/settings" 
           className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
@@ -111,9 +123,9 @@ export default function Sidebar({ user }: { user: any | null }) {
 
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="md:hidden fixed inset-0 z-40 bg-black/60" onClick={() => setIsMobileMenuOpen(false)}>
           <div 
-            className="w-80 h-full bg-[#f9f9f9] dark:bg-[#171717]" 
+            className="w-72 h-full bg-[#f9f9f9] dark:bg-[#171717] shadow-2xl" 
             onClick={(e) => e.stopPropagation()}
           >
             <SidebarContent isMobile />
@@ -129,13 +141,13 @@ function SidebarItem({ href, icon, label, active = false, truncate = false, onCl
     <Link 
       href={href} 
       onClick={onClick}
-      className={`flex items-center gap-3 w-full p-2.5 rounded-lg transition-all ${
+      className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all ${
         active 
           ? 'bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white' 
           : 'hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400'
       }`}
     >
-      <span>{icon}</span>
+      <span className="flex-shrink-0">{icon}</span>
       <span className={`text-sm font-medium ${truncate ? 'truncate' : ''}`}>{label}</span>
     </Link>
   )
