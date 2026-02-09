@@ -18,6 +18,7 @@ export default function Sidebar({ user }: { user: any | null }) {
       </Link>
 
       {/* 2-5. Herramientas Creativas */}
+      {/* Updated for Vercel deployment */}
       <div className="space-y-1 mb-8">
         <SidebarItem 
           href="/search" icon={<Search size={18}/>} 
