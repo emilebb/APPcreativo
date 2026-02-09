@@ -2,73 +2,56 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authProvider";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function AuthPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      alert("Por favor ingresa email y contraseña");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      // For demo purposes, create a mock session
-      // In production, this would use real Supabase auth
-      const mockUser = {
-        id: 'demo-user-id',
-        email: email,
-        user_metadata: {
-          name: email.split('@')[0]
-        }
-      };
-      
-      // Mock successful sign in
-      alert(`¡Bienvenido ${email}! (Modo Demo)`);
-      
-      // Redirect to home after successful login
-      setTimeout(() => {
-        router.push('/');
-      }, 1000);
-      
-    } catch (error) {
-      console.error("Error signing in:", error);
-      alert("Error al iniciar sesión. Intenta nuevamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDemoLogin = () => {
-    setLoading(true);
-    
-    // Create a mock session in localStorage
-    const mockUser = {
+    const demoUser = {
       id: 'demo-user-id',
-      email: 'demo@creativex.com',
+      email: email || 'demo@creativex.com',
       user_metadata: {
-        name: 'Demo User'
+        name: email.split('@')[0] || 'Demo User'
       }
     };
     
-    // Store mock session
-    localStorage.setItem('demo-session', JSON.stringify(mockUser));
-    
-    alert('¡Modo Demo Activado! Podrás crear proyectos.');
-    
-    setTimeout(() => {
-      router.push('/');
-      setLoading(false);
-    }, 1000);
+    localStorage.setItem('auth-session', JSON.stringify(demoUser));
+    alert(`¡Bienvenido ${demoUser.email}! (Modo Demo)`);
+    router.push("/");
+  };
+
+  const handleSupabaseLogin = async () => {
+    setIsLoading(true);
+    try {
+      // Try to import and use Supabase
+      const supabaseModule = await import("@/lib/supabaseClient");
+      const supabase = supabaseModule.supabase;
+      
+      if (supabase) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: "demo123"
+        });
+
+        if (error) {
+          alert("Error de Supabase: " + error.message);
+        } else if (data.user) {
+          localStorage.setItem('auth-session', JSON.stringify(data.user));
+          alert("¡Login exitoso con Supabase!");
+          router.push("/");
+        }
+      } else {
+        alert("Supabase no está configurado. Usa el modo demo.");
+      }
+    } catch (err) {
+      alert("Error: " + err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -76,7 +59,7 @@ export default function AuthPage() {
       <div className="w-full max-w-md">
         <Link
           href="/"
-          className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white mb-8 transition"
+          className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver al inicio
@@ -85,14 +68,14 @@ export default function AuthPage() {
         <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
-              CreationX Demo
+              Iniciar Sesión
             </h1>
             <p className="text-neutral-600 dark:text-neutral-400">
-              Acceso rápido para probar la aplicación
+              Accede a tu cuenta CreationX
             </p>
           </div>
 
-          <form onSubmit={handleSignIn} className="space-y-6">
+          <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 Email
@@ -104,84 +87,38 @@ export default function AuthPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
                 placeholder="tu@email.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
-                placeholder="•••••••••"
-                required
               />
             </div>
 
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              onClick={handleSupabaseLogin}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition mb-3"
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Iniciando sesión...
+                  Conectando con Supabase...
                 </>
               ) : (
-                <>
-                  Iniciar Sesión
-                </>
+                "🔐 Login con Supabase"
               )}
             </button>
-          </form>
 
-          <div className="mt-6 text-center">
             <button
               onClick={handleDemoLogin}
-              disabled={loading}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium transition"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              🚀 Entrar en Modo Demo
+              <span className="text-lg">🎨</span>
+              Modo Demo (Sin Supabase)
             </button>
           </div>
 
-          <div className="mt-4 text-center">
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Modo Demo: Crea proyectos sin necesidad de cuenta real
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            <button
-              onClick={handleDemoLogin}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Activando modo demo...
-                </>
-              ) : (
-                <>
-                  🚀 Activar Modo Demo
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
-              Modo Demo: Crea proyectos sin necesidad de cuenta real
-            </p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Podrás crear moodboards, mapas mentales y pizarras
+          <div className="mt-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
+            <p>
+              <strong>Modo Demo:</strong> Usa cualquier email para probar la aplicación.<br/>
+              <strong>Supabase:</strong> Usa tu email real y contraseña "demo123".
             </p>
           </div>
         </div>
