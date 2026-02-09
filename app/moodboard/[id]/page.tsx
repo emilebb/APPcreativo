@@ -21,10 +21,11 @@ interface Moodboard {
   tags: string[];
   created_at: string;
   updated_at: string;
-  color_palette?: string[];
+  category: string;
   is_public?: boolean;
   likes?: number;
   is_liked?: boolean;
+  color_palette?: string[];
 }
 
 export default function MoodboardDetailPage() {
@@ -105,7 +106,7 @@ export default function MoodboardDetailPage() {
       setMoodboard(prev => prev ? {
         ...prev,
         is_liked: !prev.is_liked,
-        likes: prev.is_liked ? prev.likes - 1 : prev.likes + 1
+        likes: (prev.likes || 0) + (prev.is_liked ? -1 : 1)
       } : null);
     } catch (error) {
       console.error("Error liking moodboard:", error);
