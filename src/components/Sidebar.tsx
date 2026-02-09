@@ -38,11 +38,17 @@ export default function Sidebar({ user }: { user: any | null }) {
   }
 
   const handleCreateProject = async (type: Project['type'] = 'canvas') => {
-    console.log('handleCreateProject called', { type });
+    console.log('handleCreateProject called', { type, userId: user?.id });
     
+    if (!user?.id) {
+      console.log('No user found, redirecting to auth');
+      router.push('/auth');
+      return;
+    }
+
     try {
       console.log('Creating project with type:', type);
-      const newProject = await projectService.createProject('demo-user-id', type);
+      const newProject = await projectService.createProject(user.id, type);
       console.log('Project created successfully:', newProject);
       
       setIsMobileMenuOpen(false);
