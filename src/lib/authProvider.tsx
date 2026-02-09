@@ -53,28 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for demo session first
-    const demoSession = localStorage.getItem('demo-session');
-    if (demoSession) {
-      try {
-        const demoUser = JSON.parse(demoSession);
-        // Create a mock session object
-        const mockSession = {
-          user: demoUser,
-          access_token: 'demo-token',
-          refresh_token: 'demo-refresh',
-          expires_at: Date.now() / 1000 + 3600, // 1 hour from now
-          expires_in: 3600
-        } as Session;
-        
-        setSession(mockSession);
-        setLoading(false);
-        return;
-      } catch (error) {
-        console.error("Error parsing demo session:", error);
-      }
-    }
-
     if (!supabase) {
       setLoading(false);
       return;
