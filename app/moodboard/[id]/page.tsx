@@ -59,6 +59,7 @@ export default function MoodboardDetailPage() {
         id: moodboardId,
         title: "Verano 2024",
         description: "Una colección vibrante de colores y energía solar para proyectos de verano. Inspirada en atardeceres, playas y la calidez del mediodía estival.",
+        category: "verano",
         images: [
           {
             id: "1",
