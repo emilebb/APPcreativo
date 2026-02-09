@@ -1,17 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Try environment variables first, then localStorage fallback
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
-                      typeof window !== 'undefined' && localStorage.getItem('temp-supabase-url');
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
-                          typeof window !== 'undefined' && localStorage.getItem('temp-supabase-key');
+// Use the provided Supabase credentials directly
+const supabaseUrl = "https://ttxxxbkeqvaourawxipg.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0eHh4YmtlcXZhb3VyYXd4aXBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0Mzg5MTksImV4cCI6MjA4NjAxNDkxOX0.Kqcqa2Zb4RuMjJ_mrgykEnTVZM9VdHKAMCEiuG1MEs8";
 
-console.log('Supabase config:', { supabaseUrl, supabaseAnonKey });
+console.log('Using hardcoded Supabase config:', { supabaseUrl: supabaseUrl.substring(0, 20) + '...' });
 
-export const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export { createClient };
 
