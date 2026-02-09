@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
-import { supabase } from "@/lib/supabaseBrowser"
+import { supabase } from "@/lib/supabaseClient"
 import { Sun, Moon, Sparkles, Zap, Coffee } from "lucide-react"
 
 export default function ProfileSettings({ userId }: { userId: string }) {

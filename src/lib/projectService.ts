@@ -1,8 +1,11 @@
-import { supabase } from './supabaseBrowser';
+import { supabase } from './supabaseClient';
 
 // Debug environment variables
 console.log("SUPABASE_URL", process.env.NEXT_PUBLIC_SUPABASE_URL);
 console.log("ANON length", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length);
+
+// Global guard against double creation
+let creating = false;
 
 export interface Project {
   id: string;
@@ -18,16 +21,25 @@ export interface Project {
 // Project Services
 export const projectService = {
   async createProject(userId: string, type: Project['type'] = 'canvas'): Promise<Project> {
-    // Verify session first
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log("session?", !!session, session?.user?.id);
-    
-    if (!session) {
-      console.error("No active session - using localStorage fallback");
+    // Global guard against double creation
+    if (creating) {
+      // Return a fallback project if already creating
+      const fallbackProject: Project = {
+        id: Date.now().toString(),
+        title: 'Sin título',
+        user_id: userId,
+        type,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      return fallbackProject;
     }
+    creating = true;
 
-    // Try Supabase first, then fallback to localStorage
-    if (supabase && session) {
+    try {
+      // Try Supabase first, then fallback to localStorage
+      if (supabase) {
       try {
         const projectData = {
           title: 'Sin título',
@@ -77,6 +89,9 @@ export const projectService = {
     
     console.log('Project created with localStorage fallback:', newProject);
     return newProject;
+    } finally {
+      creating = false;
+    }
   },
 
   async getProjects(userId: string, limit: number = 5): Promise<Project[]> {
