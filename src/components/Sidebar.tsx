@@ -56,22 +56,26 @@ export default function Sidebar() {
     try {
       console.log('Creating project with type:', type, 'for userId:', userId)
       
-      const project = await projectService.createProject(userId, type)
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout creating project')), 10000)
+      })
       
-      if (project) {
-        console.log('Project created successfully:', project)
-        
-        const routes = {
-          canvas: `/canvas/${project.id}`,
-          moodboard: `/moodboard/${project.id}`,
-          mindmap: `/mindmap/${project.id}`
-        }
-        
-        router.push(routes[type])
+      const projectPromise = projectService.createProject(userId, type)
+      const project = await Promise.race([projectPromise, timeoutPromise]) as Project
+      
+      console.log('Project created successfully:', project)
+      
+      const routes = {
+        canvas: `/canvas/${project.id}`,
+        moodboard: `/moodboard/${project.id}`,
+        mindmap: `/mindmap/${project.id}`
       }
+      
+      router.push(routes[type])
     } catch (error) {
       console.error('Error creating project:', error)
-      alert('Error al crear proyecto')
+      alert('Error al crear proyecto: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setLoading(false)
     }

@@ -29,12 +29,11 @@ export const projectService = {
         const { data, error } = await supabase
           .from('projects')
           .insert([projectData])
-          .select()
-          .single();
+          .select();
 
-        if (!error && data) {
-          console.log('Supabase success:', data);
-          return data;
+        if (!error && data && data.length > 0) {
+          console.log('Supabase success:', data[0]);
+          return data[0];
         }
         
         console.log('Supabase error, falling back to localStorage:', error);
@@ -44,6 +43,7 @@ export const projectService = {
     }
 
     // Fallback to localStorage
+    console.log('Creating project with localStorage fallback for userId:', userId);
     const projects = JSON.parse(localStorage.getItem('projects') || '[]');
     const newProject: Project = {
       id: Date.now().toString(),
