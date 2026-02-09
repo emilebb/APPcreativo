@@ -1,14 +1,24 @@
-"use client"
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/authProvider";
 import { 
-  Plus, Search, Image as ImageIcon, GitGraph, PencilRuler, 
-  FolderPlus, Folder, MessageSquare, UserCircle, Settings,
-  Menu, X, Home
-} from "lucide-react"
-import { useAuth } from "@/lib/authProvider"
-import { projectService, type Project } from "@/lib/projectService"
+  Home, 
+  Search, 
+  Plus, 
+  Settings, 
+  Palette, 
+  Brain, 
+  Layers, 
+  Sparkles,
+  Folder,
+  X,
+  Menu
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { projectService, type Project } from "@/lib/projectService";
 
 export default function Sidebar({ user }: { user: any | null }) {
   const pathname = usePathname()
@@ -18,210 +28,150 @@ export default function Sidebar({ user }: { user: any | null }) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (user?.id) {
-      loadProjects()
+    const loadProjects = async () => {
+      if (user?.id) {
+        try {
+          const userProjects = await projectService.getProjects(user.id)
+          setProjects(userProjects)
+        } catch (error) {
+          console.error('Error loading projects:', error)
+        }
+      }
     }
+
+    loadProjects()
   }, [user])
 
-  const loadProjects = async () => {
-    if (!user?.id) return
-    
+  const handleCreateProject = async (type: 'canvas' | 'moodboard' | 'mindmap') => {
+    if (!user) {
+      alert('Por favor inicia sesión para crear proyectos')
+      return
+    }
+
+    setLoading(true)
     try {
-      setLoading(true)
-      const userProjects = await projectService.getProjects(user.id)
-      setProjects(userProjects)
+      console.log('Creating project with type:', type, 'for userId:', user.id)
+      
+      const project = await projectService.createProject(user.id, type)
+      
+      if (project) {
+        console.log('Project created successfully:', project)
+        
+        const routes = {
+          canvas: `/canvas/${project.id}`,
+          moodboard: `/moodboard/${project.id}`,
+          mindmap: `/mindmap/${project.id}`
+        }
+        
+        router.push(routes[type])
+      }
     } catch (error) {
-      console.error('Error loading projects:', error)
+      console.error('Error creating project:', error)
+      alert('Error al crear proyecto')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCreateProject = async (type: Project['type'] = 'canvas') => {
-    console.log('handleCreateProject called', { type, userId: user?.id, session: !!user });
-    
-    // Fallback: si no hay usuario real, usar un ID temporal
-    const userId = user?.id || 'temp-user-id';
-    
-    if (!user?.id) {
-      console.log('No user found, but proceeding with fallback ID');
-    }
-
-    try {
-      console.log('Creating project with type:', type, 'for userId:', userId);
-      const newProject = await projectService.createProject(userId, type);
-      console.log('Project created successfully:', newProject);
-      
-      setIsMobileMenuOpen(false);
-      
-      // Redirect based on project type
-      const redirectPath = type === 'moodboard' ? `/moodboard/${newProject.id}` :
-                        type === 'mindmap' ? `/mindmap/${newProject.id}` :
-                        type === 'canvas' ? `/canvas/${newProject.id}` :
-                        `/project/${newProject.id}`;
-      
-      console.log('Redirecting to:', redirectPath);
-      router.push(redirectPath);
-      
-      // Refresh projects list after creation
-      loadProjects();
-    } catch (error) {
-      console.error('Error creating project:', error);
-      alert('Error al crear proyecto. Intenta nuevamente.');
-    }
-  }
-
-  const navigationItems = [
-    { href: "/", icon: <Home size={18} />, label: "Inicio", mobileOnly: false },
-    { href: "/search", icon: <Search size={18} />, label: "Buscar", mobileOnly: false },
-    { href: "/moodboard", icon: <ImageIcon size={18} />, label: "Moodboards", mobileOnly: false },
-    { href: "/mindmap", icon: <GitGraph size={18} />, label: "Mapas Mentales", mobileOnly: false },
-    { href: "/canvas", icon: <PencilRuler size={18} />, label: "Pizarra", mobileOnly: false },
-    { href: "/project/app", icon: <Folder size={18} />, label: "App RBR", mobileOnly: true },
-    { href: "/project/tiktok", icon: <Folder size={18} />, label: "TikTok", mobileOnly: true },
-    { href: "/chat/bloqueo", icon: <MessageSquare size={18} />, label: "Creative Coach", mobileOnly: true },
+  const navigation = [
+    { name: 'Inicio', href: '/', icon: Home },
+    { name: 'Explorar', href: '/explore', icon: Search },
+    { name: 'Canvas', href: '/canvas', icon: Palette },
+    { name: 'Moodboard', href: '/moodboard', icon: Layers },
+    { name: 'Mindmap', href: '/mindmap', icon: Brain },
+    { name: 'Configuración', href: '/settings', icon: Settings },
   ]
-
-  const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className={`flex flex-col h-full ${isMobile ? 'p-4' : 'p-3'} bg-[#f9f9f9] dark:bg-[#171717]`}>
-      {/* Mobile Close Button */}
-      {isMobile && (
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-          >
-            <X size={20} className="text-zinc-600 dark:text-zinc-400" />
-          </button>
-        </div>
-      )}
-
-      {/* Botón Nuevo Proyecto */}
-      <button 
-        onClick={() => {
-          console.log('Button clicked!');
-          handleCreateProject();
-        }}
-        className={`flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-zinc-800 border dark:border-zinc-700 hover:shadow-sm transition-all ${isMobile ? 'mb-6' : 'mb-6'}`}
-      >
-        <Plus size={18} className="text-zinc-500" />
-        <span className="text-sm font-semibold">Nuevo Proyecto</span>
-      </button>
-
-      {/* Navegación Principal */}
-      <div className={`space-y-1 ${isMobile ? 'mb-6' : 'mb-8'}`}>
-        {navigationItems.filter(item => !item.mobileOnly || isMobile).map((item) => (
-          <SidebarItem 
-            key={item.href}
-            href={item.href} 
-            icon={item.icon} 
-            label={item.label} 
-            active={pathname === item.href || (item.href !== '/' && pathname.includes(item.href))}
-            onClick={() => isMobile && setIsMobileMenuOpen(false)}
-          />
-        ))}
-      </div>
-
-      {/* Proyectos Recientes - Solo en desktop */}
-      {!isMobile && (
-        <div className="flex-1 overflow-y-auto">
-          <p className="px-3 text-[10px] font-bold text-zinc-500 mb-2 uppercase tracking-widest">
-            {loading ? 'Cargando...' : 'Tus Proyectos'}
-          </p>
-          {projects.length === 0 && !loading ? (
-            <p className="px-3 text-sm text-zinc-400">No hay proyectos aún</p>
-          ) : (
-            projects.map((project) => (
-              <SidebarItem 
-                key={project.id}
-                href={`/${project.type === 'canvas' ? 'canvas' : project.type}/${project.id}`} 
-                icon={<Folder size={18}/>} 
-                label={project.title} 
-                truncate 
-              />
-            ))
-          )}
-        </div>
-      )}
-
-      {/* Perfil de Usuario */}
-      <div className={`pt-4 border-t dark:border-zinc-800 mt-auto flex items-center gap-2 ${isMobile ? 'px-0' : 'px-3'}`}>
-        <Link 
-          href="/settings" 
-          className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-          onClick={() => isMobile && setIsMobileMenuOpen(false)}
-        >
-          <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-base font-bold text-white shadow-inner">
-            {user?.email?.[0]?.toUpperCase() || 'U'}
-          </div>
-          {!isMobile && (
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-base font-bold truncate">
-                {user?.email ? user.email.split('@')[0] : 'Usuario'}
-              </span>
-              <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">PLUS</span>
-              {user?.email && (
-                <span className="text-[10px] text-zinc-400 truncate">{user.email}</span>
-              )}
-            </div>
-          )}
-        </Link>
-        <Link 
-          href="/settings" 
-          className="p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-          onClick={() => isMobile && setIsMobileMenuOpen(false)}
-        >
-          <Settings size={22} className="text-zinc-400" />
-        </Link>
-      </div>
-    </div>
-  )
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-3 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 hover:shadow-sm transition-all"
-        >
-          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700"
+      >
+        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-[260px] h-full flex-col border-r dark:border-zinc-800">
-        <SidebarContent />
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 z-40 w-72 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700
+        transform transition-transform duration-200 ease-in-out
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <div className="flex flex-col h-full">
+          <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-neutral-900 dark:text-white">CreationX</h1>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Plataforma Creativa</p>
+              </div>
+            </div>
+          </div>
+
+          <nav className="flex-1 p-4 space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`
+                    flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${isActive 
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' 
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                    }
+                  `}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.name}
+                </Link>
+              )
+            })}
+          </nav>
+
+          <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
+            <button
+              onClick={() => handleCreateProject('canvas')}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo Proyecto
+            </button>
+          </div>
+
+          {projects.length > 0 && (
+            <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
+              <h3 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">
+                Proyectos Recientes
+              </h3>
+              <div className="space-y-2">
+                {projects.slice(0, 5).map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/canvas/${project.id}`}
+                    className="flex items-center gap-2 p-2 rounded-lg text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Folder className="w-4 h-4" />
+                    <span className="truncate">{project.title}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </aside>
 
-      {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/60" onClick={() => setIsMobileMenuOpen(false)}>
-          <div 
-            className="w-72 h-full bg-[#f9f9f9] dark:bg-[#171717] shadow-2xl" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <SidebarContent isMobile />
-          </div>
-        </div>
+        <div
+          className="lg:hidden fixed inset-0 z-30 bg-black/50"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
       )}
     </>
-  )
-}
-
-function SidebarItem({ href, icon, label, active = false, truncate = false, onClick }: any) {
-  return (
-    <Link 
-      href={href} 
-      onClick={onClick}
-      className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all ${
-        active 
-          ? 'bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white' 
-          : 'hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400'
-      }`}
-    >
-      <span className="flex-shrink-0">{icon}</span>
-      <span className={`text-sm font-medium ${truncate ? 'truncate' : ''}`}>{label}</span>
-    </Link>
   )
 }
