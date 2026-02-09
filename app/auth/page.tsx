@@ -7,7 +7,6 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function AuthPage() {
-  const { session, signIn } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -50,6 +49,9 @@ export default function AuthPage() {
   };
 
   const handleDemoLogin = () => {
+    setLoading(true);
+    
+    // Create a mock session in localStorage
     const mockUser = {
       id: 'demo-user-id',
       email: 'demo@creativex.com',
@@ -58,8 +60,15 @@ export default function AuthPage() {
       }
     };
     
-    alert('¡Modo Demo Activado!');
-    router.push('/');
+    // Store mock session
+    localStorage.setItem('demo-session', JSON.stringify(mockUser));
+    
+    alert('¡Modo Demo Activado! Podrás crear proyectos.');
+    
+    setTimeout(() => {
+      router.push('/');
+      setLoading(false);
+    }, 1000);
   };
 
   return (
@@ -76,10 +85,10 @@ export default function AuthPage() {
         <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
-              Iniciar Sesión
+              CreationX Demo
             </h1>
             <p className="text-neutral-600 dark:text-neutral-400">
-              Accede a tu cuenta de CreationX
+              Acceso rápido para probar la aplicación
             </p>
           </div>
 
@@ -135,6 +144,7 @@ export default function AuthPage() {
           <div className="mt-6 text-center">
             <button
               onClick={handleDemoLogin}
+              disabled={loading}
               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium transition"
             >
               🚀 Entrar en Modo Demo
@@ -144,6 +154,34 @@ export default function AuthPage() {
           <div className="mt-4 text-center">
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
               Modo Demo: Crea proyectos sin necesidad de cuenta real
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <button
+              onClick={handleDemoLogin}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Activando modo demo...
+                </>
+              ) : (
+                <>
+                  🚀 Activar Modo Demo
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+              Modo Demo: Crea proyectos sin necesidad de cuenta real
+            </p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Podrás crear moodboards, mapas mentales y pizarras
             </p>
           </div>
         </div>
