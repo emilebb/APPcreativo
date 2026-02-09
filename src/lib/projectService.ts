@@ -38,7 +38,28 @@ export const projectService = {
     creating = true;
 
     try {
-      // Try Supabase first, then fallback to localStorage
+      // Check if offline - use localStorage only if truly offline
+      if (!navigator.onLine) {
+        console.log('Browser is offline - using localStorage fallback');
+        const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+        const newProject: Project = {
+          id: Date.now().toString(),
+          title: 'Sin título',
+          user_id: userId,
+          type,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        projects.push(newProject);
+        localStorage.setItem('projects', JSON.stringify(projects));
+        
+        console.log('Project created with localStorage fallback (offline):', newProject);
+        return newProject;
+      }
+
+      // Try Supabase when online
       if (supabase) {
       try {
         const projectData = {
@@ -55,17 +76,14 @@ export const projectService = {
           .insert([projectData])
           .select();
 
-        if (!error && data && data.length > 0) {
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
           console.log('Supabase success:', data[0]);
           return data[0];
         }
         
-        console.error("Supabase error:", {
-          message: error?.message,
-          details: error?.details,
-          hint: error?.hint,
-          code: error?.code,
-        });
+        throw new Error('No data returned from Supabase');
       } catch (supabaseError) {
         console.log('Supabase failed, using localStorage fallback:', supabaseError);
       }

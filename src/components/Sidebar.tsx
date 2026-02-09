@@ -62,13 +62,7 @@ export default function Sidebar() {
     try {
       console.log('Creating project with type:', type, 'for userId:', userId)
       
-      // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('La conexión está tardando demasiado. Usando modo local...')), 5000)
-      })
-      
-      const projectPromise = projectService.createProject(userId, type)
-      const project = await Promise.race([projectPromise, timeoutPromise]) as Project
+      const project = await projectService.createProject(userId, type)
       
       console.log('Project created successfully:', project)
       
