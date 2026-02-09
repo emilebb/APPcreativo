@@ -36,14 +36,12 @@ export default async function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body>
         <Providers>
-          <div className="flex h-screen bg-white dark:bg-[#212121]">
+          <div className="flex h-screen bg-white dark:bg-[#212121] overflow-hidden">
             {/* Barra Lateral estilo ChatGPT */}
-            <aside className="w-[260px] h-full hidden md:flex flex-col border-r dark:border-zinc-800">
-              <Sidebar user={user} />
-            </aside>
+            <Sidebar user={user} />
 
             {/* Área de Contenido Principal */}
-            <main className="flex-1 flex flex-col relative overflow-hidden">
+            <main className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0">
               {children}
             </main>
           </div>

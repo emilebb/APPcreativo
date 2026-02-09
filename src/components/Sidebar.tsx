@@ -1,79 +1,134 @@
 "use client"
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { 
   Plus, Search, Image as ImageIcon, GitGraph, PencilRuler, 
-  FolderPlus, Folder, MessageSquare, UserCircle, Settings 
+  FolderPlus, Folder, MessageSquare, UserCircle, Settings,
+  Menu, X, Home
 } from "lucide-react"
 
 export default function Sidebar({ user }: { user: any | null }) {
   const pathname = usePathname()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  return (
-    <div className="flex flex-col h-full p-3 bg-[#f9f9f9] dark:bg-[#171717]">
-      {/* 1. Botón Nuevo Proyecto */}
-      <Link href="/projects/new" className="flex items-center gap-3 w-full p-3 rounded-lg bg-white dark:bg-zinc-800 border dark:border-zinc-700 hover:shadow-sm transition-all mb-6">
+  const navigationItems = [
+    { href: "/", icon: <Home size={18} />, label: "Inicio", mobileOnly: false },
+    { href: "/search", icon: <Search size={18} />, label: "Buscar", mobileOnly: false },
+    { href: "/moodboard", icon: <ImageIcon size={18} />, label: "Moodboards", mobileOnly: false },
+    { href: "/mindmap", icon: <GitGraph size={18} />, label: "Mapas Mentales", mobileOnly: false },
+    { href: "/canvas", icon: <PencilRuler size={18} />, label: "Pizarra", mobileOnly: false },
+    { href: "/project/app", icon: <Folder size={18} />, label: "App RBR", mobileOnly: true },
+    { href: "/project/tiktok", icon: <Folder size={18} />, label: "TikTok", mobileOnly: true },
+    { href: "/chat/bloqueo", icon: <MessageSquare size={18} />, label: "Creative Coach", mobileOnly: true },
+  ]
+
+  const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div className={`flex flex-col h-full ${isMobile ? '' : 'p-3'} bg-[#f9f9f9] dark:bg-[#171717]`}>
+      {/* Botón Nuevo Proyecto */}
+      <Link 
+        href="/projects/new" 
+        className={`flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-zinc-800 border dark:border-zinc-700 hover:shadow-sm transition-all ${isMobile ? 'mb-4' : 'mb-6'}`}
+        onClick={() => isMobile && setIsMobileMenuOpen(false)}
+      >
         <Plus size={18} className="text-zinc-500" />
         <span className="text-sm font-semibold">Nuevo Proyecto</span>
       </Link>
 
-      {/* 2-5. Herramientas Creativas */}
-      {/* Updated for Vercel deployment */}
-      <div className="space-y-1 mb-8">
-        <SidebarItem 
-          href="/search" icon={<Search size={18}/>} 
-          label="Buscar Inspiración" active={pathname === '/search'} 
-        />
-        <SidebarItem 
-          href="/moodboard" icon={<ImageIcon size={18}/>} 
-          label="Moodboards" active={pathname.includes('/moodboard')} 
-        />
-        <SidebarItem 
-          href="/mindmap" icon={<GitGraph size={18}/>} 
-          label="Mapas Mentales" active={pathname.includes('/mindmap')} 
-        />
-        <SidebarItem 
-          href="/canvas" icon={<PencilRuler size={18}/>} 
-          label="Pizarra Libre" active={pathname.includes('/canvas')} 
-        />
+      {/* Navegación Principal */}
+      <div className={`space-y-1 ${isMobile ? 'mb-4' : 'mb-8'}`}>
+        {navigationItems.filter(item => !item.mobileOnly || isMobile).map((item) => (
+          <SidebarItem 
+            key={item.href}
+            href={item.href} 
+            icon={item.icon} 
+            label={item.label} 
+            active={pathname === item.href || (item.href !== '/' && pathname.includes(item.href))}
+            onClick={() => isMobile && setIsMobileMenuOpen(false)}
+          />
+        ))}
       </div>
 
-      {/* 6. Proyectos Recientes (Dinámicos) */}
-      <div className="flex-1 overflow-y-auto">
-        <p className="px-3 text-[10px] font-bold text-zinc-500 mb-2 uppercase tracking-widest">Tus Proyectos</p>
-        <SidebarItem href="/project/app" icon={<Folder size={18}/>} label="App RBR" />
-        <SidebarItem href="/project/tiktok" icon={<Folder size={18}/>} label="Contenido TikTok" />
-        <SidebarItem href="/chat/bloqueo" icon={<MessageSquare size={18}/>} label="Creative Coach v1" truncate />
-      </div>
+      {/* Proyectos Recientes - Solo en desktop */}
+      {!isMobile && (
+        <div className="flex-1 overflow-y-auto">
+          <p className="px-3 text-[10px] font-bold text-zinc-500 mb-2 uppercase tracking-widest">Tus Proyectos</p>
+          <SidebarItem href="/project/app" icon={<Folder size={18}/>} label="App RBR" />
+          <SidebarItem href="/project/tiktok" icon={<Folder size={18}/>} label="Contenido TikTok" />
+          <SidebarItem href="/chat/bloqueo" icon={<MessageSquare size={18}/>} label="Creative Coach v1" truncate />
+        </div>
+      )}
 
-      {/* 7-8. Perfil de Usuario y engranaje (ambos clicables) */}
-      <div className="pt-4 border-t dark:border-zinc-800 mt-auto flex items-center gap-2">
-        <Link href="/settings" className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+      {/* Perfil de Usuario */}
+      <div className={`pt-4 border-t dark:border-zinc-800 mt-auto flex items-center gap-2 ${isMobile ? 'px-3' : ''}`}>
+        <Link 
+          href="/settings" 
+          className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+          onClick={() => isMobile && setIsMobileMenuOpen(false)}
+        >
           <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-base font-bold text-white shadow-inner">
             {user?.email?.[0]?.toUpperCase() || 'U'}
           </div>
-          <div className="flex flex-col overflow-hidden">
-            <span className="text-base font-bold truncate">
-              {user?.email ? user.email.split('@')[0] : 'Usuario'}
-            </span>
-            <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">PLUS</span>
-            {user?.email && (
-              <span className="text-[10px] text-zinc-400 truncate">{user.email}</span>
-            )}
-          </div>
+          {!isMobile && (
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-base font-bold truncate">
+                {user?.email ? user.email.split('@')[0] : 'Usuario'}
+              </span>
+              <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">PLUS</span>
+              {user?.email && (
+                <span className="text-[10px] text-zinc-400 truncate">{user.email}</span>
+              )}
+            </div>
+          )}
         </Link>
-        <Link href="/settings" className="p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+        <Link 
+          href="/settings" 
+          className="p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+          onClick={() => isMobile && setIsMobileMenuOpen(false)}
+        >
           <Settings size={22} className="text-zinc-400" />
         </Link>
       </div>
     </div>
   )
+
+  return (
+    <>
+      {/* Mobile Menu Button */}
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-3 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 hover:shadow-sm transition-all"
+        >
+          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-[260px] h-full flex-col border-r dark:border-zinc-800">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setIsMobileMenuOpen(false)}>
+          <div 
+            className="w-80 h-full bg-[#f9f9f9] dark:bg-[#171717]" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SidebarContent isMobile />
+          </div>
+        </div>
+      )}
+    </>
+  )
 }
 
-function SidebarItem({ href, icon, label, active = false, truncate = false }: any) {
+function SidebarItem({ href, icon, label, active = false, truncate = false, onClick }: any) {
   return (
     <Link 
       href={href} 
+      onClick={onClick}
       className={`flex items-center gap-3 w-full p-2.5 rounded-lg transition-all ${
         active 
           ? 'bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white' 

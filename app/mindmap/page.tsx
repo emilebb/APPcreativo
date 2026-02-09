@@ -23,21 +23,21 @@ export default function MindMapsPage() {
   ]);
 
   return (
-    <main className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">
+    <main className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
           Mapas Mentales
         </h1>
         <Link
           href="/mindmap/new"
-          className="flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition"
+          className="flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition text-sm sm:text-base"
         >
           <Plus className="w-4 h-4" />
           Nuevo Mapa Mental
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {mindMaps.map((mindMap) => (
           <Link
             key={mindMap.id}

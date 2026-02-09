@@ -332,7 +332,7 @@ export default function Canvas() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Toolbar */}
-        <div className="w-20 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-4 space-y-4">
+        <div className="w-16 sm:w-20 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-2 sm:p-4 space-y-2 sm:space-y-4">
           {/* Tools */}
           <div className="space-y-2">
             {tools.map(tool => (
@@ -376,17 +376,17 @@ export default function Canvas() {
         {/* Canvas Area */}
         <div className="flex-1 flex flex-col">
           {/* Color and Stroke Controls */}
-          <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4">
-            <div className="flex items-center gap-6">
+          <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-2 sm:p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
               {/* Colors */}
               <div className="flex items-center gap-2">
                 <Palette className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
                 <div className="flex gap-1">
-                  {colors.map(color => (
+                  {colors.slice(0, 6).map(color => (
                     <button
                       key={color}
                       onClick={() => setCurrentColor(color)}
-                      className={`w-6 h-6 rounded border-2 transition ${
+                      className={`w-5 h-5 sm:w-6 sm:h-6 rounded border-2 transition ${
                         currentColor === color
                           ? 'border-neutral-900 dark:border-white'
                           : 'border-neutral-300 dark:border-neutral-600'
@@ -399,22 +399,22 @@ export default function Canvas() {
                   type="color"
                   value={currentColor}
                   onChange={(e) => setCurrentColor(e.target.value)}
-                  className="w-6 h-6 border border-neutral-300 dark:border-neutral-600 rounded cursor-pointer"
+                  className="w-5 h-5 sm:w-6 sm:h-6 border border-neutral-300 dark:border-neutral-600 rounded cursor-pointer"
                 />
               </div>
 
               {/* Stroke Width */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-neutral-600 dark:text-neutral-400">Grosor:</span>
+                <span className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">Grosor:</span>
                 <input
                   type="range"
                   min="1"
                   max="20"
                   value={strokeWidth}
                   onChange={(e) => setStrokeWidth(Number(e.target.value))}
-                  className="w-24"
+                  className="w-16 sm:w-24"
                 />
-                <span className="text-sm text-neutral-600 dark:text-neutral-400 w-8">
+                <span className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 w-6 sm:w-8">
                   {strokeWidth}
                 </span>
               </div>
@@ -422,7 +422,7 @@ export default function Canvas() {
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 bg-white dark:bg-neutral-800 m-4 rounded-lg shadow-lg overflow-hidden">
+          <div className="flex-1 bg-white dark:bg-neutral-800 m-2 sm:m-4 rounded-lg shadow-lg overflow-hidden">
             <canvas
               ref={canvasRef}
               className="w-full h-full cursor-crosshair"
