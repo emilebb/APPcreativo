@@ -38,32 +38,32 @@ export default function Sidebar({ user }: { user: any | null }) {
   }
 
   const handleCreateProject = async (type: Project['type'] = 'canvas') => {
+    console.log('handleCreateProject called', { type, userId: user?.id });
+    
     if (!user?.id) {
-      router.push('/auth')
-      return
+      console.log('No user found, redirecting to auth');
+      router.push('/auth');
+      return;
     }
 
     try {
-      const newProject = await projectService.createProject(user.id, type)
-      setIsMobileMenuOpen(false)
+      console.log('Creating project with type:', type);
+      const newProject = await projectService.createProject(user.id, type);
+      console.log('Project created successfully:', newProject);
+      
+      setIsMobileMenuOpen(false);
       
       // Redirect based on project type
-      switch (type) {
-        case 'moodboard':
-          router.push(`/moodboard/${newProject.id}`)
-          break
-        case 'mindmap':
-          router.push(`/mindmap/${newProject.id}`)
-          break
-        case 'canvas':
-          router.push(`/canvas/${newProject.id}`)
-          break
-        default:
-          router.push(`/project/${newProject.id}`)
-      }
+      const redirectPath = type === 'moodboard' ? `/moodboard/${newProject.id}` :
+                        type === 'mindmap' ? `/mindmap/${newProject.id}` :
+                        type === 'canvas' ? `/canvas/${newProject.id}` :
+                        `/project/${newProject.id}`;
+      
+      console.log('Redirecting to:', redirectPath);
+      router.push(redirectPath);
     } catch (error) {
-      console.error('Error creating project:', error)
-      alert('Error al crear proyecto. Intenta nuevamente.')
+      console.error('Error creating project:', error);
+      alert('Error al crear proyecto. Intenta nuevamente.');
     }
   }
 
@@ -94,11 +94,25 @@ export default function Sidebar({ user }: { user: any | null }) {
 
       {/* Botón Nuevo Proyecto */}
       <button 
-        onClick={() => handleCreateProject()}
+        onClick={() => {
+          console.log('Button clicked!');
+          handleCreateProject();
+        }}
         className={`flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-zinc-800 border dark:border-zinc-700 hover:shadow-sm transition-all ${isMobile ? 'mb-6' : 'mb-6'}`}
       >
         <Plus size={18} className="text-zinc-500" />
         <span className="text-sm font-semibold">Nuevo Proyecto</span>
+      </button>
+
+      {/* Botón de prueba */}
+      <button 
+        onClick={() => {
+          console.log('Test button clicked!');
+          alert('Botón de prueba funciona!');
+        }}
+        className="flex items-center gap-3 p-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all mb-4"
+      >
+        <span className="text-sm font-semibold">🧪 Test</span>
       </button>
 
       {/* Navegación Principal */}
