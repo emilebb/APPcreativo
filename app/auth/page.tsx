@@ -32,14 +32,20 @@ export default function AuthPage() {
       const supabase = supabaseModule.supabase;
       
       if (supabase) {
+        // Use demo@creativex.com for testing
+        const loginEmail = email || 'demo@creativex.com';
+        console.log("Attempting Supabase login with:", loginEmail);
+        
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: email,
+          email: loginEmail,
           password: "demo123"
         });
 
         if (error) {
+          console.error("Supabase login error:", error);
           alert("Error de Supabase: " + error.message);
         } else if (data.user) {
+          console.log("Supabase login successful:", data.user.id);
           localStorage.setItem('auth-session', JSON.stringify(data.user));
           alert("¡Login exitoso con Supabase!");
           router.push("/");
@@ -48,6 +54,7 @@ export default function AuthPage() {
         alert("Supabase no está configurado. Usa el modo demo.");
       }
     } catch (err) {
+      console.error("Supabase login exception:", err);
       alert("Error: " + err);
     } finally {
       setIsLoading(false);
@@ -118,7 +125,10 @@ export default function AuthPage() {
           <div className="mt-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
             <p>
               <strong>Modo Demo:</strong> Usa cualquier email para probar la aplicación.<br/>
-              <strong>Supabase:</strong> Usa tu email real y contraseña "demo123".
+              <strong>Supabase:</strong> Usa "demo@creativex.com" y contraseña "demo123".
+            </p>
+            <p className="mt-2 text-xs">
+              Si el login falla, ejecuta el script CREATE_DEMO_USER.sql en tu Supabase.
             </p>
           </div>
         </div>
