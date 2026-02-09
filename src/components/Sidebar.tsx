@@ -107,17 +107,6 @@ export default function Sidebar({ user }: { user: any | null }) {
         <span className="text-sm font-semibold">Nuevo Proyecto</span>
       </button>
 
-      {/* Botón de prueba */}
-      <button 
-        onClick={() => {
-          console.log('Test button clicked!');
-          alert('Botón de prueba funciona!');
-        }}
-        className="flex items-center gap-3 p-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all mb-4"
-      >
-        <span className="text-sm font-semibold">🧪 Test</span>
-      </button>
-
       {/* Navegación Principal */}
       <div className={`space-y-1 ${isMobile ? 'mb-6' : 'mb-8'}`}>
         {navigationItems.filter(item => !item.mobileOnly || isMobile).map((item) => (
