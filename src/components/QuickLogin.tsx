@@ -126,6 +126,7 @@ export default function QuickLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
               className="w-full pl-7 pr-2 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
               placeholder="tu@email.com"
               required
