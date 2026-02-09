@@ -33,55 +33,31 @@ async function createProfileIfNeeded(userId: string, email: string | undefined) 
       await supabase.from("profiles").insert({
         id: userId,
         email: email || null,
-          avatar_color,
-        last_seen: new Date().toISOString(),
-      });
-    } else {
-      // Update last_seen
-      await supabase
-        .from("profiles")
-        .update({ last_seen: new Date().toISOString() })
-        .eq("id", userId);
-    }
-  } catch (error) {
-    console.error("Error managing profile:", error);
-  }
 }
 
+const AuthContext = createContext<AuthContextType>({
+  session: null,
+  loading: true
+});
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
+    // Check for existing session in localStorage
+    const storedSession = localStorage.getItem('auth-session');
+    if (storedSession) {
+      try {
+        const user = JSON.parse(storedSession);
+        setSession(user);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error parsing stored session:', error);
+      }
     }
 
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error("Error getting session:", error);
-        setLoading(false);
-        return;
-      }
-      
-      setSession(session);
-      setLoading(false);
-
-      if (session?.user) {
-        createProfileIfNeeded(session.user.id, session.user.email);
-      }
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
-      setSession(session);
-
-      if (event === "SIGNED_IN" && session?.user) {
+    setLoading(false);
         await createProfileIfNeeded(session.user.id, session.user.email);
         await migrateLocalToSupabase(session.user.id);
       }
