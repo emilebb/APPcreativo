@@ -55,6 +55,7 @@ export default function MoodboardDetailPage() {
       setLoading(true);
       
       // Simulación de carga - en producción vendría de una API
+      // Fixed: Added category property to resolve TypeScript error
       const mockMoodboard: Moodboard = {
         id: moodboardId,
         title: "Verano 2024",
