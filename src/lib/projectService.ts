@@ -1,5 +1,9 @@
 import { supabase } from './supabaseBrowser';
 
+// Debug environment variables
+console.log("SUPABASE_URL", process.env.NEXT_PUBLIC_SUPABASE_URL);
+console.log("ANON length", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length);
+
 export interface Project {
   id: string;
   title: string;
@@ -14,8 +18,16 @@ export interface Project {
 // Project Services
 export const projectService = {
   async createProject(userId: string, type: Project['type'] = 'canvas'): Promise<Project> {
+    // Verify session first
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log("session?", !!session, session?.user?.id);
+    
+    if (!session) {
+      console.error("No active session - using localStorage fallback");
+    }
+
     // Try Supabase first, then fallback to localStorage
-    if (supabase) {
+    if (supabase && session) {
       try {
         const projectData = {
           title: 'Sin título',
@@ -36,7 +48,12 @@ export const projectService = {
           return data[0];
         }
         
-        console.log('Supabase error, falling back to localStorage:', error);
+        console.error("Supabase error:", {
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code,
+        });
       } catch (supabaseError) {
         console.log('Supabase failed, using localStorage fallback:', supabaseError);
       }
@@ -79,7 +96,12 @@ export const projectService = {
           return data || [];
         }
         
-        console.log('Supabase error for getProjects, using localStorage:', error);
+        console.error("Supabase error for getProjects:", {
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code,
+        });
       } catch (supabaseError) {
         console.log('Supabase failed, using localStorage fallback:', supabaseError);
       }

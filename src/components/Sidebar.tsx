@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
 import { 
@@ -28,6 +28,7 @@ export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(false)
+  const creatingRef = useRef(false)
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -46,9 +47,14 @@ export default function Sidebar() {
   }, [user, session])
 
   const handleCreateProject = async (type: 'canvas' | 'moodboard' | 'mindmap') => {
+    // Guard against double creation
+    if (creatingRef.current) return;
+    creatingRef.current = true;
+    
     const userId = user?.id || session?.user?.id;
     if (!userId) {
       alert('Por favor inicia sesión para crear proyectos')
+      creatingRef.current = false;
       return
     }
 
@@ -78,6 +84,7 @@ export default function Sidebar() {
       alert('Error al crear proyecto: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setLoading(false)
+      creatingRef.current = false;
     }
   }
 
