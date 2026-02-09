@@ -20,7 +20,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { projectService, type Project } from "@/lib/projectService";
 
-export default function Sidebar({ user }: { user: any | null }) {
+export default function Sidebar() {
+  const { session } = useAuth();
+  const user = session?.user || null;
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -29,9 +31,10 @@ export default function Sidebar({ user }: { user: any | null }) {
 
   useEffect(() => {
     const loadProjects = async () => {
-      if (user?.id) {
+      const userId = user?.id || session?.user?.id;
+      if (userId) {
         try {
-          const userProjects = await projectService.getProjects(user.id)
+          const userProjects = await projectService.getProjects(userId)
           setProjects(userProjects)
         } catch (error) {
           console.error('Error loading projects:', error)
@@ -40,19 +43,20 @@ export default function Sidebar({ user }: { user: any | null }) {
     }
 
     loadProjects()
-  }, [user])
+  }, [user, session])
 
   const handleCreateProject = async (type: 'canvas' | 'moodboard' | 'mindmap') => {
-    if (!user) {
+    const userId = user?.id || session?.user?.id;
+    if (!userId) {
       alert('Por favor inicia sesión para crear proyectos')
       return
     }
 
     setLoading(true)
     try {
-      console.log('Creating project with type:', type, 'for userId:', user.id)
+      console.log('Creating project with type:', type, 'for userId:', userId)
       
-      const project = await projectService.createProject(user.id, type)
+      const project = await projectService.createProject(userId, type)
       
       if (project) {
         console.log('Project created successfully:', project)

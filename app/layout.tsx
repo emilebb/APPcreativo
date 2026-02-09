@@ -38,7 +38,7 @@ export default async function RootLayout({
         <Providers>
           <div className="flex h-screen bg-white dark:bg-[#212121] overflow-hidden">
             {/* Barra Lateral estilo ChatGPT */}
-            <Sidebar user={user} />
+            <Sidebar />
 
             {/* Área de Contenido Principal */}
             <main className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0">
