@@ -18,16 +18,24 @@ export function loadMemory(): SessionMemory {
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return {
-        lastBlockage: null,
-        successfulTechniques: [],
-        sessionCount: 0,
-        lastSession: null,
-      };
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) {
+        return {
+          lastBlockage: null,
+          successfulTechniques: [],
+          sessionCount: 0,
+          lastSession: null,
+        };
+      }
+      return JSON.parse(stored) as SessionMemory;
     }
-    return JSON.parse(stored) as SessionMemory;
+    return {
+      lastBlockage: null,
+      successfulTechniques: [],
+      sessionCount: 0,
+      lastSession: null,
+    };
   } catch {
     return {
       lastBlockage: null,
@@ -41,7 +49,9 @@ export function loadMemory(): SessionMemory {
 export function saveMemory(memory: SessionMemory) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(memory));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(memory));
+    }
   } catch {
     // Ignore storage errors
   }

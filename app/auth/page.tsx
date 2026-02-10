@@ -13,13 +13,15 @@ export default function AuthPage() {
   const handleDemoLogin = () => {
     const demoUser = {
       id: 'demo-user-id',
-      email: email || 'demo@creativex.com',
+      email: 'demo@creativex.com',
       user_metadata: {
-        name: email.split('@')[0] || 'Demo User'
+        name: 'Demo User'
       }
     };
     
-    localStorage.setItem('auth-session', JSON.stringify(demoUser));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth-session', JSON.stringify(demoUser));
+    }
     alert(`¡Bienvenido ${demoUser.email}! (Modo Demo)`);
     router.push("/");
   };
@@ -46,7 +48,9 @@ export default function AuthPage() {
           alert("Error de Supabase: " + error.message);
         } else if (data.user) {
           console.log("Supabase login successful:", data.user.id);
-          localStorage.setItem('auth-session', JSON.stringify(data.user));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('auth-session', JSON.stringify(data.user));
+          }
           alert("¡Login exitoso con Supabase!");
           router.push("/");
         }

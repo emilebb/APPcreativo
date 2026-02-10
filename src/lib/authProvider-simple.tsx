@@ -33,14 +33,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for existing session in localStorage
-    const storedSession = localStorage.getItem('auth-session');
-    if (storedSession) {
-      try {
-        const user = JSON.parse(storedSession);
-        setSession(user);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error parsing stored session:', error);
+    if (typeof window !== 'undefined') {
+      const storedSession = localStorage.getItem('auth-session');
+      if (storedSession) {
+        try {
+          const user = JSON.parse(storedSession);
+          setSession(user);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error parsing stored session:', error);
+          localStorage.removeItem('auth-session');
+        }
       }
     }
 
