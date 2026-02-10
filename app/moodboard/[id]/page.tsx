@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Heart, Share2, Download, Palette, Grid3X3, List, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/authProvider";
+import { ArrowLeft, Heart, Share2, Download, Palette, Grid3X3, List, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 interface MoodboardImage {
@@ -36,8 +36,15 @@ export default function MoodboardDetailPage() {
   
   const [moodboard, setMoodboard] = useState<Moodboard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUrl, setCurrentUrl] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "masonry">("grid");
   const [selectedImage, setSelectedImage] = useState<MoodboardImage | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
 
   useEffect(() => {
     if (!session) {
@@ -55,7 +62,6 @@ export default function MoodboardDetailPage() {
       setLoading(true);
       
       // Simulación de carga - en producción vendría de una API
-      // Fixed: Added category property to resolve TypeScript error
       const mockMoodboard: Moodboard = {
         id: moodboardId,
         title: "Verano 2024",
@@ -116,22 +122,25 @@ export default function MoodboardDetailPage() {
   };
 
   const handleShare = async () => {
-    if (navigator.share && moodboard) {
+    if (navigator.share && moodboard && currentUrl) {
       try {
         await navigator.share({
           title: moodboard.title,
           text: moodboard.description,
-          url: typeof window !== 'undefined' ? window.location.href : ''
+          url: currentUrl
         });
       } catch (error) {
-        console.log("Error sharing:", error);
-      } finally {
-        // Fallback: copiar al portapapeles
-        if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-          navigator.clipboard.writeText(window.location.href);
+        if (currentUrl && typeof navigator !== 'undefined') {
+          navigator.clipboard.writeText(currentUrl);
           alert("Enlace copiado al portapapeles");
         }
       }
+    }
+  };
+
+  const handleEdit = () => {
+    if (moodboard) {
+      router.push(`/moodboard/${moodboard.id}/edit`);
     }
   };
 
@@ -219,7 +228,7 @@ export default function MoodboardDetailPage() {
 
           <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-700 pl-2">
             <button
-              onClick={() => router.push(`/moodboard/${moodboard.id}/edit`)}
+              onClick={handleEdit}
               className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
             >
               <Edit className="w-4 h-4" />
