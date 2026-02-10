@@ -22,23 +22,20 @@ export default function ExplorePage() {
   const userId = useMemo(() => user?.id || null, [user?.id]);
 
   useEffect(() => {
-    console.log("🔍 Explore page - Auth state:", { user: !!user, loading, userId: user?.id });
+    console.log("🔍 Explore page - Auth state:", { user: !!user, loading, userId });
     
+    // Redirección si no hay usuario
     if (!loading && !user) {
       console.log("🔄 No user found, redirecting to login");
       router.replace("/login");
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
-    if (!userId) {
-      setLoadingProjects(false);
       return;
     }
 
-    // Si ya cargamos proyectos para este usuario, no recargar
-    if (projectsLoaded) {
-      console.log("📁 Projects already loaded for user:", userId);
+    // Si no hay userId o ya cargamos proyectos, no hacer nada
+    if (!userId || projectsLoaded) {
+      if (projectsLoaded) {
+        console.log("📁 Projects already loaded for user:", userId);
+      }
       return;
     }
 
@@ -71,7 +68,7 @@ export default function ExplorePage() {
     return () => {
       cancelled = true;
     };
-  }, [userId, projectsLoaded]); // ← Usa userId estabilizado
+  }, [loading, user, userId, projectsLoaded, router]); // ← Unificado y controlado
 
   if (loading || loadingProjects) return <div className="flex items-center justify-center min-h-screen"><p>Cargando sesión...</p></div>;
   if (!user) return null;
