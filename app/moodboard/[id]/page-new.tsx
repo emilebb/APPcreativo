@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { ArrowLeft, Heart, Share2, Download, Palette, Grid3X3, List, Edit } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/authProvider";
+import { ArrowLeft, Heart, Share2, Download, Palette, Grid3X3, List, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 interface MoodboardImage {
@@ -28,6 +29,8 @@ interface Moodboard {
 }
 
 export default function MoodboardDetailPage() {
+  const { session } = useAuth();
+  const router = useRouter();
   const params = useParams();
   const moodboardId = params.id as string;
   
@@ -35,12 +38,24 @@ export default function MoodboardDetailPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "masonry">("grid");
   const [selectedImage, setSelectedImage] = useState<MoodboardImage | null>(null);
+  const [currentUrl, setCurrentUrl] = useState("");
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      router.push("/");
+      return;
+    }
+
     if (moodboardId) {
       loadMoodboard();
     }
-  }, [moodboardId]);
+  }, [session, moodboardId]);
 
   const loadMoodboard = async () => {
     try {
@@ -107,20 +122,25 @@ export default function MoodboardDetailPage() {
   };
 
   const handleShare = async () => {
-    if (navigator.share && moodboard) {
+    if (navigator.share && moodboard && currentUrl) {
       try {
         await navigator.share({
           title: moodboard.title,
           text: moodboard.description,
-          url: window.location.href
+          url: currentUrl
         });
       } catch (error) {
-        console.log("Error sharing:", error);
+        if (currentUrl && typeof navigator !== 'undefined') {
+          navigator.clipboard.writeText(currentUrl);
+          alert("Enlace copiado al portapapeles");
+        }
       }
-    } else {
-      // Fallback: copiar al portapapeles
-      navigator.clipboard.writeText(window.location.href);
-      alert("Enlace copiado al portapapeles");
+    }
+  };
+
+  const handleEdit = () => {
+    if (moodboard) {
+      router.push(`/moodboard/${moodboard.id}/edit`);
     }
   };
 
@@ -166,27 +186,27 @@ export default function MoodboardDetailPage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto p-6 space-y-6">
+    <main className="max-w-6xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link
             href="/moodboard"
             className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">
+            <h1 className="text-xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
               {moodboard.title}
             </h1>
-            <p className="text-neutral-600 dark:text-neutral-400">
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
               Actualizado {formatDate(moodboard.updated_at)}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleLike}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg transition ${
@@ -208,7 +228,7 @@ export default function MoodboardDetailPage() {
 
           <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-700 pl-2">
             <button
-              onClick={() => window.location.href = `/moodboard/${moodboard.id}/edit`}
+              onClick={handleEdit}
               className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
             >
               <Edit className="w-4 h-4" />
@@ -252,7 +272,7 @@ export default function MoodboardDetailPage() {
       )}
 
       {/* Grid de imágenes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {moodboard.images.map((image) => (
           <div
             key={image.id}
