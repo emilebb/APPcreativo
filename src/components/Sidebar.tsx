@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/lib/authProvider";
 import { 
   Home, 
   Search, 
@@ -22,8 +22,7 @@ import { usePathname } from "next/navigation";
 import { projectService, type Project } from "@/lib/projectService";
 
 export default function Sidebar() {
-  const auth = useAuth();
-  const { user, loading: authLoading } = auth || { user: null, loading: true };
+  const { user, loading: authLoading } = useAuth();
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
