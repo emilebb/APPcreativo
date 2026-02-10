@@ -15,6 +15,7 @@ export default function ExplorePage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [projectsLoaded, setProjectsLoaded] = useState(false); // ← Nueva bandera
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -32,6 +33,12 @@ export default function ExplorePage() {
       return;
     }
 
+    // Si ya cargamos proyectos para este usuario, no recargar
+    if (projectsLoaded) {
+      console.log("📁 Projects already loaded for user:", user.id);
+      return;
+    }
+
     let cancelled = false;
 
     const loadProjects = async () => {
@@ -41,11 +48,13 @@ export default function ExplorePage() {
         console.log("📊 Projects loaded:", userProjects);
         if (!cancelled) {
           setProjects(userProjects);
+          setProjectsLoaded(true); // ← Marcar como cargado
         }
       } catch (error) {
         console.error("❌ Error loading projects:", error);
         if (!cancelled) {
           setProjects([]);
+          setProjectsLoaded(true);
         }
       } finally {
         if (!cancelled) {
@@ -59,7 +68,7 @@ export default function ExplorePage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user?.id, projectsLoaded]); // ← Incluir bandera en dependencias
 
   if (loading || loadingProjects) return <div className="flex items-center justify-center min-h-screen"><p>Cargando sesión...</p></div>;
   if (!user) return null;
