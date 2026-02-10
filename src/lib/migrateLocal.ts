@@ -73,38 +73,28 @@ export async function migrateLocalToSupabase(userId: string) {
             await new Promise(resolve => setTimeout(resolve, attempt * 1000));
           }
         } else {
-          throw error;
+          // Éxito: limpiar localStorage
+          localStorage.removeItem("current_week_v1");
+          
+          // Guardar registro de migración exitosa
+          const migrationLog = {
+            success: true,
+            userId,
+            dataKeys: Object.keys(data),
+            migratedAt: new Date().toISOString(),
+            attempts: attempt
+          }
         }
-      } else {
-        // Éxito: limpiar localStorage
-        localStorage.removeItem("current_week_v1");
+      } catch (error) {
+        lastError = error;
+        console.error(`❌ Migration attempt ${attempt} threw error:`, error);
         
-        // Guardar registro de migración exitosa
-        const migrationLog = {
-          success: true,
-          userId,
-          dataKeys: Object.keys(data),
-          migratedAt: new Date().toISOString(),
-          attempts: attempt
-        };
-        
-        localStorage.setItem("migration_log", JSON.stringify(migrationLog));
-        console.log("✅ Migration completed successfully:", migrationLog);
-        
-        // Notificar al usuario (opcional)
-        if (typeof window !== 'undefined' && window.dispatchEvent) {
-          window.dispatchEvent(new CustomEvent('migration-completed', {
-            detail: migrationLog
-          }));
+        if (attempt < maxRetries) {
+          console.log(`⏳ Retrying in ${attempt * 1000}ms...`);
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
         }
-        
-        return;
-      }
-    } catch (error) {
-      lastError = error;
-      console.error(`❌ Migration attempt ${attempt} threw error:`, error);
-      
-      if (attempt < maxRetries) {
+      } finally {
+        // Added finally block to fix syntax error
         console.log(`⏳ Retrying in ${attempt * 1000}ms...`);
         await new Promise(resolve => setTimeout(resolve, attempt * 1000));
       }
