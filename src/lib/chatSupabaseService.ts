@@ -165,6 +165,8 @@ export const chatSupabaseService = {
       .select("*")
       .eq("user_id", userId)
       .eq("memory_type", "session_stats")
+      .order("updated_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (error) {
