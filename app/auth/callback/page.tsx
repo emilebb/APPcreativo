@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -14,6 +14,7 @@ export default function AuthCallback() {
   useEffect(() => {
     async function handleCallback() {
       try {
+        const supabase = getSupabaseClient();
         if (!supabase) {
           setStatus("error");
           setMessage("Supabase no está configurado.");
@@ -36,7 +37,7 @@ export default function AuthCallback() {
             id: userData.user.id,
             email: userData.user.email,
             last_seen: new Date().toISOString()
-          });
+          } as any); // Use any type to avoid TypeScript errors
         }
 
         setStatus("success");
