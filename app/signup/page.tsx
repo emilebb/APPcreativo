@@ -37,10 +37,11 @@ export default function SignupPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`,
-          // Desactivar confirmación para desarrollo
+          emailRedirectTo: `${window.location.origin}/confirm-email`,
+          // Activar confirmación personalizada
           data: {
-            skip_email_verification: true
+            user_name: email.split('@')[0],
+            app_name: 'CreationX'
           }
         }
       });
@@ -49,23 +50,10 @@ export default function SignupPage() {
         setError(error.message);
       } else {
         setSuccess(true);
-        // Login automático después del registro
-        const { error: loginError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (!loginError) {
-          // Redirigir directamente a explore
-          setTimeout(() => {
-            router.push("/explore");
-          }, 1000);
-        } else {
-          // Si falla login, ir a login manual
-          setTimeout(() => {
-            router.push("/login");
-          }, 2000);
-        }
+        // Mostrar mensaje de confirmación requerida
+        setTimeout(() => {
+          router.push("/login");
+        }, 3000);
       }
     } catch (err) {
       setError("Error al crear cuenta. Inténtalo de nuevo.");
@@ -79,14 +67,21 @@ export default function SignupPage() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a12 12 0 0 1-.673.042L3 15.5a12 12 0 0 0 1 .673-.042L12 8l-7.89 4.26z"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 1 1-9 9 9 9 0 0 1-9-9"></path>
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Cuenta Creada!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Revisa tu Email!</h2>
             <p className="text-gray-600 mb-4">
-              Tu cuenta está lista. Serás redirigido automáticamente...
+              Hemos enviado un email de confirmación a <strong>{email}</strong>
+            </p>
+            <p className="text-sm text-gray-500 mb-4">
+              Revisa tu bandeja de entrada (y carpeta de spam) y haz click en el enlace de confirmación.
+            </p>
+            <p className="text-sm text-gray-600">
+              Serás redirigido al login automáticamente...
             </p>
           </div>
         </div>
