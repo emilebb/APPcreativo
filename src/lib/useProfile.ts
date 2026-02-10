@@ -21,6 +21,7 @@ export function useProfile(): UseProfileReturn {
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = async () => {
+    const supabase = getSupabaseClient();
     if (!supabase || !session?.user?.id) {
       setProfile(null);
       setLoading(false);
@@ -46,6 +47,7 @@ export function useProfile(): UseProfileReturn {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
+    const supabase = getSupabaseClient();
     if (!supabase || !session?.user?.id) {
       throw new Error("No hay sesión activa");
     }
