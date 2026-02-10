@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { projectService, type Project } from "@/lib/projectService";
 import { Search, Palette, Brain, Layers, Star, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import LogoutButton from "@/components/LogoutButton";
 
 export default function ExplorePage() {
   const { user, loading } = useAuth();
@@ -93,13 +94,16 @@ export default function ExplorePage() {
       
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-            Explorar Proyectos
-          </h2>
-          <p className="text-neutral-600 dark:text-neutral-400">
-            Descubre y gestiona todos tus proyectos creativos
-          </p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
+              Explorar Proyectos
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              Descubre y gestiona todos tus proyectos creativos
+            </p>
+          </div>
+          <LogoutButton />
         </div>
 
         {/* Search Bar */}
