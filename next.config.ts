@@ -5,8 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   // reactCompiler: true, // Disabled to fix SSR location errors
   experimental: {
-    optimizePackageImports: ['framer-motion', 'lucide-react'],
-    instrumentationHook: true, // Required for Sentry
+    optimizePackageImports: ['framer-motion', 'lucide-react']
   }
 };
 
