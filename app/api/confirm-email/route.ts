@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.auth.verifyOtp({
       token,
       type: 'signup',
+      email: '', // Email opcional para verifyOtp
     });
 
     if (error) {
