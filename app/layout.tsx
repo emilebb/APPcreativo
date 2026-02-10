@@ -3,6 +3,9 @@ import { Providers } from "@/components/Providers"
 import { AuthProvider } from "@/lib/authProvider";
 import "./globals.css"
 
+// Initialize Sentry on the client
+import "../sentry.client.config";
+
 export default function RootLayout({
   children,
 }: {
