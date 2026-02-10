@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -24,22 +25,39 @@ export default function ExplorePage() {
   }, [user, loading, router]);
 
   useEffect(() => {
+    if (!user?.id) {
+      setLoadingProjects(false);
+      return;
+    }
+
+    let cancelled = false;
+
     const loadProjects = async () => {
-      if (user?.id) {
+      try {
         console.log("📁 Loading projects for user:", user.id);
-        try {
-          const userProjects = await projectService.getProjects(user.id);
-          console.log("📊 Projects loaded:", userProjects);
+        const userProjects = await projectService.getProjects(user.id);
+        console.log("📊 Projects loaded:", userProjects);
+        if (!cancelled) {
           setProjects(userProjects);
-        } catch (error) {
-          console.error('❌ Error loading projects:', error);
+        }
+      } catch (error) {
+        console.error("❌ Error loading projects:", error);
+        if (!cancelled) {
+          setProjects([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingProjects(false);
         }
       }
-      setLoadingProjects(false);
     };
 
     loadProjects();
-  }, [user]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   if (loading || loadingProjects) return <div className="flex items-center justify-center min-h-screen"><p>Cargando sesión...</p></div>;
   if (!user) return null;
