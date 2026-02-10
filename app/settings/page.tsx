@@ -49,7 +49,7 @@ export default function SettingsPage() {
           <div className="text-red-600 mb-4">❌ Error al cargar configuración</div>
           <div className="text-neutral-600 text-sm mb-4">{profileError}</div>
           <button 
-            onClick={() => window.location.reload()}
+            onClick={() => router.refresh()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mr-2"
           >
             Reintentar
