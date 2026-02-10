@@ -50,9 +50,15 @@ export default function SettingsPage() {
           <div className="text-neutral-600 text-sm mb-4">{profileError}</div>
           <button 
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mr-2"
           >
             Reintentar
+          </button>
+          <button 
+            onClick={() => router.push("/")}
+            className="px-4 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700"
+          >
+            Inicio
           </button>
         </div>
       </main>
@@ -63,7 +69,18 @@ export default function SettingsPage() {
     return (
       <main className="mx-auto max-w-md p-8">
         <div className="text-center">
-          <div className="text-neutral-600">No se encontró el perfil</div>
+          <div className="text-neutral-600 mb-4">No se encontró el perfil de usuario</div>
+          <div className="text-neutral-500 text-sm mb-4">
+            {session ? "El perfil está siendo creado..." : "Debes iniciar sesión para acceder a la configuración"}
+          </div>
+          {!session && (
+            <button 
+              onClick={() => router.push("/")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Iniciar Sesión
+            </button>
+          )}
         </div>
       </main>
     );

@@ -22,8 +22,21 @@ export function useProfile(): UseProfileReturn {
 
   const fetchProfile = async () => {
     const supabase = getSupabaseClient();
-    if (!supabase || !session?.user?.id) {
-      console.log("🔍 No supabase client or session:", { supabase: !!supabase, session: !!session });
+    console.log("🔍 fetchProfile called:", { 
+      supabase: !!supabase, 
+      session: !!session,
+      userId: session?.user?.id 
+    });
+    
+    if (!supabase) {
+      console.log("❌ No supabase client available");
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    
+    if (!session?.user?.id) {
+      console.log("❌ No user session available - user not logged in");
       setProfile(null);
       setLoading(false);
       return;
