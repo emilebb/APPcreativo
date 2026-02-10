@@ -1,10 +1,8 @@
 import Sidebar from "@/components/Sidebar"
 import { Providers } from "@/components/Providers"
 import { AuthProvider } from "@/lib/authProvider";
+import { SentryInit } from "@/components/SentryInit";
 import "./globals.css"
-
-// Initialize Sentry on the client
-import "../sentry.client.config";
 
 export default function RootLayout({
   children,
@@ -18,6 +16,7 @@ export default function RootLayout({
         <meta name="description" content="Tu espacio creativo profesional para proyectos, moodboards y mindmaps" />
       </head>
       <body>
+        <SentryInit />
         <AuthProvider>
           <Providers>
             <div className="flex h-screen bg-white dark:bg-[#212121] overflow-hidden">
