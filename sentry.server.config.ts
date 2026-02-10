@@ -8,12 +8,4 @@ Sentry.init({
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
-
-  // Enable logs
-  enableLogs: true,
-
-  integrations: [
-    // Send console.log, console.warn, and console.error calls as logs to Sentry
-    Sentry.consoleIntegration({ levels: ["log", "warn", "error"] }),
-  ],
 });
