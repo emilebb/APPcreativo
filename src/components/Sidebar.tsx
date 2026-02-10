@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authProvider";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Home, 
   Search, 
@@ -21,8 +21,7 @@ import { usePathname } from "next/navigation";
 import { projectService, type Project } from "@/lib/projectService";
 
 export default function Sidebar() {
-  const { session } = useAuth();
-  const user = session?.user || null;
+  const { user, loading: authLoading } = useAuth();
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -34,10 +33,9 @@ export default function Sidebar() {
     let mounted = true;
 
     const loadProjects = async () => {
-      const userId = user?.id || session?.user?.id;
-      if (userId && mounted) {
+      if (user && mounted) {
         try {
-          const userProjects = await projectService.getProjects(userId)
+          const userProjects = await projectService.getProjects(user.id)
           if (mounted) {
             setProjects(userProjects)
           }
@@ -52,15 +50,14 @@ export default function Sidebar() {
 
     loadProjects()
     return () => { mounted = false }
-  }, [user, session])
+  }, [user])
 
   const handleCreateProject = async (type: 'canvas' | 'moodboard' | 'mindmap') => {
     // Guard against double creation
     if (creatingRef.current) return;
     creatingRef.current = true;
     
-    const userId = user?.id || session?.user?.id;
-    if (!userId) {
+    if (!user) {
       alert('Por favor inicia sesión para crear proyectos')
       creatingRef.current = false;
       return
@@ -68,9 +65,9 @@ export default function Sidebar() {
 
     setLoading(true)
     try {
-      console.log('Creating project with type:', type, 'for userId:', userId)
+      console.log('Creating project with type:', type, 'for userId:', user.id)
       
-      const project = await projectService.createProject(userId, type)
+      const project = await projectService.createProject(user.id, type)
       
       console.log('Project created successfully:', project)
       

@@ -1,32 +1,43 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/authProvider";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { projectService, type Project } from "@/lib/projectService";
 import { Search, Palette, Brain, Layers, Star, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 export default function ExplorePage() {
-  const { session } = useAuth();
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [user, loading, router]);
+
+  useEffect(() => {
     const loadProjects = async () => {
-      if (session?.user?.id) {
+      if (user?.id) {
         try {
-          const userProjects = await projectService.getProjects(session.user.id);
+          const userProjects = await projectService.getProjects(user.id);
           setProjects(userProjects);
         } catch (error) {
           console.error('Error loading projects:', error);
         }
       }
-      setLoading(false);
+      setLoadingProjects(false);
     };
 
     loadProjects();
-  }, [session]);
+  }, [user]);
+
+  if (loading || loadingProjects) return <div className="flex items-center justify-center min-h-screen"><p>Cargando sesión...</p></div>;
+  if (!user) return null;
 
   const filteredProjects = projects.filter(project =>
     project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,29 +61,6 @@ export default function ExplorePage() {
       default: return 'Proyecto';
     }
   };
-
-  if (!session?.user) {
-    return (
-      <main className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-white mb-4">
-              Explorar Proyectos
-            </h1>
-            <p className="text-neutral-600 dark:text-neutral-400 mb-8">
-              Por favor inicia sesión para ver tus proyectos
-            </p>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Iniciar Sesión
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-8">
@@ -153,7 +141,7 @@ export default function ExplorePage() {
         </div>
 
         {/* Projects Grid */}
-        {loading ? (
+        {loadingProjects ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-neutral-600 dark:text-neutral-400">
