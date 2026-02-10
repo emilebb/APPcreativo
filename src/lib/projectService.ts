@@ -124,38 +124,43 @@ export const projectService = {
   },
 
   async getProjects(userId: string, limit: number = 5): Promise<Project[]> {
-    // Try Supabase first, then fallback to localStorage
-    if (supabase) {
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('status', 'active')
-          .order('updated_at', { ascending: false })
-          .limit(limit);
+    let timeoutId;
 
-        if (!error && data) {
-          console.log('Supabase getProjects success:', data);
-          return data || [];
-        }
-        
-        console.error("Supabase error for getProjects:", {
-          message: error?.message,
-          details: error?.details,
-          hint: error?.hint,
-          code: error?.code,
-        });
-      } catch (supabaseError) {
-        console.log('Supabase failed, using localStorage fallback:', supabaseError);
+    try {
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error("Supabase timeout")),
+          8000
+        );
+      });
+
+      const supabasePromise = supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('updated_at', { ascending: false })
+        .limit(limit);
+
+      const result = await Promise.race([
+        supabasePromise,
+        timeoutPromise,
+      ]);
+
+      // Handle both Supabase result and timeout error
+      if (result instanceof Error) {
+        throw result;
       }
-    }
 
-    // Fallback to localStorage
-    const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const userProjects = projects.filter((p: Project) => p.user_id === userId);
-    console.log('Projects loaded from localStorage:', userProjects);
-    return userProjects;
+      const { data, error } = result as { data: Project[] | null, error: any };
+      if (error) throw error;
+      return data ?? [];
+    } catch (e) {
+      console.error("getProjects failed:", e);
+      return [];
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 };
 

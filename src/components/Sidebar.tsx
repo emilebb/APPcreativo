@@ -31,19 +31,27 @@ export default function Sidebar() {
   const creatingRef = useRef(false)
 
   useEffect(() => {
+    let mounted = true;
+
     const loadProjects = async () => {
       const userId = user?.id || session?.user?.id;
-      if (userId) {
+      if (userId && mounted) {
         try {
           const userProjects = await projectService.getProjects(userId)
-          setProjects(userProjects)
+          if (mounted) {
+            setProjects(userProjects)
+          }
         } catch (error) {
           console.error('Error loading projects:', error)
+          if (mounted) {
+            setProjects([]) // Always set projects even on error
+          }
         }
       }
     }
 
     loadProjects()
+    return () => { mounted = false }
   }, [user, session])
 
   const handleCreateProject = async (type: 'canvas' | 'moodboard' | 'mindmap') => {
