@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/authProvider";
 import { useRouter } from "next/navigation";
 import { projectService, type Project } from "@/lib/projectService";
@@ -15,8 +15,11 @@ export default function ExplorePage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
-  const [projectsLoaded, setProjectsLoaded] = useState(false); // ← Nueva bandera
+  const [projectsLoaded, setProjectsLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Estabilizar userId para evitar cambios innecesarios
+  const userId = useMemo(() => user?.id || null, [user?.id]);
 
   useEffect(() => {
     console.log("🔍 Explore page - Auth state:", { user: !!user, loading, userId: user?.id });
@@ -28,14 +31,14 @@ export default function ExplorePage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!userId) {
       setLoadingProjects(false);
       return;
     }
 
     // Si ya cargamos proyectos para este usuario, no recargar
     if (projectsLoaded) {
-      console.log("📁 Projects already loaded for user:", user.id);
+      console.log("📁 Projects already loaded for user:", userId);
       return;
     }
 
@@ -43,12 +46,12 @@ export default function ExplorePage() {
 
     const loadProjects = async () => {
       try {
-        console.log("📁 Loading projects for user:", user.id);
-        const userProjects = await projectService.getProjects(user.id);
+        console.log("📁 Loading projects for user:", userId);
+        const userProjects = await projectService.getProjects(userId);
         console.log("📊 Projects loaded:", userProjects);
         if (!cancelled) {
           setProjects(userProjects);
-          setProjectsLoaded(true); // ← Marcar como cargado
+          setProjectsLoaded(true);
         }
       } catch (error) {
         console.error("❌ Error loading projects:", error);
@@ -68,7 +71,7 @@ export default function ExplorePage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, projectsLoaded]); // ← Incluir bandera en dependencias
+  }, [userId, projectsLoaded]); // ← Usa userId estabilizado
 
   if (loading || loadingProjects) return <div className="flex items-center justify-center min-h-screen"><p>Cargando sesión...</p></div>;
   if (!user) return null;
