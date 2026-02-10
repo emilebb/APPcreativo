@@ -31,7 +31,10 @@ export default function SettingsPage() {
   if (authLoading || profileLoading) {
     return (
       <main className="mx-auto max-w-md p-8">
-        <div className="text-neutral-500">Cargando...</div>
+        {/* SEO h1 - hidden but accessible */}
+        <h1 className="sr-only">Configuración de Perfil - Ajustes de Cuenta en CreationX</h1>
+        
+        <div className="text-neutral-700">Cargando...</div>
       </main>
     );
   }

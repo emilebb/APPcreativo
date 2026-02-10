@@ -28,7 +28,7 @@ export default function Home() {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               CreationX
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-gray-700">
               Tu espacio creativo profesional
             </p>
           </div>
@@ -50,7 +50,7 @@ export default function Home() {
             {/* Login Button */}
             <Link
               href="/login"
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 text-white px-6 py-3 font-medium hover:bg-blue-700 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-800 text-white px-6 py-3 font-medium hover:bg-blue-900 transition-colors"
             >
               <LogIn className="w-5 h-5" />
               Iniciar Sesión
@@ -82,7 +82,7 @@ export default function Home() {
           {/* Footer */}
           <div className="text-center text-sm text-gray-500">
             <p>¿No tienes cuenta?{" "}
-            <Link href="/login" className="text-blue-800 hover:text-blue-900 font-medium">
+            <Link href="/login" className="text-blue-900 hover:text-blue-950 font-medium">
               Regístrate gratis
             </Link>
           </p>
