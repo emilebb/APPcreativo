@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/authProvider";
 import { ArrowLeft, Heart, Share2, Download, Palette, Grid3X3, List, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 interface MoodboardImage {
   id: string;
   url: string;
