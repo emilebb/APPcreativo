@@ -55,9 +55,7 @@ export default function ProfilePage() {
         </div>
         <button
           onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.location.reload();
-            }
+            router.refresh();
           }}
           className="mt-4 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800"
         >

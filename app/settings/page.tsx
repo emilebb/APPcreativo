@@ -121,9 +121,7 @@ export default function SettingsPage() {
                 try {
                   setSaving(true);
                   await uploadAvatar(file, profile.id);
-                  if (typeof window !== 'undefined') {
-                    window.location.reload();
-                  }
+                  router.refresh();
                 } catch (err) {
                   console.error("Error uploading avatar:", err);
                 } finally {
