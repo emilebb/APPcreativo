@@ -55,7 +55,7 @@ export const chatSupabaseService = {
       .from("user_profiles")
       .select("*")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Error loading user profile:", error);
@@ -96,9 +96,9 @@ export const chatSupabaseService = {
       .eq("is_complete", false)
       .order("started_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+    if (error) {
       console.error("Error loading active protocol:", error);
       return null;
     }
@@ -165,9 +165,9 @@ export const chatSupabaseService = {
       .select("*")
       .eq("user_id", userId)
       .eq("memory_type", "session_stats")
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error("Error loading user memory:", error);
       return null;
     }
