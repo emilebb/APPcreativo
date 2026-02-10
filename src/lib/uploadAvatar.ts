@@ -1,7 +1,10 @@
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseClient } from "./supabaseClient";
 
-export async function uploadAvatar(file: File, userId: string) {
-  if (!supabase || !file) return;
+export async function uploadAvatar(file: File, userId: string): Promise<string> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
 
   const fileExt = file.name.split(".").pop() || "png";
   const filePath = `${userId}.${fileExt}`;
@@ -20,4 +23,6 @@ export async function uploadAvatar(file: File, userId: string) {
     .eq("id", userId);
 
   if (updateError) throw updateError;
+
+  return data.publicUrl;
 }
