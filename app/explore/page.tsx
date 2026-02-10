@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/lib/authProvider";
 import { useRouter } from "next/navigation";
 import { projectService, type Project } from "@/lib/projectService";
 import { Search, Palette, Brain, Layers, Star, Clock, TrendingUp } from "lucide-react";

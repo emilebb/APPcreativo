@@ -4,7 +4,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
-const AuthContext = createContext<any>(null);
+const AuthContext = createContext<any>({
+  user: null,
+  loading: true,
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
@@ -27,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
+        setLoading(false); // ← CRÍTICO
       }
     );
 
