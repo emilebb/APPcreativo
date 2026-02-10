@@ -16,10 +16,10 @@ export default function HomePage() {
             Iniciar Sesión
           </Link>
           <Link 
-            href="/explore"
+            href="/signup"
             className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
           >
-            Explorar
+            Crear Cuenta
           </Link>
         </div>
       </div>
