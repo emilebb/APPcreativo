@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabaseClient"
+import { getSupabaseClient } from "@/lib/supabaseClient"
 import { Search, History } from "lucide-react"
 
 export default function SearchBar({ userId }: { userId: string }) {
@@ -9,15 +9,17 @@ export default function SearchBar({ userId }: { userId: string }) {
   // Usa el cliente supabase compartido
 
   const fetchHistory = async () => {
+    const supabase = getSupabaseClient();
     if (!supabase) return;
-    const { data } = await supabase!.from('searches').select('query').eq('user_id', userId).order('created_at', { ascending: false }).limit(5)
+    const { data } = await supabase.from('searches').select('query').eq('user_id', userId).order('created_at', { ascending: false }).limit(5)
     if (data) setHistory(data)
   }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
+    const supabase = getSupabaseClient();
     if (!query || !supabase) return
-    await supabase!.from('searches').insert({ user_id: userId, query })
+    await supabase.from('searches').insert({ user_id: userId, query } as any) // Use any type to avoid TypeScript errors
     setQuery("")
     fetchHistory()
   }
