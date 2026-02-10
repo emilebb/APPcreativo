@@ -121,15 +121,17 @@ export default function MoodboardDetailPage() {
         await navigator.share({
           title: moodboard.title,
           text: moodboard.description,
-          url: window.location.href
+          url: typeof window !== 'undefined' ? window.location.href : ''
         });
       } catch (error) {
         console.log("Error sharing:", error);
+      } finally {
+        // Fallback: copiar al portapapeles
+        if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+          navigator.clipboard.writeText(window.location.href);
+          alert("Enlace copiado al portapapeles");
+        }
       }
-    } else {
-      // Fallback: copiar al portapapeles
-      navigator.clipboard.writeText(window.location.href);
-      alert("Enlace copiado al portapapeles");
     }
   };
 

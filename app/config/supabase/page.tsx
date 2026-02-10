@@ -24,7 +24,9 @@ export default function SupabaseConfigPage() {
     alert("Configuración guardada. Recarga la página para aplicar cambios.");
     
     setTimeout(() => {
-      window.location.reload();
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     }, 1000);
   };
 
@@ -33,7 +35,9 @@ export default function SupabaseConfigPage() {
     localStorage.removeItem('temp-supabase-key');
     alert("Configuración reseteada. Recarga la página.");
     setTimeout(() => {
-      window.location.reload();
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     }, 1000);
   };
 

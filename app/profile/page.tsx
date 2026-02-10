@@ -54,7 +54,11 @@ export default function ProfilePage() {
           {profileError || statsError}
         </div>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.location.reload();
+            }
+          }}
           className="mt-4 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800"
         >
           Reintentar
