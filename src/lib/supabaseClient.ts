@@ -43,7 +43,16 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false, // ← Disable to fix SSR location error
+      flowType: 'pkce', // Ensure proper flow
     },
+    db: {
+      schema: 'public',
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'creationx-web'
+      }
+    }
   }
 );
 
