@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useAuth } from "@/lib/authProvider";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AuthModal({ onClose }: { onClose?: () => void }) {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,13 +16,13 @@ export default function AuthModal({ onClose }: { onClose?: () => void }) {
 
   // Si hay sesión activa, cerrar el modal automáticamente
   useEffect(() => {
-    if (session) {
+    if (user) {
       setSuccess(true);
       setTimeout(() => {
         onClose?.();
       }, 1500);
     }
-  }, [session, onClose]);
+  }, [user, onClose]);
 
   if (!supabase) {
     return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useAuth } from "@/lib/authProvider";
+import { useAuth } from "@/context/AuthContext";
 
 interface UserStats {
   totalSessions: number;

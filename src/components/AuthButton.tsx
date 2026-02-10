@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authProvider";
+import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/lib/useProfile";
 import { supabase } from "@/lib/supabaseClient";
 import AuthModal from "@/components/AuthModal";
 
 export default function AuthButton() {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
   const { profile } = useProfile();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function AuthButton() {
   const showImage = Boolean(profile?.avatar_url) && !avatarError;
   const hideInitial = showImage && avatarLoaded;
 
-  if (session) {
+  if (user) {
     return (
       <div className="relative">
         <button
