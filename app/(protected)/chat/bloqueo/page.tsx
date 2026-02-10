@@ -1,11 +1,11 @@
 "use client";
 
-import ChatContainer from "@/components/chat/ChatContainer";
+import SupabaseChatContainer from "@/components/chat/SupabaseChatContainer";
 
 export default function ChatBloqueo() {
   return (
     <main className="min-h-screen bg-neutral-50">
-      <ChatContainer />
+      <SupabaseChatContainer />
     </main>
   );
 }
