@@ -36,16 +36,36 @@ export default function SignupPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`,
+          // Desactivar confirmación para desarrollo
+          data: {
+            skip_email_verification: true
+          }
+        }
       });
 
       if (error) {
         setError(error.message);
       } else {
         setSuccess(true);
-        // Redirigir a login después de 2 segundos
-        setTimeout(() => {
-          router.push("/login");
-        }, 2000);
+        // Login automático después del registro
+        const { error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (!loginError) {
+          // Redirigir directamente a explore
+          setTimeout(() => {
+            router.push("/explore");
+          }, 1000);
+        } else {
+          // Si falla login, ir a login manual
+          setTimeout(() => {
+            router.push("/login");
+          }, 2000);
+        }
       }
     } catch (err) {
       setError("Error al crear cuenta. Inténtalo de nuevo.");
@@ -66,7 +86,7 @@ export default function SignupPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Cuenta Creada!</h2>
             <p className="text-gray-600 mb-4">
-              Revisa tu email para confirmar la cuenta. Serás redirigido al login...
+              Tu cuenta está lista. Serás redirigido automáticamente...
             </p>
           </div>
         </div>
