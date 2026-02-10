@@ -22,9 +22,9 @@ export default function MoodboardsPage() {
   return (
     <main className="max-w-6xl mx-auto p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
+        <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
           Moodboards
-        </h1>
+        </div>
         <Link
           href="/moodboard/new"
           className="flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition text-sm sm:text-base"

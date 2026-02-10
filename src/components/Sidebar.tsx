@@ -117,8 +117,8 @@ export default function Sidebar() {
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-neutral-900 dark:text-white">CreationX</h1>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">Plataforma Creativa</p>
+                <div className="text-lg font-bold text-neutral-900 dark:text-white">CreationX</div>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">Plataforma Creativa</p>
               </div>
             </div>
           </div>

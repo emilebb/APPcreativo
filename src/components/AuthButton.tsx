@@ -105,7 +105,7 @@ export default function AuthButton() {
       </button>
 
       {isAuthOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-2xl">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-neutral-900">

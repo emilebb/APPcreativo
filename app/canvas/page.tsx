@@ -301,9 +301,9 @@ export default function Canvas() {
       {/* Header */}
       <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+          <div className="text-2xl font-bold text-neutral-900 dark:text-white">
             Pizarra Libre
-          </h1>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={saveCanvas}

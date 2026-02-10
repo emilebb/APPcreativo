@@ -25,9 +25,9 @@ export default function MindMapsPage() {
   return (
     <main className="max-w-6xl mx-auto p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
+        <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
           Mapas Mentales
-        </h1>
+        </div>
         <Link
           href="/mindmap/new"
           className="flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition text-sm sm:text-base"
@@ -49,7 +49,7 @@ export default function MindMapsPage() {
                 <div className="text-2xl font-bold text-neutral-600 dark:text-neutral-400 mb-1">
                   {mindMap.nodes}
                 </div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-500">nodos</div>
+                <div className="text-xs text-neutral-600 dark:text-neutral-400">nodos</div>
               </div>
             </div>
             <h3 className="font-semibold text-neutral-900 dark:text-white mb-1">
