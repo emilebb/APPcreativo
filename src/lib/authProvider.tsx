@@ -59,5 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  // Always return context, never null - SSR-safe
+  return context;
 };
