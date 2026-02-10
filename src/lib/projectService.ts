@@ -56,6 +56,23 @@ export const projectService = {
     if (error) throw error;
     return data;
   },
+
+  async updateProjectTitle(projectId: string, title: string): Promise<Project> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      throw new Error("Supabase not available");
+    }
+
+    const { data, error } = await supabase
+      .from("projects")
+      .update({ title, updated_at: new Date().toISOString() })
+      .eq("id", projectId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
 };
 
 export default projectService;

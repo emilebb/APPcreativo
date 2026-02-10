@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
 import { projectService } from "@/lib/projectService";
+import ProjectTitleEditor from "@/components/ProjectTitleEditor";
 import { 
   Pencil, Trash2, Undo, Redo, Palette, Move, 
   Download, Save, Share2 
@@ -39,6 +40,7 @@ export default function CanvasPage() {
   const [history, setHistory] = useState<DrawingElement[][]>([]);
   const [historyStep, setHistoryStep] = useState(0);
   const [selectedImage, setSelectedImage] = useState<DrawingElement | null>(null);
+  const [project, setProject] = useState<any>(null);
 
   const tools = [
     { id: 'pencil', name: 'Lápiz', icon: <Pencil className="w-4 h-4" />, cursor: 'crosshair' },
@@ -62,8 +64,23 @@ export default function CanvasPage() {
 
     if (canvasId) {
       loadCanvas();
+      loadProject();
     }
   }, [session, canvasId]);
+
+  const loadProject = async () => {
+    try {
+      console.log('Loading project for ID:', canvasId);
+      if (!session?.user) return;
+      const projects = await projectService.getProjects(session.user.id);
+      const currentProject = projects.find(p => p.id === canvasId);
+      if (currentProject) {
+        setProject(currentProject);
+      }
+    } catch (error) {
+      console.error('Error loading project:', error);
+    }
+  };
 
   const loadCanvas = async () => {
     try {
@@ -230,9 +247,16 @@ export default function CanvasPage() {
               <span className="text-lg font-semibold">Canvas</span>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-                Canvas {canvasId}
-              </h1>
+              {project ? (
+                <ProjectTitleEditor 
+                  project={project} 
+                  onUpdate={(updatedProject) => setProject(updatedProject)}
+                />
+              ) : (
+                <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+                  Canvas {canvasId}
+                </h1>
+              )}
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Pizarra creativa
               </p>
