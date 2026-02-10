@@ -23,6 +23,7 @@ export function useProfile(): UseProfileReturn {
   const fetchProfile = async () => {
     const supabase = getSupabaseClient();
     if (!supabase || !session?.user?.id) {
+      console.log("🔍 No supabase client or session:", { supabase: !!supabase, session: !!session });
       setProfile(null);
       setLoading(false);
       return;
@@ -30,17 +31,52 @@ export function useProfile(): UseProfileReturn {
 
     try {
       setError(null);
+      console.log("🔍 Fetching profile for user:", session.user.id);
+      
       const { data, error: fetchError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      if (fetchError) throw fetchError;
-      setProfile(data);
+      if (fetchError) {
+        console.error("❌ Profile fetch error:", fetchError);
+        // If profile doesn't exist, create a default one
+        if (fetchError.code === 'PGRST116') {
+          console.log("📝 Profile not found, creating default profile");
+          const defaultProfile = {
+            id: session.user.id,
+            username: session.user.email?.split('@')[0] || 'user',
+            full_name: session.user.user_metadata?.full_name || '',
+            avatar_url: session.user.user_metadata?.avatar_url || '',
+            creative_mode: 'balanced' as CreativeMode,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          const { data: newProfile, error: insertError } = await supabase
+            .from("profiles")
+            .insert(defaultProfile)
+            .select()
+            .single();
+            
+          if (insertError) {
+            throw insertError;
+          }
+          
+          console.log("✅ Default profile created:", newProfile);
+          setProfile(newProfile);
+        } else {
+          throw fetchError;
+        }
+      } else {
+        console.log("✅ Profile loaded:", data);
+        setProfile(data);
+      }
     } catch (err) {
-      console.error("Error fetching profile:", err);
+      console.error("❌ Error in fetchProfile:", err);
       setError(err instanceof Error ? err.message : "Error al cargar perfil");
+      setProfile(null);
     } finally {
       setLoading(false);
     }

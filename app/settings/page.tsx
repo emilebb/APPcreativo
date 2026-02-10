@@ -10,7 +10,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 export default function SettingsPage() {
   const { session, loading: authLoading } = useAuth();
-  const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { profile, loading: profileLoading, error: profileError, updateProfile } = useProfile();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -34,12 +34,40 @@ export default function SettingsPage() {
         {/* SEO h1 - hidden but accessible */}
         <h1 className="sr-only">Configuración de Perfil - Ajustes de Cuenta en CreationX</h1>
         
-        <div className="text-neutral-700">Cargando...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-neutral-700">Cargando configuración...</div>
+        </div>
       </main>
     );
   }
 
-  if (!profile) return null;
+  if (profileError) {
+    return (
+      <main className="mx-auto max-w-md p-8">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">❌ Error al cargar configuración</div>
+          <div className="text-neutral-600 text-sm mb-4">{profileError}</div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Reintentar
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <main className="mx-auto max-w-md p-8">
+        <div className="text-center">
+          <div className="text-neutral-600">No se encontró el perfil</div>
+        </div>
+      </main>
+    );
+  }
 
   const handleModeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedMode = e.target.value as CreativeMode;
