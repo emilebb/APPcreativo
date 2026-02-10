@@ -119,21 +119,29 @@ export function useProfile(): UseProfileReturn {
 
   useEffect(() => {
     console.log("🔄 useProfile useEffect triggered:", { 
+      loading: loading,
       session: !!session, 
       userId: session?.user?.id 
     });
     
-    // Solo ejecutar fetchProfile si hay sesión
+    // ✅ CRÍTICO: No hacer nada mientras auth esté cargando
+    if (loading) {
+      console.log("🔄 Auth still loading, waiting...");
+      return;
+    }
+    
+    // ✅ Solo ejecutar fetchProfile si hay sesión válida
     if (session?.user?.id) {
+      console.log("🔄 Session available, fetching profile");
       fetchProfile();
     } else {
-      // Si no hay sesión, limpiar estado y detener loading
-      console.log("🔄 No session found, clearing profile state");
+      // ✅ Si no hay sesión y auth ya cargó, limpiar estado
+      console.log("🔄 No session found and auth loaded, clearing profile state");
       setProfile(null);
       setLoading(false);
       setError(null);
     }
-  }, [session?.user?.id]); // Solo depende del ID de usuario
+  }, [loading, session?.user?.id]); // ← Depende de loading Y userId
 
   return {
     profile,

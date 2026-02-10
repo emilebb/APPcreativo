@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false); // ← CRÍTICO: Asegurar que loading se detenga
       }
     );
 
