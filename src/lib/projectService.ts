@@ -35,7 +35,7 @@ export const projectService = {
 
     try {
       // Check if offline - use localStorage only if truly offline
-      if (typeof window !== 'undefined' && !navigator.onLine) {
+      if (typeof window !== 'undefined' && typeof navigator !== 'undefined' && !navigator.onLine) {
         console.log('Browser is offline - using localStorage fallback');
         const projects = JSON.parse(localStorage.getItem('projects') || '[]');
         const newProject: Project = {

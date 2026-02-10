@@ -102,7 +102,7 @@ export default function MindMapDetailPage() {
   };
 
   const handleShare = async () => {
-    if (navigator.share && mindMap) {
+    if (typeof navigator !== 'undefined' && navigator.share && mindMap) {
       try {
         await navigator.share({
           title: mindMap.title,

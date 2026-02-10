@@ -115,7 +115,7 @@ export default function MoodboardDetailPage() {
   };
 
   const handleShare = async () => {
-    if (navigator.share && moodboard) {
+    if (typeof navigator !== 'undefined' && navigator.share && moodboard) {
       try {
         await navigator.share({
           title: moodboard.title,
