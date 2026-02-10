@@ -63,7 +63,7 @@ export default function MoodboardDetailPage() {
         images: [
           {
             id: "1",
-            url: "https://images.unsplash.com/photo-1507525428034-b723a9ce6890?w=800&h=600&fit=crop",
+            url: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop",
             title: "Atardecer tropical",
             description: "Colores cálidos del atardecer en la playa"
           },

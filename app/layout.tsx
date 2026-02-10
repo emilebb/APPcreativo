@@ -10,6 +10,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <title>CreationX - Plataforma Creativa Profesional</title>
+        <meta name="description" content="Tu espacio creativo profesional para proyectos, moodboards y mindmaps" />
+      </head>
       <body>
         <AuthProvider>
           <Providers>

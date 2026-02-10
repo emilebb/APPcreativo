@@ -10,7 +10,7 @@ export default function MoodboardsPage() {
       id: "1",
       title: "Verano 2024",
       description: "Colores vibrantes y energía solar para proyectos de verano",
-      images: ["https://images.unsplash.com/photo-1507525428034-b723a9ce6890?w=300&h=200&fit=crop"],
+      images: ["https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=300&h=200&fit=crop"],
       tags: ["verano", "vibrante"],
       created_at: "2024-01-15T10:30:00Z",
       updated_at: "2024-01-20T15:45:00Z",

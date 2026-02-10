@@ -334,6 +334,8 @@ export default function CanvasPage() {
                   value={currentColor}
                   onChange={(e) => setCurrentColor(e.target.value)}
                   className="w-6 h-6 sm:w-8 sm:h-8 border border-neutral-300 dark:border-neutral-600 rounded cursor-pointer"
+                  aria-label="Seleccionar color de dibujo"
+                  title="Seleccionar color de dibujo"
                 />
               </div>
 
@@ -346,7 +348,9 @@ export default function CanvasPage() {
                   max="20"
                   value={strokeWidth}
                   onChange={(e) => setStrokeWidth(Number(e.target.value))}
-                  className="w-16 sm:w-24"
+                  className="w-20 sm:w-24"
+                  aria-label="Grosor del trazo"
+                  title="Ajustar grosor del trazo"
                 />
                 <span className="text-sm text-neutral-600 dark:text-neutral-400 w-6 sm:w-8">
                   {strokeWidth}
