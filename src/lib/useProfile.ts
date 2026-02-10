@@ -15,7 +15,7 @@ type UseProfileReturn = {
 };
 
 export function useProfile(): UseProfileReturn {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,13 +119,13 @@ export function useProfile(): UseProfileReturn {
 
   useEffect(() => {
     console.log("🔄 useProfile useEffect triggered:", { 
-      loading: loading,
+      authLoading: authLoading,
       session: !!session, 
       userId: session?.user?.id 
     });
     
     // ✅ CRÍTICO: No hacer nada mientras auth esté cargando
-    if (loading) {
+    if (authLoading) {
       console.log("🔄 Auth still loading, waiting...");
       return;
     }
@@ -141,7 +141,7 @@ export function useProfile(): UseProfileReturn {
       setLoading(false);
       setError(null);
     }
-  }, [loading, session?.user?.id]); // ← Depende de loading Y userId
+  }, [authLoading, session?.user?.id]); // ← Depende de authLoading Y userId
 
   return {
     profile,
