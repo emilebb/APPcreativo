@@ -133,7 +133,7 @@ export default function Sidebar() {
                   className={`
                     flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                     ${isActive 
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' 
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300' 
                       : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                     }
                   `}

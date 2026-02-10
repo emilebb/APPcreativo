@@ -69,12 +69,15 @@ export default function ExplorePage() {
 
   return (
     <main className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-8">
+      {/* SEO h1 - hidden but accessible */}
+      <h1 className="sr-only">Explorar Proyectos Creativos - Canvas, Mindmaps y Moodboards</h1>
+      
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
+          <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
             Explorar Proyectos
-          </h1>
+          </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
             Descubre y gestiona todos tus proyectos creativos
           </p>

@@ -298,12 +298,15 @@ export default function Canvas() {
 
   return (
     <main className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+      {/* SEO h1 - hidden but accessible */}
+      <h1 className="sr-only">Pizarra Libre - Canvas Creativo para Dibujar y Diseñar</h1>
+      
       {/* Header */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4">
+      <header className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-neutral-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
             Pizarra Libre
-          </div>
+          </h2>
           <div className="flex items-center gap-2">
             <button
               onClick={saveCanvas}
@@ -335,7 +338,7 @@ export default function Canvas() {
             </button>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Toolbar */}

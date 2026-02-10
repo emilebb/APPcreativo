@@ -24,6 +24,9 @@ export default function MindMapsPage() {
 
   return (
     <main className="max-w-6xl mx-auto p-4 sm:p-6">
+      {/* SEO h1 - hidden but accessible */}
+      <h1 className="sr-only">Mapas Mentales - Organiza Ideas y Conceptos Visualmente</h1>
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
           Mapas Mentales
@@ -55,7 +58,7 @@ export default function MindMapsPage() {
             <h3 className="font-semibold text-neutral-900 dark:text-white mb-1">
               {mindMap.title}
             </h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
+            <p className="text-base text-neutral-600 dark:text-neutral-400 line-clamp-2">
               {mindMap.description}
             </p>
           </Link>

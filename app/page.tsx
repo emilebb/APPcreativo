@@ -82,7 +82,7 @@ export default function Home() {
           {/* Footer */}
           <div className="text-center text-sm text-gray-500">
             <p>¿No tienes cuenta?{" "}
-            <Link href="/login" className="text-blue-700 hover:text-blue-900 font-medium">
+            <Link href="/login" className="text-blue-800 hover:text-blue-900 font-medium">
               Regístrate gratis
             </Link>
           </p>

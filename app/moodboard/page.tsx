@@ -21,6 +21,9 @@ export default function MoodboardsPage() {
 
   return (
     <main className="max-w-6xl mx-auto p-4 sm:p-6">
+      {/* SEO h1 - hidden but accessible */}
+      <h1 className="sr-only">Moodboards - Crea Tableros de Inspiración Visual</h1>
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
           Moodboards
@@ -46,6 +49,8 @@ export default function MoodboardsPage() {
                 <img
                   src={moodboard.images[0]}
                   alt={moodboard.title}
+                  width="800"
+                  height="450"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
               )}
@@ -53,7 +58,7 @@ export default function MoodboardsPage() {
             <h3 className="font-semibold text-neutral-900 dark:text-white mb-1">
               {moodboard.title}
             </h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
+            <p className="text-base text-neutral-600 dark:text-neutral-400 line-clamp-2">
               {moodboard.description}
             </p>
           </Link>

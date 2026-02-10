@@ -241,6 +241,8 @@ export default function MoodboardDetailPage() {
             <img
               src={image.url}
               alt={image.title || ""}
+              width="800"
+              height="384"
               className="w-full h-64 object-cover transition-transform group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
@@ -267,6 +269,8 @@ export default function MoodboardDetailPage() {
             <img
               src={selectedImage.url}
               alt={selectedImage.title || ""}
+              width="1200"
+              height="800"
               className="max-w-full max-h-full object-contain rounded-lg"
             />
             <button
