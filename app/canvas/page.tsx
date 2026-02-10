@@ -400,11 +400,13 @@ export default function Canvas() {
                           : 'border-neutral-300 dark:border-neutral-600'
                       }`}
                       style={{ backgroundColor: color }}
+                      title={color}
+                      aria-label={`Color ${color}`}
                     />
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                <label htmlFor="color-picker" className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+                <label htmlFor="color-picker" className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
                   Color:
                 </label>
                 <input
@@ -420,7 +422,7 @@ export default function Canvas() {
 
               {/* Stroke Width */}
               <div className="flex items-center gap-2">
-                <label htmlFor="stroke-width" className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+                <label htmlFor="stroke-width" className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
                   Grosor:
                 </label>
                 <input
@@ -433,7 +435,7 @@ export default function Canvas() {
                   className="w-16 sm:w-24"
                   title="Ajustar grosor del trazo"
                 />
-                <span className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 w-6 sm:w-8">
+                <span className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 w-6 sm:w-8">
                   {strokeWidth}
                 </span>
               </div>
