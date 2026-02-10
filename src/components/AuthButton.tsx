@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/lib/useProfile";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import AuthModal from "@/components/AuthModal";
 
 export default function AuthButton() {
@@ -26,6 +26,7 @@ export default function AuthButton() {
   }
 
   const handleLogout = async () => {
+    const supabase = getSupabaseClient();
     if (supabase) {
       await supabase.auth.signOut();
       setIsMenuOpen(false);
