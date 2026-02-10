@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -15,6 +15,13 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setError("Supabase no está disponible");
+      setLoading(false);
+      return;
+    }
 
     console.log("🔍 Attempting login with:", { email, password: password ? "***" : "empty" });
 
