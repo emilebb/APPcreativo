@@ -104,19 +104,14 @@ export default function MindMapDetailPage() {
   const handleShare = async () => {
     if (navigator.share && mindMap) {
       try {
-        // Get current URL safely
-        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-        
         await navigator.share({
           title: mindMap.title,
           text: mindMap.description,
-          url: currentUrl
+          url: '' // No URL needed for sharing in SSR
         });
       } catch (error) {
-        if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-          navigator.clipboard.writeText(window.location.href);
-          alert("Enlace copiado al portapapeles");
-        }
+        // Fallback: show message instead of copying URL
+        alert("Compartir no disponible. Usa el enlace del navegador.");
       }
     }
   };

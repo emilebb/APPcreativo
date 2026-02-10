@@ -117,19 +117,14 @@ export default function MoodboardDetailPage() {
   const handleShare = async () => {
     if (navigator.share && moodboard) {
       try {
-        // Get current URL safely
-        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-        
         await navigator.share({
           title: moodboard.title,
           text: moodboard.description,
-          url: currentUrl
+          url: '' // No URL needed for sharing in SSR
         });
       } catch (error) {
-        if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-          navigator.clipboard.writeText(window.location.href);
-          alert("Enlace copiado al portapapeles");
-        }
+        // Fallback: show message instead of copying URL
+        alert("Compartir no disponible. Usa el enlace del navegador.");
       }
     }
   };
