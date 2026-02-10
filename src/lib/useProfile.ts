@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/lib/authProvider";
 import type { Profile, CreativeMode } from "@/types/profile";
 
 type UseProfileReturn = {
@@ -118,8 +118,22 @@ export function useProfile(): UseProfileReturn {
   };
 
   useEffect(() => {
-    fetchProfile();
-  }, [session?.user?.id]);
+    console.log("🔄 useProfile useEffect triggered:", { 
+      session: !!session, 
+      userId: session?.user?.id 
+    });
+    
+    // Solo ejecutar fetchProfile si hay sesión
+    if (session?.user?.id) {
+      fetchProfile();
+    } else {
+      // Si no hay sesión, limpiar estado y detener loading
+      console.log("🔄 No session found, clearing profile state");
+      setProfile(null);
+      setLoading(false);
+      setError(null);
+    }
+  }, [session?.user?.id]); // Solo depende del ID de usuario
 
   return {
     profile,
