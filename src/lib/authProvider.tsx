@@ -2,31 +2,37 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import type { Session, User } from "@supabase/supabase-js";
 
 type AuthContextType = {
-  user: any;
+  user: User | null;
+  session: Session | null;
   loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  session: null,
   loading: true,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // sesión inicial
+    // Sesión inicial
     supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);
     });
 
-    // cambios de auth (solo una vez)
+    // Cambios de auth (una sola suscripción)
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        setSession(session);
         setUser(session?.user ?? null);
       }
     );
@@ -37,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, session, loading }}>
       {children}
     </AuthContext.Provider>
   );
