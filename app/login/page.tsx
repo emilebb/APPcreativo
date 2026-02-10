@@ -16,17 +16,23 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
+    console.log("🔍 Attempting login with:", { email, password: password ? "***" : "empty" });
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
+    console.log("🔍 Login response:", { error, hasError: !!error });
+
     if (error) {
+      console.error("❌ Login error:", error);
       setError(error.message);
       setLoading(false);
       return;
     }
 
+    console.log("✅ Login successful, redirecting to /explore");
     router.push("/explore");
   }
 

@@ -15,7 +15,10 @@ export default function ExplorePage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
+    console.log("🔍 Explore page - Auth state:", { user: !!user, loading, userId: user?.id });
+    
     if (!loading && !user) {
+      console.log("🔄 No user found, redirecting to login");
       router.replace("/login");
     }
   }, [user, loading, router]);
@@ -23,11 +26,13 @@ export default function ExplorePage() {
   useEffect(() => {
     const loadProjects = async () => {
       if (user?.id) {
+        console.log("📁 Loading projects for user:", user.id);
         try {
           const userProjects = await projectService.getProjects(user.id);
+          console.log("📊 Projects loaded:", userProjects);
           setProjects(userProjects);
         } catch (error) {
-          console.error('Error loading projects:', error);
+          console.error('❌ Error loading projects:', error);
         }
       }
       setLoadingProjects(false);
