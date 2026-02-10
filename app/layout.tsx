@@ -22,9 +22,9 @@ export default function RootLayout({
               <Sidebar />
 
               {/* Área de Contenido Principal */}
-              <main className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0">
+              <div className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0">
                 {children}
-              </main>
+              </div>
             </div>
           </Providers>
         </AuthProvider>

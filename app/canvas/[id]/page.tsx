@@ -329,27 +329,34 @@ export default function CanvasPage() {
                     />
                   ))}
                 </div>
+                <div className="flex items-center gap-2">
+                <label htmlFor="color-picker" className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Color:
+                </label>
                 <input
+                  id="color-picker"
                   type="color"
                   value={currentColor}
                   onChange={(e) => setCurrentColor(e.target.value)}
                   className="w-6 h-6 sm:w-8 sm:h-8 border border-neutral-300 dark:border-neutral-600 rounded cursor-pointer"
-                  aria-label="Seleccionar color de dibujo"
                   title="Seleccionar color de dibujo"
                 />
+              </div>
               </div>
 
               {/* Stroke Width */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-neutral-600 dark:text-neutral-400">Grosor:</span>
+                <label htmlFor="stroke-width" className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Grosor:
+                </label>
                 <input
+                  id="stroke-width"
                   type="range"
                   min="1"
                   max="20"
                   value={strokeWidth}
                   onChange={(e) => setStrokeWidth(Number(e.target.value))}
                   className="w-20 sm:w-24"
-                  aria-label="Grosor del trazo"
                   title="Ajustar grosor del trazo"
                 />
                 <span className="text-sm text-neutral-600 dark:text-neutral-400 w-6 sm:w-8">

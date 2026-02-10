@@ -352,6 +352,7 @@ export default function Canvas() {
                     : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
                 }`}
                 title={tool.name}
+                aria-label={tool.name}
                 style={{ cursor: tool.cursor }}
               >
                 {tool.icon}
@@ -402,27 +403,34 @@ export default function Canvas() {
                     />
                   ))}
                 </div>
+                <div className="flex items-center gap-2">
+                <label htmlFor="color-picker" className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+                  Color:
+                </label>
                 <input
+                  id="color-picker"
                   type="color"
                   value={currentColor}
                   onChange={(e) => setCurrentColor(e.target.value)}
                   className="w-5 h-5 sm:w-6 sm:h-6 border border-neutral-300 dark:border-neutral-600 rounded cursor-pointer"
-                  aria-label="Seleccionar color de dibujo"
                   title="Seleccionar color de dibujo"
                 />
+              </div>
               </div>
 
               {/* Stroke Width */}
               <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">Grosor:</span>
+                <label htmlFor="stroke-width" className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+                  Grosor:
+                </label>
                 <input
+                  id="stroke-width"
                   type="range"
                   min="1"
                   max="20"
                   value={strokeWidth}
                   onChange={(e) => setStrokeWidth(Number(e.target.value))}
                   className="w-16 sm:w-24"
-                  aria-label="Grosor del trazo"
                   title="Ajustar grosor del trazo"
                 />
                 <span className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 w-6 sm:w-8">
