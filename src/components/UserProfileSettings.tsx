@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
-import { supabase } from "@/lib/supabaseClient"
+import { getSupabaseClient } from "@/lib/supabaseClient"
 import { Sun, Moon, Sparkles, Loader2 } from "lucide-react"
 
 export default function UserProfileSettings({ userId }: { userId: string }) {
@@ -11,6 +11,7 @@ export default function UserProfileSettings({ userId }: { userId: string }) {
   const updateTheme = async (newTheme: string) => {
     setLoading(true)
     setTheme(newTheme)
+    const supabase = getSupabaseClient();
     if (!supabase) {
       console.error("Supabase client not initialized.");
       setLoading(false);
@@ -18,7 +19,7 @@ export default function UserProfileSettings({ userId }: { userId: string }) {
     }
     const { error } = await supabase
       .from('profiles')
-      .update({ theme: newTheme })
+      .update({ theme: newTheme } as any)
       .eq('id', userId)
     if (error) console.error("Error guardando tema:", error.message)
     setLoading(false)

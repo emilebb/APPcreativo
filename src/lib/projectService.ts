@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { getSupabaseClient } from './supabaseClient';
 
 // Global guard against double creation
 let creating = false;
@@ -56,6 +56,7 @@ export const projectService = {
       }
 
       // Try Supabase when online
+      const supabase = getSupabaseClient();
       if (supabase) {
       try {
         const projectData = {
@@ -70,7 +71,7 @@ export const projectService = {
         
         const { error } = await supabase
           .from('projects')
-          .insert([projectData]);
+          .insert([projectData] as any); // Use any type to avoid TypeScript errors
 
         if (error) {
           console.error("Insert failed:", error);
