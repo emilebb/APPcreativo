@@ -1,9 +1,5 @@
 import { supabase } from './supabaseClient';
 
-// Debug environment variables
-console.log("SUPABASE_URL", process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log("ANON length", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length);
-
 // Global guard against double creation
 let creating = false;
 
