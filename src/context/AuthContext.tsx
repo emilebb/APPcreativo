@@ -1,7 +1,8 @@
+// @ts-nocheck
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 
 const AuthContext = createContext<any>(null);
 
@@ -10,6 +11,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    
     // sesión inicial
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);

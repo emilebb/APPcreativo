@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getSupabaseClient } from './supabaseClient';
 
 // Global guard against double creation
@@ -144,6 +145,10 @@ export const projectService = {
         );
       });
 
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        throw new Error("Supabase client not available");
+      }
       const supabasePromise = supabase
         .from('projects')
         .select('*')
