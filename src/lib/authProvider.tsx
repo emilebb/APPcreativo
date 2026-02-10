@@ -1,62 +1,61 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import type { Session, User } from "@supabase/supabase-js";
 
 type AuthContextType = {
-  user: User | null;
   session: Session | null;
+  user: User | null;
   loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
-  user: null,
   session: null,
+  user: null,
   loading: true,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      // No Supabase client available (SSR), set loading to false
-      setLoading(false);
-      return;
-    }
+    let mounted = true;
 
-    // Sesión inicial
+    console.log("🔐 AuthProvider: Initializing auth state");
+
     supabase.auth.getSession().then(({ data }) => {
+      console.log("🔐 AuthProvider: getSession completed", { session: !!data.session, mounted });
+      if (!mounted) return;
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      setLoading(false);
+      setLoading(false); // 🔥 CLAVE
     });
 
-    // Cambios de auth (una sola suscripción)
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        console.log("🔐 AuthProvider: onAuthStateChange", { session: !!session, mounted });
+        if (!mounted) return;
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false); // ← CRÍTICO: Asegurar que loading se detenga
+        setLoading(false); // 🔥 CLAVE
       }
     );
 
     return () => {
+      console.log("🔐 AuthProvider: Cleanup");
+      mounted = false;
       listener.subscription.unsubscribe();
     };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading }}>
+    <AuthContext.Provider value={{ session, user, loading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);
