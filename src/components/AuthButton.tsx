@@ -8,7 +8,8 @@ import { getSupabaseClient } from "@/lib/supabaseClient";
 import AuthModal from "@/components/AuthModal";
 
 export default function AuthButton() {
-  const { user, loading } = useAuth();
+  const auth = useAuth();
+  const { user, loading } = auth || { user: null, loading: true };
   const { profile } = useProfile();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);

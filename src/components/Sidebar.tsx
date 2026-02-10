@@ -21,7 +21,8 @@ import { usePathname } from "next/navigation";
 import { projectService, type Project } from "@/lib/projectService";
 
 export default function Sidebar() {
-  const { user, loading: authLoading } = useAuth();
+  const auth = useAuth();
+  const { user, loading: authLoading } = auth || { user: null, loading: true };
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
