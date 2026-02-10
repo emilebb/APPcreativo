@@ -12,14 +12,19 @@ export default function SupabaseConfigPage() {
   const [loading, setLoading] = useState(false);
 
   const handleSaveConfig = () => {
+    const supabaseUrl = (document.getElementById('supabase-url') as HTMLInputElement)?.value || '';
+    const supabaseKey = (document.getElementById('supabase-key') as HTMLInputElement)?.value || '';
+
     if (!supabaseUrl || !supabaseKey) {
-      alert("Por favor ingresa ambos campos");
+      alert('Por favor completa ambos campos');
       return;
     }
 
     // Guardar en localStorage temporalmente
-    localStorage.setItem('temp-supabase-url', supabaseUrl);
-    localStorage.setItem('temp-supabase-key', supabaseKey);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('temp-supabase-url', supabaseUrl);
+      localStorage.setItem('temp-supabase-key', supabaseKey);
+    }
     
     alert("Configuración guardada. Recarga la página para aplicar cambios.");
     
@@ -29,8 +34,10 @@ export default function SupabaseConfigPage() {
   };
 
   const handleResetConfig = () => {
-    localStorage.removeItem('temp-supabase-url');
-    localStorage.removeItem('temp-supabase-key');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('temp-supabase-url');
+      localStorage.removeItem('temp-supabase-key');
+    }
     alert("Configuración reseteada. Recarga la página.");
     setTimeout(() => {
       router.refresh();

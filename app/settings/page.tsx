@@ -45,19 +45,24 @@ export default function SettingsPage() {
     try {
       await updateProfile({ creative_mode: selectedMode });
 
-      // Guardar mensaje para mostrar en el chat
       const message = selectedMode === "direct"
         ? "Vale. Voy a ir más al grano."
         : "De acuerdo. Vamos despacio.";
 
-      localStorage.setItem("settings_feedback", message);
-
-      // Redirigir al chat inmediatamente
-      router.push("/");
+      handleSaveSettings(message);
     } catch (err) {
       console.error("Error updating mode:", err);
       setSaving(false);
     }
+  };
+
+  const handleSaveSettings = (message: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("settings_feedback", message);
+    }
+    
+    // Redirigir al chat inmediatamente
+    router.push("/");
   };
 
   const initial = profile.email?.[0]?.toUpperCase() || "?";

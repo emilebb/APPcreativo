@@ -66,9 +66,11 @@ export default function CanvasPage() {
   const loadCanvas = async () => {
     try {
       console.log('Loading canvas for ID:', canvasId);
-      const canvasData = localStorage.getItem(`canvas-${canvasId}`);
-      if (canvasData) {
-        setElements(JSON.parse(canvasData));
+      if (typeof window !== 'undefined') {
+        const canvasData = localStorage.getItem(`canvas-${canvasId}`);
+        if (canvasData) {
+          setElements(JSON.parse(canvasData));
+        }
       }
     } catch (error) {
       console.error('Error loading canvas:', error);
@@ -77,8 +79,10 @@ export default function CanvasPage() {
 
   const saveCanvas = () => {
     try {
-      localStorage.setItem(`canvas-${canvasId}`, JSON.stringify(elements));
-      console.log('Canvas saved for ID:', canvasId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`canvas-${canvasId}`, JSON.stringify(elements));
+        console.log('Canvas saved for ID:', canvasId);
+      }
     } catch (error) {
       console.error('Error saving canvas:', error);
     }

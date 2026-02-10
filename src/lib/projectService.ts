@@ -35,7 +35,7 @@ export const projectService = {
 
     try {
       // Check if offline - use localStorage only if truly offline
-      if (!navigator.onLine) {
+      if (typeof window !== 'undefined' && !navigator.onLine) {
         console.log('Browser is offline - using localStorage fallback');
         const projects = JSON.parse(localStorage.getItem('projects') || '[]');
         const newProject: Project = {
@@ -97,23 +97,36 @@ export const projectService = {
     }
 
     // Fallback to localStorage
-    console.log('Creating project with localStorage fallback for userId:', userId);
-    const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const newProject: Project = {
+    if (typeof window !== 'undefined') {
+      console.log('Creating project with localStorage fallback for userId:', userId);
+      const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+      const newProject: Project = {
+        id: Date.now().toString(),
+        title: 'Sin título',
+        user_id: userId,
+        type,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      projects.push(newProject);
+      localStorage.setItem('projects', JSON.stringify(projects));
+      
+      console.log('Project created with localStorage fallback:', newProject);
+      return newProject;
+    }
+    
+    // Return fallback project if window is not available
+    return {
       id: Date.now().toString(),
       title: 'Sin título',
       user_id: userId,
       type,
-      status: 'active' as const,
+      status: 'active',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
-    
-    projects.push(newProject);
-    localStorage.setItem('projects', JSON.stringify(projects));
-    
-    console.log('Project created with localStorage fallback:', newProject);
-    return newProject;
     } finally {
       creating = false;
     }

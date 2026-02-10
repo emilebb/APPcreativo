@@ -77,11 +77,13 @@ export default function ChatContainer() {
     // Función async para manejar la inicialización
     (async () => {
       // Verificar si hay feedback de ajustes
-      const settingsFeedback = localStorage.getItem("settings_feedback");
-      if (settingsFeedback) {
-        await addSystemMessagesWithPacing([settingsFeedback]);
-        localStorage.removeItem("settings_feedback");
-        return; // No continuar con la lógica de savedWeek
+      if (typeof window !== 'undefined') {
+        const settingsFeedback = localStorage.getItem("settings_feedback");
+        if (settingsFeedback) {
+          await addSystemMessagesWithPacing([settingsFeedback]);
+          localStorage.removeItem("settings_feedback");
+          return; // No continuar con la lógica de savedWeek
+        }
       }
 
       const savedWeek = loadCurrentWeek();

@@ -66,9 +66,12 @@ export default function Canvas() {
     };
 
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    return () => window.removeEventListener('resize', resizeCanvas);
+    
+    // Only add event listeners on client side
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', resizeCanvas);
+      return () => window.removeEventListener('resize', resizeCanvas);
+    }
   }, []);
 
   useEffect(() => {
@@ -271,21 +274,25 @@ export default function Canvas() {
   };
 
   const saveCanvas = () => {
-    const canvasData = {
-      elements,
-      timestamp: new Date().toISOString()
-    };
-    localStorage.setItem('canvas-drawing', JSON.stringify(canvasData));
-    alert('Canvas guardado exitosamente');
+    if (typeof window !== 'undefined') {
+      const canvasData = {
+        elements,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('canvas-drawing', JSON.stringify(canvasData));
+      alert('Canvas guardado exitosamente');
+    }
   };
 
   const loadCanvas = () => {
-    const saved = localStorage.getItem('canvas-drawing');
-    if (saved) {
-      const canvasData = JSON.parse(saved);
-      setElements(canvasData.elements);
-      setHistory([canvasData.elements]);
-      setHistoryStep(0);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('canvas-drawing');
+      if (saved) {
+        const canvasData = JSON.parse(saved);
+        setElements(canvasData.elements);
+        setHistory([canvasData.elements]);
+        setHistoryStep(0);
+      }
     }
   };
 
