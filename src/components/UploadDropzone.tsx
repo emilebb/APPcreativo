@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { supabase } from "@/lib/supabaseClient"
+import { getSupabaseClient } from "@/lib/supabaseClient"
 import { processFile } from "@/lib/upload/mediaHandler"
 import { Upload, Loader2, FileCheck } from "lucide-react"
 
@@ -14,24 +14,26 @@ export default function UploadDropzone({ projectId, userId }: { projectId: strin
 
     setLoading(true)
     try {
+      const supabase = getSupabaseClient();
       if (!supabase) throw new Error("Supabase no está configurado");
+      
       const processed = await processFile(file)
       const fileName = `${userId}/${projectId}/${Date.now()}-${file.name}`
       // 1. Subir a Storage
-      const { data: storageData, error: storageError } = await supabase!.storage
+      const { data: storageData, error: storageError } = await supabase.storage
         .from('uploads')
         .upload(fileName, processed)
 
       if (storageError) throw storageError
 
       // 2. Registrar en DB
-      const { error: dbError } = await supabase!.from('assets').insert({
+      const { error: dbError } = await supabase.from('assets').insert({
         user_id: userId,
         project_id: projectId,
         type: file.type,
         name: file.name,
         url: storageData.path
-      })
+      } as any) // Use any type to avoid TypeScript errors
 
       if (dbError) throw dbError
       alert("Archivo listo y optimizado")
