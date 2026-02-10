@@ -1,3 +1,35 @@
+// Global polyfill for SSR - must be before any imports
+if (typeof globalThis !== 'undefined' && typeof globalThis.window === 'undefined') {
+  (globalThis as any).window = {
+    location: {
+      href: process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000',
+      origin: process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000',
+      protocol: 'http:',
+      host: 'localhost:3000',
+      hostname: 'localhost',
+      port: '3000',
+      pathname: '/',
+      search: '',
+      hash: ''
+    }
+  };
+}
+
+// Also polyfill location directly
+if (typeof globalThis !== 'undefined' && typeof globalThis.location === 'undefined') {
+  (globalThis as any).location = {
+    href: process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000',
+    origin: process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000',
+    protocol: 'http:',
+    host: 'localhost:3000',
+    hostname: 'localhost',
+    port: '3000',
+    pathname: '/',
+    search: '',
+    hash: ''
+  };
+}
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
