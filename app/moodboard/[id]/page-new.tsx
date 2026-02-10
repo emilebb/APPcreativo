@@ -38,13 +38,6 @@ export default function MoodboardDetailPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "masonry">("grid");
   const [selectedImage, setSelectedImage] = useState<MoodboardImage | null>(null);
-  const [currentUrl, setCurrentUrl] = useState("");
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentUrl(window.location.href);
-    }
-  }, []);
 
   useEffect(() => {
     if (!session) {
@@ -122,16 +115,19 @@ export default function MoodboardDetailPage() {
   };
 
   const handleShare = async () => {
-    if (navigator.share && moodboard && currentUrl) {
+    if (navigator.share && moodboard) {
       try {
+        // Get current URL safely
+        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+        
         await navigator.share({
           title: moodboard.title,
           text: moodboard.description,
           url: currentUrl
         });
       } catch (error) {
-        if (currentUrl && typeof navigator !== 'undefined') {
-          navigator.clipboard.writeText(currentUrl);
+        if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+          navigator.clipboard.writeText(window.location.href);
           alert("Enlace copiado al portapapeles");
         }
       }

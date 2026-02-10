@@ -32,13 +32,6 @@ export default function MindMapDetailPage() {
   
   const [mindMap, setMindMap] = useState<MindMap | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentUrl, setCurrentUrl] = useState("");
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentUrl(window.location.href);
-    }
-  }, []);
 
   useEffect(() => {
     if (!session) {
@@ -109,16 +102,19 @@ export default function MindMapDetailPage() {
   };
 
   const handleShare = async () => {
-    if (navigator.share && mindMap && currentUrl) {
+    if (navigator.share && mindMap) {
       try {
+        // Get current URL safely
+        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+        
         await navigator.share({
           title: mindMap.title,
           text: mindMap.description,
           url: currentUrl
         });
       } catch (error) {
-        if (currentUrl && typeof navigator !== 'undefined') {
-          navigator.clipboard.writeText(currentUrl);
+        if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+          navigator.clipboard.writeText(window.location.href);
           alert("Enlace copiado al portapapeles");
         }
       }
