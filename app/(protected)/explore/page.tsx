@@ -2,77 +2,91 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useMemo } from "react";
-import { useAuth } from "@/lib/authProvider";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { projectService, type Project } from "@/lib/projectService";
+import { createBrowserClient } from "@supabase/ssr";
+import { useAuth } from "../providers/AuthProvider";
+import { PrivateGate } from "./PrivateGate";
 import { Search, Palette, Brain, Layers, Star, Clock, TrendingUp, Trash2 } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
 
 export default function ExplorePage() {
-  const { user, loading } = useAuth();
+  const auth = useAuth();
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loadingProjects, setLoadingProjects] = useState(true);
-  const [projectsLoaded, setProjectsLoaded] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const supabase = useMemo(() => createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ), []);
 
-  // Estabilizar userId para evitar cambios innecesarios
-  const userId = useMemo(() => user?.id || null, [user?.id]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [projectToDelete, setProjectToDelete] = useState<any | null>(null);
 
   useEffect(() => {
-    console.log("🔍 Explore page - Auth state:", { user: !!user, loading, userId });
-    
-    // Redirección si no hay usuario
-    if (!loading && !user) {
-      console.log("🔄 No user found, redirecting to login");
-      router.replace("/login");
-      return;
-    }
+    if (auth.status !== "authed") return;
 
-    // Si no hay userId o ya cargamos proyectos, no hacer nada
-    if (!userId || projectsLoaded) {
-      if (projectsLoaded) {
-        console.log("📁 Projects already loaded for user:", userId);
-      }
-      return;
-    }
+    const ac = new AbortController();
+    setLoading(true);
+    setError(null);
 
-    let cancelled = false;
-
-    const loadProjects = async () => {
+    (async () => {
       try {
-        console.log("📁 Loading projects for user:", userId);
-        const userProjects = await projectService.getProjects(userId);
-        console.log("📊 Projects loaded:", userProjects);
-        if (!cancelled) {
-          setProjects(userProjects);
-          setProjectsLoaded(true);
+        const { data, error: fetchError } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("user_id", auth.session.user.id)
+          .eq("status", "active")
+          .order("updated_at", { ascending: false })
+          .abortSignal(ac.signal);
+
+        if (ac.signal.aborted) return;
+
+        if (fetchError) {
+          setError(fetchError.message);
+        } else {
+          setProjects(data ?? []);
         }
-      } catch (error) {
-        console.error("❌ Error loading projects:", error);
-        if (!cancelled) {
-          setProjects([]);
-          setProjectsLoaded(true);
+      } catch (err) {
+        if (!ac.signal.aborted) {
+          setError("Error al cargar proyectos");
         }
       } finally {
-        if (!cancelled) {
-          setLoadingProjects(false);
+        if (!ac.signal.aborted) {
+          setLoading(false);
         }
       }
-    };
+    })();
 
-    loadProjects();
+    return () => ac.abort();
+  }, [auth.status, supabase, auth.session?.user?.id]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [loading, user, userId, projectsLoaded, router]); // ← Unificado y controlado
+  const handleDeleteProject = async (project: any) => {
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", project.id);
 
-  if (loading || loadingProjects) return <div className="flex items-center justify-center min-h-screen"><p>Cargando sesión...</p></div>;
-  if (!user) return null;
+      if (error) {
+        console.error("deleteProject error:", error);
+        return;
+      }
+
+      // Eliminar datos del canvas en localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(`canvas-${project.id}`);
+      }
+
+      // Actualizar lista local
+      setProjects(prev => prev.filter(p => p.id !== project.id));
+      setProjectToDelete(null);
+    } catch (error) {
+      console.error('Error deleting project:', error);
+    }
+  };
 
   const filteredProjects = projects.filter(project =>
     project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,79 +125,40 @@ export default function ExplorePage() {
   };
 
   return (
-    <main className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-8">
-      {/* SEO h1 - hidden but accessible */}
-      <h1 className="sr-only">Explorar Proyectos Creativos - Canvas, Mindmaps y Moodboards</h1>
-      
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-              Explorar Proyectos
-            </h2>
-            <p className="text-neutral-600 dark:text-neutral-400">
-              Descubre y gestiona todos tus proyectos creativos
-            </p>
-          </div>
-          <LogoutButton />
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-            <input
-              type="text"
-              placeholder="Buscar proyectos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-neutral-200 dark:border-neutral-700">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-neutral-900 dark:text-white">
-                  {projects.length}
-                </p>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Total Proyectos
-                </p>
-              </div>
+    <PrivateGate>
+      <main className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-8">
+        {/* SEO h1 - hidden but accessible */}
+        <h1 className="sr-only">Explorar Proyectos Creativos - Canvas, Mindmaps y Moodboards</h1>
+        
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
+                Explora tus proyectos
+              </h2>
+              <p className="text-neutral-600 dark:text-neutral-400">
+                Organiza, crea y da vida a tus ideas
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <LogoutButton />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-neutral-200 dark:border-neutral-700">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <Star className="w-6 h-6 text-green-600 dark:text-green-400" />
+          {/* Search Bar */}
+          <div className="mb-8">
+            <div className="relative max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-neutral-400" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-neutral-900 dark:text-white">
-                  {projects.filter(p => p.status === 'active').length}
-                </p>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Activos
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-neutral-200 dark:border-neutral-700">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-neutral-900 dark:text-white">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar proyectos..."
+                className="block w-full pl-10 pr-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
                   {projects.filter(p => p.type === 'canvas').length}
                 </p>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
