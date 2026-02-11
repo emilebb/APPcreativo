@@ -73,6 +73,30 @@ export const projectService = {
     if (error) throw error;
     return data;
   },
+
+  async deleteProject(projectId: string): Promise<boolean> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      throw new Error("Supabase not available");
+    }
+
+    const { error } = await supabase
+      .from("projects")
+      .delete()
+      .eq("id", projectId);
+
+    if (error) {
+      console.error("deleteProject error:", error);
+      return false;
+    }
+
+    // También eliminar datos relacionados del canvas en localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(`canvas-${projectId}`);
+    }
+
+    return true;
+  },
 };
 
 export default projectService;
