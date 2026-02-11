@@ -89,7 +89,6 @@ export default function Sidebar() {
   }
 
   const navigation = [
-    { name: 'Creative Coach', href: '/chat/bloqueo', icon: MessageCircle },
     { name: 'Inicio', href: '/', icon: Home },
     { name: 'Explorar', href: '/explore', icon: Search },
     { name: 'Canvas', href: '/canvas', icon: Palette },
