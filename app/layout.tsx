@@ -1,6 +1,6 @@
 import Sidebar from "@/components/Sidebar"
 import { Providers } from "@/components/Providers"
-import { AuthProvider } from "./providers/AuthProvider";
+import { AuthProvider } from "@/lib/authProvider";
 import { SentryInit } from "@/components/SentryInit";
 import "./globals.css"
 

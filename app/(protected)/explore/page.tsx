@@ -4,57 +4,64 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
-import { useAuth } from "../../providers/AuthProvider";
-import { PrivateGate } from "../PrivateGate";
-import { Search, Palette, Brain, Layers, Trash2 } from "lucide-react";
+import { useAuth } from "@/lib/authProvider";
+import { projectService } from "@/lib/projectService";
+import { Search, Palette, Trash2 } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
 
 export default function ExplorePage() {
-  const auth = useAuth();
-  const supabase = useMemo(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ), []);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [projectToDelete, setProjectToDelete] = useState<any | null>(null);
 
   useEffect(() => {
-    if (auth.status !== "authed") return;
+    if (!authLoading && !user) {
+      router.replace("/login");
+      return;
+    }
 
-    const ac = new AbortController();
-    setLoading(true);
+    if (!user) return;
 
-    (async () => {
+    const loadProjects = async () => {
       try {
-        const { data } = await supabase
-          .from("projects")
-          .select("*")
-          .eq("user_id", auth.session.user.id)
-          .eq("status", "active")
-          .order("updated_at", { ascending: false })
-          .abortSignal(ac.signal);
-
-        if (!ac.signal.aborted) {
-          setProjects(data ?? []);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (!ac.signal.aborted) setLoading(false);
+        const data = await projectService.getProjects(user.id);
+        setProjects(data);
+      } catch (error) {
+        console.error("Error loading projects:", error);
+      } finally {
+        setLoading(false);
       }
-    })();
+    };
 
-    return () => ac.abort();
-  }, [auth.status, supabase, auth.session?.user?.id]);
+    loadProjects();
+  }, [user, authLoading, router]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Cargando proyectos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   const handleDelete = async (id: string) => {
-    await supabase.from("projects").delete().eq("id", id);
-    setProjects(prev => prev.filter(p => p.id !== id));
-    setProjectToDelete(null);
+    try {
+      await projectService.deleteProject(id);
+      setProjects(prev => prev.filter(p => p.id !== id));
+      setProjectToDelete(null);
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
   };
 
   const filtered = projects.filter(p =>
@@ -62,8 +69,7 @@ export default function ExplorePage() {
   );
 
   return (
-    <PrivateGate>
-      <main className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-8">
+    <main className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <div>
@@ -159,6 +165,5 @@ export default function ExplorePage() {
           </div>
         )}
       </main>
-    </PrivateGate>
   );
 }
