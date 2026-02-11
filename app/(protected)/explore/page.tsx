@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authProvider";
+import { useAuth } from "../../../src/lib/authProvider";
 import { projectService } from "@/lib/projectService";
 import { Search, Palette, Trash2 } from "lucide-react";
 import Link from "next/link";
