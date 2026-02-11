@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Sparkles, Palette, MessageSquare, Layout, Lightbulb, Zap, ArrowRight, CheckCircle2 } from "lucide-react";
 
+import PWAInstallLink from "@/components/PWAInstallLink";
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -219,6 +221,9 @@ export default function HomePage() {
             Comenzar Ahora Gratis
             <ArrowRight className="ml-2 h-6 w-6" />
           </Link>
+          <div className="mt-6">
+            <PWAInstallLink />
+          </div>
         </div>
       </section>
     </div>
