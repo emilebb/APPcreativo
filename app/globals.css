@@ -60,48 +60,38 @@
   --foreground: #1f1f1f;
 }
 
-.dark {
+[data-theme="light"] {
+  --bg: #f7f1e6;
+  --bg-2: #f0d9b8;
+  --ink: #1f1f1f;
+  --muted: #5b524a;
+  --accent: #ff6b35;
+  --accent-2: #2a9d8f;
+  --card: #fff9ef;
+  --background: radial-gradient(1200px 800px at 10% 10%, #fff2d8 0%, #f7f1e6 45%),
+    radial-gradient(900px 700px at 90% 10%, #f3e0c1 0%, #f7f1e6 55%),
+    linear-gradient(120deg, #f7f1e6 0%, #f0d9b8 100%);
+  --foreground: #1f1f1f;
+}
+
+[data-theme="dark"] {
   --background: #0f0f10;
   --foreground: #ededed;
 }
 
-.night {
+[data-theme="night"] {
   --background: #050707;
   --foreground: rgba(255, 255, 255, 0.86);
 }
 
-@layer base {
-  html,
-  body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-  }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
-  html {
-    color-scheme: light;
-  }
-
-  .dark {
-    color-scheme: dark;
-  }
-
-  .night {
-    color-scheme: dark;
-  }
-
-  body {
-    background: var(--background) !important;
-    background-attachment: fixed;
-    color: var(--foreground);
-    font-family: var(--font-display), system-ui, sans-serif;
-    transition: background 0.3s ease, color 0.3s ease;
-  }
-
-  main {
-    min-height: 100vh;
-  }
+main {
+  min-height: 100vh;
 }
 
 .night .theme-toggle {
