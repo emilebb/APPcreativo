@@ -7,9 +7,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
 import { projectService } from "@/lib/projectService";
 import ProjectTitleEditor from "@/components/ProjectTitleEditor";
+import { useStyleLearning } from "@/hooks/useStyleLearning";
+import InspirationPanel from "@/components/InspirationPanel";
 import { 
   Pencil, Trash2, Undo, Redo, Palette, Move, 
-  Download, Save, Share2 
+  Download, Save, Share2, Sparkles 
 } from "lucide-react";
 import Link from "next/link";
 
@@ -41,6 +43,11 @@ export default function CanvasPage() {
   const [historyStep, setHistoryStep] = useState(0);
   const [selectedImage, setSelectedImage] = useState<DrawingElement | null>(null);
   const [project, setProject] = useState<any>(null);
+  const [showInspiration, setShowInspiration] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Hook de aprendizaje de estilo
+  const { analyzeProject, analyzing } = useStyleLearning(canvasId);
 
   const tools = [
     { id: 'pencil', name: 'Lápiz', icon: <Pencil className="w-4 h-4" />, cursor: 'crosshair' },
@@ -96,14 +103,30 @@ export default function CanvasPage() {
     }
   };
 
-  const saveCanvas = () => {
+  const saveCanvas = async () => {
     try {
+      setSaving(true);
+      
+      // Guardar canvas en localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem(`canvas-${canvasId}`, JSON.stringify(elements));
         console.log('Canvas saved for ID:', canvasId);
       }
+
+      // 🎨 ANÁLISIS AUTOMÁTICO DE ESTILO
+      // Analizar y guardar patrones de estilo del proyecto
+      if (session?.user?.id && elements.length > 0) {
+        console.log('🎨 Analizando estilo del proyecto...');
+        await analyzeProject('canvas', {
+          elements: elements,
+          tags: project?.tags || []
+        });
+        console.log('✅ Análisis de estilo completado');
+      }
     } catch (error) {
       console.error('Error saving canvas:', error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -265,10 +288,23 @@ export default function CanvasPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={saveCanvas}
-              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+              disabled={saving || analyzing}
+              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               title="Guardar"
             >
               <Save className="w-4 h-4" />
+              {saving || analyzing ? 'Guardando...' : 'Guardar'}
+            </button>
+            <button
+              onClick={() => setShowInspiration(!showInspiration)}
+              className={`p-2 rounded-lg transition ${
+                showInspiration
+                  ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+              title="Panel de Inspiración"
+            >
+              <Sparkles className="w-4 h-4" />
             </button>
             <button
               onClick={downloadCanvas}
@@ -402,6 +438,23 @@ export default function CanvasPage() {
             />
           </div>
         </div>
+
+        {/* Panel de Inspiración */}
+        {showInspiration && (
+          <InspirationPanel
+            projectId={canvasId}
+            onApplySuggestion={(suggestion) => {
+              // Aplicar sugerencia al canvas
+              if (suggestion.context_type === 'color_palette') {
+                const colors = suggestion.suggestion_data.palette;
+                if (colors && colors.length > 0) {
+                  setCurrentColor(colors[0]);
+                  console.log('🎨 Color aplicado:', colors[0]);
+                }
+              }
+            }}
+          />
+        )}
       </div>
     </main>
   );
