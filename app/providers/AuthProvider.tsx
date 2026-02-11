@@ -16,21 +16,56 @@ type AuthState =
 const AuthCtx = createContext<AuthState>({ status: "loading", session: null });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const supabase = useMemo(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ), []);
+  const supabase = useMemo(() => {
+    try {
+      return createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+    } catch (error) {
+      console.error("Error creating Supabase client:", error);
+      return null;
+    }
+  }, []);
 
   const [state, setState] = useState<AuthState>({ status: "loading", session: null });
 
   useEffect(() => {
+    if (!supabase) {
+      setState({ status: "guest", session: null });
+      return;
+    }
+
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      const session = data.session ?? null;
-      setState(session ? { status: "authed", session } : { status: "guest", session: null });
-    });
+    // Timeout de seguridad: si después de 5 segundos no hay respuesta, asumir guest
+    const timeout = setTimeout(() => {
+      if (mounted && state.status === "loading") {
+        console.warn("Auth timeout - assuming guest");
+        setState({ status: "guest", session: null });
+      }
+    }, 5000);
+
+    supabase.auth.getSession()
+      .then(({ data, error }) => {
+        if (!mounted) return;
+        clearTimeout(timeout);
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          setState({ status: "guest", session: null });
+          return;
+        }
+
+        const session = data.session ?? null;
+        setState(session ? { status: "authed", session } : { status: "guest", session: null });
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        clearTimeout(timeout);
+        console.error("Error in getSession:", error);
+        setState({ status: "guest", session: null });
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
@@ -39,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      clearTimeout(timeout);
       sub.subscription.unsubscribe();
     };
   }, [supabase]);
