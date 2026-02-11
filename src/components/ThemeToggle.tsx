@@ -1,37 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
-import { Sun, Moon, Sparkles } from "lucide-react";
 
 export default function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState("light");
 
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute("data-theme", savedTheme);
+    } else {
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
+      const defaultTheme = prefersDark ? "dark" : "light";
+      setTheme(defaultTheme);
+      document.documentElement.setAttribute("data-theme", defaultTheme);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+  };
 
   return (
-    <div className="theme-toggle flex gap-2 p-1 rounded-full w-fit bg-gray-100 dark:bg-zinc-800">
-      <button
-        onClick={() => setTheme("light")}
-        className={`p-2 rounded-full transition ${
-          theme === "light" ? "bg-white shadow-sm" : ""}
-        `}
-        aria-label="Tema claro"
-      >
-        <Sun size={18} className="text-orange-500" />
-      </button>
-      {/* Modo oscuro eliminado */}
-      <button
-        onClick={() => setTheme("night")}
-        className={`p-2 rounded-full transition ${
-          theme === "night" ? "bg-night-bg shadow-sm" : ""}
-        `}
-        aria-label="Tema noche"
-      >
-        <Sparkles size={18} className="text-purple-400" />
-      </button>
-    </div>
+    <button
+      id="themeToggle"
+      onClick={toggleTheme}
+      className="p-2 rounded-full bg-gray-200 dark:bg-gray-800"
+    >
+      {theme === "light" ? "🌞" : "🌙"}
+    </button>
   );
 }

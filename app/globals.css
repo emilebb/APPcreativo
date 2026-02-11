@@ -1,18 +1,12 @@
 @layer base {
   :root {
-    --chat-bg: #ffffff;
-    --chat-user-msg: #f4f4f4;
-    --chat-ai-msg: #ffffff;
-    --border-subtle: rgba(0,0,0,0.1);
+    --bg: #ffffff;
+    --text: #111111;
   }
 
   [data-theme='dark'] {
-    --chat-bg: #18181b;
-    --chat-user-msg: #232329;
-    --chat-ai-msg: #18181b;
-    --border-subtle: rgba(255,255,255,0.08);
-    --foreground: #e5e5e5;
-    --text-muted: #bdbdbd;
+    --bg: #0f0f0f;
+    --text: #ffffff;
   }
 
   [data-theme='night'] {
@@ -23,12 +17,12 @@
     --foreground: #d1d1d1;
     --text-muted: #a0a0a0;
   }
-}
 
-body {
-  background-color: var(--chat-bg);
-  color: var(--foreground, #18181b);
-  @apply antialiased text-sm md:text-base;
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
 .prose, .prose-invert, .dark .prose, .dark .prose-invert {
