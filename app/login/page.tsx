@@ -1,18 +1,103 @@
+/**
+ * LOGIN TOP 1 - AppCreativo
+ * Flujo inteligente con detección de email y onboarding creativo
+ */
+
 "use client";
 
-import { useState } from "react";
-import { getSupabaseClient } from "@/lib/supabaseClient";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/authProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Mail, Lock, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Sparkles, Loader2, Check } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  
+  // Estados del flujo TOP 1
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Estados de detección inteligente
+  const [emailStatus, setEmailStatus] = useState<'checking' | 'exists' | 'new' | null>(null);
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
+  // Redirección inteligente
+  useEffect(() => {
+    if (!authLoading && user) {
+      // Post-login inteligente
+      if (!user.user_metadata?.onboarding_completed) {
+        router.push('/onboarding');
+      } else {
+        // TODO: Redirigir al último proyecto o explore
+        router.push('/explore');
+      }
+    }
+  }, [user, authLoading, router]);
+
+  // Detección inteligente de email
+  const checkEmailExists = async (emailToCheck: string) => {
+    if (!emailToCheck || !emailToCheck.includes('@')) {
+      setEmailStatus(null);
+      setIsLoginMode(true);
+      return;
+    }
+
+    setCheckingEmail(true);
+    setEmailStatus('checking');
+
+    try {
+      const supabase = getSupabaseClient();
+      if (!supabase) return;
+
+      // Verificar si el usuario existe
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailToCheck,
+        password: 'dummy-password-for-check'
+      });
+
+      if (error?.message?.includes('Invalid login credentials')) {
+        // El usuario existe pero la contraseña es incorrecta
+        setEmailStatus('exists');
+        setIsLoginMode(true);
+      } else if (error?.message?.includes('Email not confirmed')) {
+        // Usuario existe pero no confirmado
+        setEmailStatus('exists');
+        setIsLoginMode(true);
+      } else {
+        // Usuario no existe
+        setEmailStatus('new');
+        setIsLoginMode(false);
+      }
+    } catch (err) {
+      // En caso de error, asumimos que es nuevo usuario
+      setEmailStatus('new');
+      setIsLoginMode(false);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
+  // Manejar cambio de email
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    
+    // Debounce para no hacer muchas peticiones
+    const timeoutId = setTimeout(() => {
+      checkEmailExists(newEmail);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
+
+  // Login
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -20,7 +105,7 @@ export default function LoginPage() {
 
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setError("Supabase no está disponible");
+      setError("Servicio no disponible");
       setLoading(false);
       return;
     }
@@ -31,12 +116,55 @@ export default function LoginPage() {
     });
 
     if (error) {
+      setError("La contraseña no coincide");
+      setLoading(false);
+      return;
+    }
+
+    // Loading con mensaje creativo
+    setLoading(false);
+  }
+
+  // Registro express
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setError("Servicio no disponible");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+      }
+    });
+
+    if (error) {
       setError(error.message);
       setLoading(false);
       return;
     }
 
-    router.push("/explore");
+    // Mostrar mensaje de verificación
+    setLoading(false);
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Preparando tu espacio creativo...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -49,46 +177,65 @@ export default function LoginPage() {
         <div className="max-w-md w-full space-y-8">
           {/* Logo and Title */}
           <div className="text-center">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="flex items-center justify-center mb-4">
+              <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
             </div>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              Bienvenido de nuevo
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Bienvenido a tu espacio creativo
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Ingresa a tu espacio creativo
+              {isLoginMode ? "Inicia sesión para continuar tu proyecto" : "Crea tu cuenta en segundos"}
             </p>
           </div>
 
-          {/* Login Form */}
-          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-            <div className="space-y-4">
-              {/* Email Input */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Correo electrónico
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+          {/* Form */}
+          <form onSubmit={isLoginMode ? handleLogin : handleSignup} className="space-y-6">
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
                 </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={handleEmailChange}
+                  className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="tu@email.com"
+                />
+                {checkingEmail && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                  </div>
+                )}
+                {emailStatus === 'exists' && !checkingEmail && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <Check className="h-5 w-5 text-green-500" />
+                  </div>
+                )}
               </div>
+              
+              {/* Mensaje inteligente */}
+              {emailStatus === 'new' && !checkingEmail && (
+                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    ✨ No encontramos una cuenta, creemos una en segundos
+                  </p>
+                </div>
+              )}
+            </div>
 
-              {/* Password Input */}
+            {/* Password Input - Solo mostrar si es login o si ya se detectó que existe */}
+            {(isLoginMode || emailStatus === 'exists') && (
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Contraseña
@@ -100,90 +247,124 @@ export default function LoginPage() {
                   <input
                     id="password"
                     name="password"
-                    type="password"
-                    autoComplete="current-password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={isLoginMode ? "current-password" : "new-password"}
                     required
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    )}
+                  </button>
                 </div>
+                
+                {/* ¿Olvidaste tu contraseña? - Solo en login */}
+                {isLoginMode && (
+                  <div className="mt-2 text-right">
+                    <Link
+                      href="/reset-password"
+                      className="text-sm text-blue-600 hover:text-blue-500 transition"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  ❌ {error}
+                </p>
               </div>
             )}
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex items-center justify-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
-            >
-              {loading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Entrando...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  Iniciar Sesión
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              )}
-            </button>
+            <div>
+              <button
+                type="submit"
+                disabled={loading || checkingEmail || !email}
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Preparando tu espacio creativo...
+                  </>
+                ) : (
+                  <>
+                    {isLoginMode ? "Entrar" : "Crear cuenta"}
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
-          {/* Sign Up Link */}
+          {/* Footer Links */}
           <div className="text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              ¿No tienes cuenta?{" "}
-              <Link href="/signup" className="font-medium text-purple-600 hover:text-purple-500 dark:text-purple-400 dark:hover:text-purple-300 transition-colors">
-                Crear cuenta gratis
-              </Link>
+              {isLoginMode ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
+              <button
+                type="button"
+                onClick={() => setIsLoginMode(!isLoginMode)}
+                className="font-medium text-blue-600 hover:text-blue-500 transition"
+              >
+                {isLoginMode ? "Crear cuenta" : "Iniciar sesión"}
+              </button>
             </p>
           </div>
         </div>
       </div>
 
-      {/* Right Side - Hero Section */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10 flex flex-col items-center justify-center text-white p-12">
-          <div className="max-w-md text-center space-y-6">
-            <h2 className="text-5xl font-bold leading-tight">
-              Tu espacio creativo te espera
-            </h2>
-            <p className="text-xl text-white/90">
-              Accede a tus proyectos, moodboards, canvas y mucho más. CreationX es tu plataforma todo-en-uno para crear sin límites.
-            </p>
-            <div className="grid grid-cols-3 gap-4 mt-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-3xl font-bold">100+</div>
+      {/* Right Side - Visual */}
+      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/20" />
+        
+        {/* Animated Elements */}
+        <div className="relative h-full flex items-center justify-center">
+          <div className="text-center text-white p-8">
+            <div className="mb-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-6">
+                <Sparkles className="w-10 h-10" />
+              </div>
+              <h3 className="text-3xl font-bold mb-4">
+                Tu espacio creativo te espera
+              </h3>
+              <p className="text-xl text-white/90 max-w-md mx-auto">
+                Donde las ideas cobran vida y los proyectos florecen
+              </p>
+            </div>
+            
+            {/* Features */}
+            <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto">
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-1">∞</div>
                 <div className="text-sm text-white/80">Proyectos</div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-3xl font-bold">50+</div>
-                <div className="text-sm text-white/80">Moodboards</div>
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-1">🎨</div>
+                <div className="text-sm text-white/80">Creatividad</div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-3xl font-bold">24/7</div>
-                <div className="text-sm text-white/80">Coach IA</div>
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-1">⚡</div>
+                <div className="text-sm text-white/80">Foco</div>
               </div>
             </div>
           </div>
         </div>
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
       </div>
     </div>
   );
