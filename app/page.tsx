@@ -103,14 +103,16 @@ export default function HomePage() {
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
             Así funciona CreationX: claridad, enfoque y ejecución creativa sin bloqueos.
           </p>
-          <div className="aspect-w-16 aspect-h-9 w-full rounded-xl overflow-hidden shadow-2xl mx-auto">
-            <iframe
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-              title="Demo CreationX"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full border-0"
-            />
+          <div className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden shadow-2xl">
+            <div className="aspect-video">
+              <iframe
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                title="Demo CreationX"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full border-0"
+              />
+            </div>
           </div>
         </div>
       </section>
