@@ -8,7 +8,7 @@ export const metadata = {
   title: "CreationX - Plataforma Creativa",
   description: "Tu espacio creativo profesional para proyectos, moodboards y mindmaps",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/icon.svg",
     shortcut: "/favicon.ico",
   },
 };
