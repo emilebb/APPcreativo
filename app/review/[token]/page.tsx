@@ -205,7 +205,7 @@ export default function ReviewPage() {
             </h1>
             <p className="text-sm text-gray-600">
               {share?.client_name ? `Hola ${share.client_name}` : 'Cliente'} - 
-              {share?.project_name || 'Proyecto'}
+              Proyecto para Revisión
             </p>
           </div>
           <div className="flex items-center gap-3">
