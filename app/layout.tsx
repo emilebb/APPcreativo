@@ -14,7 +14,8 @@ export default function RootLayout({
       <head>
         <title>CreationX - Plataforma Creativa Profesional</title>
         <meta name="description" content="Tu espacio creativo profesional para proyectos, moodboards y mindmaps" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       </head>
       <body>
