@@ -94,6 +94,7 @@ export default function Sidebar() {
     { name: 'Canvas', href: '/canvas', icon: Palette },
     { name: 'Moodboard', href: '/moodboard', icon: Layers },
     { name: 'Mindmap', href: '/mindmap', icon: Brain },
+    { name: 'Creative Coach', href: '/chat/bloqueo', icon: MessageCircle },
     { name: 'Configuración', href: '/settings', icon: Settings },
   ]
 
