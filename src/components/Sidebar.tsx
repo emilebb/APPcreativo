@@ -89,7 +89,7 @@ export default function Sidebar() {
   }
 
   const navigation = [
-    { name: 'Inicio', href: '/', icon: Home },
+    ...(user ? [] : [{ name: 'Inicio', href: '/', icon: Home }]), // Mostrar "Inicio" solo si no hay usuario
     { name: 'Explorar', href: '/explore', icon: Search },
     { name: 'Canvas', href: '/canvas', icon: Palette },
     { name: 'Moodboard', href: '/moodboard', icon: Layers },
