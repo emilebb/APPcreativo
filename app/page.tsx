@@ -25,27 +25,25 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Tu espacio creativo
-              <br />
-              <span className="text-blue-200">todo en uno</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight">
+              Convierte tus ideas creativas<br />
+              <span className="text-blue-200">en proyectos ejecutables en minutos.</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-white/90 mb-12 max-w-3xl mx-auto">
-              Gestiona proyectos, crea moodboards, diseña en canvas y recibe coaching creativo con IA. Todo en una sola plataforma.
+            <p className="text-lg sm:text-2xl text-white/90 mb-12 max-w-2xl mx-auto">
+              Visualiza, estructura y acciona con Canvas, Moodboards y un Coach de IA diseñado para creadores.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link 
                 href="/signup"
                 className="group px-8 py-4 min-h-[44px] text-base sm:text-lg bg-white text-purple-600 rounded-lg hover:bg-gray-100 transition-all font-semibold shadow-xl hover:shadow-2xl flex items-center justify-center"
               >
-                Comenzar Gratis
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <span className="mr-2">🚀</span> Crear proyecto gratis
               </Link>
               <Link 
-                href="/login"
-                className="px-8 py-4 min-h-[44px] text-base sm:text-lg border-2 border-white/30 text-white rounded-lg hover:bg-white/10 backdrop-blur-sm transition-all font-semibold"
+                href="#demo-video"
+                className="px-8 py-4 min-h-[44px] text-base sm:text-lg border-2 border-white/30 text-white rounded-lg hover:bg-white/10 backdrop-blur-sm transition-all font-semibold flex items-center justify-center"
               >
-                Iniciar Sesión
+                <span className="mr-2">▶</span> Ver cómo funciona
               </Link>
             </div>
           </div>
@@ -117,7 +115,7 @@ export default function HomePage() {
                 </p>
               </div>
 
-              {/* Feature 5 */
+              {/* Feature 5 */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-14 h-14 bg-pink-100 dark:bg-pink-900/30 rounded-xl flex items-center justify-center mb-6">
                 <Zap className="w-7 h-7 text-pink-600 dark:text-pink-400" />
