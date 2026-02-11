@@ -4,6 +4,50 @@ import { Sparkles, Palette, MessageSquare, Layout, Lightbulb, Zap, ArrowRight, C
 import PWAInstallLink from "@/components/PWAInstallLink";
 
 export default function HomePage() {
+              {/* Free Template Section */}
+              <section className="py-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">
+                    Prueba gratis una plantilla de ejemplo
+                  </h2>
+                  <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+                    Descarga una plantilla de proyecto creativo y comienza a estructurar tus ideas en segundos.
+                  </p>
+                  <a
+                    href="/plantilla-ejemplo.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all font-bold text-lg shadow-xl"
+                  >
+                    Descargar plantilla gratuita
+                  </a>
+                </div>
+              </section>
+        {/* Social Proof Section */}
+        <section className="py-16 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-800">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-8">
+              Creadores como tú ya lo usan
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow flex flex-col items-center">
+                <img src="/avatar1.png" alt="Testimonio 1" className="w-14 h-14 rounded-full mb-3" />
+                <p className="text-gray-700 dark:text-gray-300 mb-2">“Por fin puedo pasar de idea a proyecto sin perderme en el proceso.”</p>
+                <span className="text-sm text-gray-500 dark:text-gray-400">— Ana, Ilustradora</span>
+              </div>
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow flex flex-col items-center">
+                <img src="/avatar2.png" alt="Testimonio 2" className="w-14 h-14 rounded-full mb-3" />
+                <p className="text-gray-700 dark:text-gray-300 mb-2">“El coach de IA me ayuda a enfocarme y avanzar cada día.”</p>
+                <span className="text-sm text-gray-500 dark:text-gray-400">— Luis, Emprendedor</span>
+              </div>
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow flex flex-col items-center">
+                <img src="/avatar3.png" alt="Testimonio 3" className="w-14 h-14 rounded-full mb-3" />
+                <p className="text-gray-700 dark:text-gray-300 mb-2">“Moodboards y canvas en un solo lugar. ¡Ahorra tiempo real!”</p>
+                <span className="text-sm text-gray-500 dark:text-gray-400">— Sofía, Diseñadora UX</span>
+              </div>
+            </div>
+          </div>
+        </section>
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
@@ -26,26 +70,47 @@ export default function HomePage() {
               </div>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight">
-              Convierte tus ideas creativas<br />
-              <span className="text-blue-200">en proyectos ejecutables en minutos.</span>
+              Claridad creativa instantánea.<br />
+              <span className="text-blue-200">Enfócate. Ejecuta. Sin bloqueos.</span>
             </h1>
             <p className="text-lg sm:text-2xl text-white/90 mb-12 max-w-2xl mx-auto">
-              Visualiza, estructura y acciona con Canvas, Moodboards y un Coach de IA diseñado para creadores.
+              Lleva tus ideas a la acción con enfoque y claridad. Elimina el caos creativo y ejecuta proyectos sin fricción con Canvas, Moodboards y un Coach de IA.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link 
                 href="/signup"
                 className="group px-8 py-4 min-h-[44px] text-base sm:text-lg bg-white text-purple-600 rounded-lg hover:bg-gray-100 transition-all font-semibold shadow-xl hover:shadow-2xl flex items-center justify-center"
               >
-                <span className="mr-2">🚀</span> Crear proyecto gratis
+                <span className="mr-2">🚀</span> Empieza sin bloqueo
               </Link>
               <Link 
                 href="#demo-video"
                 className="px-8 py-4 min-h-[44px] text-base sm:text-lg border-2 border-white/30 text-white rounded-lg hover:bg-white/10 backdrop-blur-sm transition-all font-semibold flex items-center justify-center"
               >
-                <span className="mr-2">▶</span> Ver cómo funciona
+                <span className="mr-2">▶</span> Ver demo en 1 min
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Demo Visual Section */}
+      <section id="demo-video" className="py-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Mira cómo pasas de idea a acción en 1 minuto
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+            Así funciona CreationX: claridad, enfoque y ejecución creativa sin bloqueos.
+          </p>
+          <div className="aspect-w-16 aspect-h-9 w-full rounded-xl overflow-hidden shadow-2xl mx-auto">
+            <iframe
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              title="Demo CreationX"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full border-0"
+            />
           </div>
         </div>
       </section>
@@ -55,10 +120,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Herramientas creativas poderosas
+              Herramientas para claridad y acción
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
-              Todo lo que necesitas para llevar tus ideas a la realidad
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Elimina el caos creativo. Visualiza, estructura y ejecuta tus ideas en minutos.
             </p>
           </div>
 
@@ -69,10 +134,10 @@ export default function HomePage() {
                   <Layout className="w-7 h-7 text-purple-600 dark:text-purple-400" />
                 </div>
                 <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  Canvas Creativo
+                  Canvas: Visualiza y ejecuta
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
-                  Dibuja, diseña y crea libremente en un lienzo infinito. Perfecto para logos, ilustraciones y bocetos.
+                  Pasa de idea a acción en un lienzo infinito, sin bloqueos ni distracciones.
                 </p>
               </div>
 
@@ -82,10 +147,10 @@ export default function HomePage() {
                   <Palette className="w-7 h-7 text-blue-600 dark:text-blue-400" />
                 </div>
                 <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  Moodboards
+                  Moodboards: Inspírate y decide
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
-                  Organiza tus referencias visuales, paletas de colores e inspiración en tableros personalizados.
+                  Junta referencias y elige rápido. Sin perderte en la inspiración.
                 </p>
               </div>
 
@@ -95,10 +160,10 @@ export default function HomePage() {
                   <Lightbulb className="w-7 h-7 text-green-600 dark:text-green-400" />
                 </div>
                 <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  Mindmaps
+                  Mindmaps: Ordena y enfoca
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
-                  Estructura tus ideas y proyectos con mapas mentales interactivos y fáciles de usar.
+                  Estructura tus ideas en segundos. Enfócate en lo importante, sin ruido.
                 </p>
               </div>
 
@@ -108,10 +173,10 @@ export default function HomePage() {
                   <MessageSquare className="w-7 h-7 text-orange-600 dark:text-orange-400" />
                 </div>
                 <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  Creative Coach IA
+                  Coach IA: Sin bloqueos
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
-                  Recibe guía personalizada, supera bloqueos creativos y sigue protocolos de 7 días para tus proyectos.
+                  Recibe claridad y foco inmediato. Supera bloqueos y ejecuta con confianza.
                 </p>
               </div>
 
