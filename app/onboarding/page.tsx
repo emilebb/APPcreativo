@@ -130,10 +130,10 @@ export default function OnboardingPage() {
                 <div className="text-center">
                   <div className="mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                      ¿Qué haces?
+                      ¿Cuál es tu rol creativo?
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Cuéntanos sobre ti para personalizar tu experiencia
+                      Elige para adaptar la experiencia a tu perfil.
                     </p>
                   </div>
 
@@ -163,6 +163,15 @@ export default function OnboardingPage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Prueba social interna */}
+                  <div className="mt-8">
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 shadow flex flex-col items-center">
+                      <img src="/avatar2.png" alt="Testimonio onboarding" className="w-12 h-12 rounded-full mb-2" />
+                      <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">“Me sentí guiada y enfocada desde el primer minuto.”</p>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">— Camila, Creativa Digital</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -171,10 +180,10 @@ export default function OnboardingPage() {
                 <div className="text-center">
                   <div className="mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                      ¿Para qué usarás AppCreativo?
+                      ¿Qué quieres lograr aquí?
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Esto nos ayudará a darte las mejores recomendaciones
+                      Selecciona tu objetivo principal para darte foco y claridad.
                     </p>
                   </div>
 
@@ -203,10 +212,10 @@ export default function OnboardingPage() {
                 <div className="text-center">
                   <div className="mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                      Elige tu tema preferido
+                      ¿Cómo prefieres ver tu espacio?
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Personaliza el ambiente de tu espacio creativo
+                      Elige el modo visual que te ayude a enfocarte mejor.
                     </p>
                   </div>
 
