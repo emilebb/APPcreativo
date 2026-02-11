@@ -8,10 +8,13 @@ import { useAuth } from "@/lib/authProvider";
 import { projectService } from "@/lib/projectService";
 import ProjectTitleEditor from "@/components/ProjectTitleEditor";
 import { useStyleLearning } from "@/hooks/useStyleLearning";
+import { useCollaboration } from "@/hooks/useCollaboration";
 import InspirationPanel from "@/components/InspirationPanel";
+import CommentsPanel from "@/components/CommentsPanel";
+import ShareProjectModal from "@/components/ShareProjectModal";
 import { 
   Pencil, Trash2, Undo, Redo, Palette, Move, 
-  Download, Save, Share2, Sparkles 
+  Download, Save, Share2, Sparkles, MessageSquare 
 } from "lucide-react";
 import Link from "next/link";
 
@@ -44,10 +47,15 @@ export default function CanvasPage() {
   const [selectedImage, setSelectedImage] = useState<DrawingElement | null>(null);
   const [project, setProject] = useState<any>(null);
   const [showInspiration, setShowInspiration] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Hook de aprendizaje de estilo
   const { analyzeProject, analyzing } = useStyleLearning(canvasId);
+  
+  // Hook de colaboración
+  const { comments, addComment } = useCollaboration(canvasId);
 
   const tools = [
     { id: 'pencil', name: 'Lápiz', icon: <Pencil className="w-4 h-4" />, cursor: 'crosshair' },
@@ -296,6 +304,30 @@ export default function CanvasPage() {
               {saving || analyzing ? 'Guardando...' : 'Guardar'}
             </button>
             <button
+              onClick={() => setShowShareModal(true)}
+              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2"
+              title="Compartir para Revisión"
+            >
+              <Share2 className="w-4 h-4" />
+              Compartir
+            </button>
+            <button
+              onClick={() => setShowComments(!showComments)}
+              className={`p-2 rounded-lg transition relative ${
+                showComments
+                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+              title="Comentarios"
+            >
+              <MessageSquare className="w-4 h-4" />
+              {comments.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {comments.length}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setShowInspiration(!showInspiration)}
               className={`p-2 rounded-lg transition ${
                 showInspiration
@@ -439,6 +471,17 @@ export default function CanvasPage() {
           </div>
         </div>
 
+        {/* Panel de Comentarios */}
+        {showComments && (
+          <CommentsPanel
+            projectId={canvasId}
+            onPinClick={(position) => {
+              // Hacer zoom o scroll a la ubicación del pin
+              console.log('📍 Ver comentario en:', position);
+            }}
+          />
+        )}
+
         {/* Panel de Inspiración */}
         {showInspiration && (
           <InspirationPanel
@@ -456,6 +499,14 @@ export default function CanvasPage() {
           />
         )}
       </div>
+
+      {/* Modal de Compartir Proyecto */}
+      <ShareProjectModal
+        projectId={canvasId}
+        projectName={project?.name || `Canvas ${canvasId}`}
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+      />
     </main>
   );
 }
