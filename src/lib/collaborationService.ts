@@ -152,10 +152,13 @@ export const collaborationService = {
     const supabase = getSupabaseClient();
     if (!supabase) return null;
 
+    // Limpiar el token de posibles encoding issues
+    const cleanToken = decodeURIComponent(token);
+
     const { data, error } = await supabase
       .from('project_shares')
       .select('*')
-      .eq('share_token', token)
+      .eq('share_token', cleanToken)
       .eq('status', 'active')
       .single();
 
