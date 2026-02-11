@@ -4,6 +4,15 @@ import { AuthProvider } from "../src/lib/authProvider";
 import { SentryInit } from "@/components/SentryInit";
 import "./globals.css"
 
+export const metadata = {
+  title: "CreationX - Plataforma Creativa",
+  description: "Tu espacio creativo profesional para proyectos, moodboards y mindmaps",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.ico",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -11,13 +20,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <head>
-        <title>CreationX - Plataforma Creativa Profesional</title>
-        <meta name="description" content="Tu espacio creativo profesional para proyectos, moodboards y mindmaps" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-      </head>
       <body>
         <SentryInit />
         <AuthProvider>
