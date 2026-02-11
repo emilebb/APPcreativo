@@ -108,12 +108,12 @@ export default function Sidebar() {
       </button>
 
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-40 w-72 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700
+        fixed lg:static inset-y-0 left-0 z-40 w-11/12 max-w-xs sm:w-72 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700
         transform transition-transform duration-200 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+          <div className="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
@@ -125,7 +125,7 @@ export default function Sidebar() {
             </div>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-2 sm:p-4 space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -133,7 +133,7 @@ export default function Sidebar() {
                   key={item.name}
                   href={item.href}
                   className={`
-                    flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg text-base sm:text-sm font-medium transition-colors
                     ${isActive 
                       ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300' 
                       : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
@@ -141,14 +141,14 @@ export default function Sidebar() {
                   `}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className="w-5 h-5" />
                   {item.name}
                 </Link>
               )
             })}
           </nav>
 
-          <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div className="p-2 sm:p-4 border-t border-neutral-200 dark:border-neutral-700">
             <button
               onClick={() => handleCreateProject('canvas')}
               disabled={loading}
@@ -160,7 +160,7 @@ export default function Sidebar() {
           </div>
 
           {projects.length > 0 && (
-            <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="p-2 sm:p-4 border-t border-neutral-200 dark:border-neutral-700">
               <h3 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">
                 Proyectos Recientes
               </h3>

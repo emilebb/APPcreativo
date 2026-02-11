@@ -36,14 +36,14 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link 
                 href="/signup"
-                className="group px-8 py-4 bg-white text-purple-600 rounded-lg hover:bg-gray-100 transition-all font-semibold text-lg shadow-xl hover:shadow-2xl flex items-center justify-center"
+                className="group px-8 py-4 min-h-[44px] text-base sm:text-lg bg-white text-purple-600 rounded-lg hover:bg-gray-100 transition-all font-semibold shadow-xl hover:shadow-2xl flex items-center justify-center"
               >
                 Comenzar Gratis
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link 
                 href="/login"
-                className="px-8 py-4 border-2 border-white/30 text-white rounded-lg hover:bg-white/10 backdrop-blur-sm transition-all font-semibold text-lg"
+                className="px-8 py-4 min-h-[44px] text-base sm:text-lg border-2 border-white/30 text-white rounded-lg hover:bg-white/10 backdrop-blur-sm transition-all font-semibold"
               >
                 Iniciar Sesión
               </Link>
@@ -64,60 +64,60 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-6">
-                <Layout className="w-7 h-7 text-purple-600 dark:text-purple-400" />
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Feature 1 */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-8 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-6">
+                  <Layout className="w-7 h-7 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                  Canvas Creativo
+                </h3>
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
+                  Dibuja, diseña y crea libremente en un lienzo infinito. Perfecto para logos, ilustraciones y bocetos.
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Canvas Creativo
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Dibuja, diseña y crea libremente en un lienzo infinito. Perfecto para logos, ilustraciones y bocetos.
-              </p>
-            </div>
 
-            {/* Feature 2 */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-6">
-                <Palette className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+              {/* Feature 2 */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-8 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-6">
+                  <Palette className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                  Moodboards
+                </h3>
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
+                  Organiza tus referencias visuales, paletas de colores e inspiración en tableros personalizados.
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Moodboards
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Organiza tus referencias visuales, paletas de colores e inspiración en tableros personalizados.
-              </p>
-            </div>
 
-            {/* Feature 3 */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mb-6">
-                <Lightbulb className="w-7 h-7 text-green-600 dark:text-green-400" />
+              {/* Feature 3 */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-8 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mb-6">
+                  <Lightbulb className="w-7 h-7 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                  Mindmaps
+                </h3>
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
+                  Estructura tus ideas y proyectos con mapas mentales interactivos y fáciles de usar.
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Mindmaps
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Estructura tus ideas y proyectos con mapas mentales interactivos y fáciles de usar.
-              </p>
-            </div>
 
-            {/* Feature 4 */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mb-6">
-                <MessageSquare className="w-7 h-7 text-orange-600 dark:text-orange-400" />
+              {/* Feature 4 */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-8 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-14 h-14 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mb-6">
+                  <MessageSquare className="w-7 h-7 text-orange-600 dark:text-orange-400" />
+                </div>
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                  Creative Coach IA
+                </h3>
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
+                  Recibe guía personalizada, supera bloqueos creativos y sigue protocolos de 7 días para tus proyectos.
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Creative Coach IA
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Recibe guía personalizada, supera bloqueos creativos y sigue protocolos de 7 días para tus proyectos.
-              </p>
-            </div>
 
-            {/* Feature 5 */}
+              {/* Feature 5 */
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-14 h-14 bg-pink-100 dark:bg-pink-900/30 rounded-xl flex items-center justify-center mb-6">
                 <Zap className="w-7 h-7 text-pink-600 dark:text-pink-400" />
