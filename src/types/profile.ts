@@ -10,4 +10,8 @@ export type Profile = {
   avatar_color: string;
   last_seen: string | null;
   created_at: string;
+  currentProject?: {
+    id: string;
+    name: string;
+  };
 };

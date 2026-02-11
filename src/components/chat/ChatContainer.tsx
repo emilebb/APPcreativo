@@ -613,335 +613,61 @@ export default function ChatContainer() {
     }
   }
 
+  const [projectName, setProjectName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profile?.currentProject) {
+      const projectName = profile.currentProject?.name || "tu proyecto";
+      setProjectName(projectName);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: `Veo que estás trabajando en el proyecto "${projectName}". ¿En qué puedo ayudarte hoy?`,
+        },
+      ]);
+    }
+  }, [profile]);
+
+  const renderMessages = () => {
+    return messages.map((message, index) => (
+      <ChatMessage
+        key={index}
+        role={message.role}
+        content={message.content}
+      />
+    ));
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 py-10">
-      <div className="flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
-          <div className="space-y-2">
-            <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
-              Creative Coach
-            </div>
-            <div className="text-base font-semibold text-neutral-800">
-              Vamos paso a paso.
-            </div>
-            {ctx.step !== "welcome" &&
-              ctx.step !== "free_input" &&
-              ctx.step !== "suggest_blockage" &&
-              ctx.step !== "choose_blockage" &&
-              ctx.step !== "end" && (
-                <MentalStateIndicator state={ctx.mental} />
-              )}
+    <div className="chat-container flex flex-col h-full bg-chat-bg p-4">
+      <div className="chat-messages flex-1 overflow-y-auto space-y-4">
+        {renderMessages()}
+        {isThinking && (
+          <div className="chat-thinking text-center text-gray-500">
+            Pensando...
           </div>
-          <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs uppercase tracking-[0.15em] text-white">
-            Beta
-          </span>
-        </div>
-
-        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
-          {messages.map((message, index) => (
-            <ChatMessage
-              key={`${message.role}-${index}`}
-              role={message.role}
-              content={message.content}
-            />
-          ))}
-          {isThinking && (
-            <div className="text-xs italic text-neutral-400">pensando…</div>
-          )}
-        </div>
-
-        <div className="border-t border-neutral-100 px-6 py-4">
-          {ctx.step === "returning_week" && (
-            <ChatOptions
-              options={[
-                { id: "continue", label: "Sí" },
-                { id: "not_now", label: "No ahora" },
-              ]}
-              onSelect={async (choice) => {
-                if (choice === "continue") {
-                  addUserMessage("Sí");
-                  
-                  const savedWeek = loadCurrentWeek();
-                  if (savedWeek) {
-                    // Continuar desde el día actual
-                    const currentDay = savedWeek.currentDay;
-                    
-                    // Nuevos índices después del polish: cada día comienza en [1, 5, 9, 13, 17, 21, 25]
-                    const dayStartIndexes = [1, 5, 9, 13, 17, 21, 25];
-                    const startStepIndex = dayStartIndexes[currentDay - 1] || 0;
-                    
-                    const newProtocolState: ProtocolState = {
-                      protocolId: "primeros_7_dias",
-                      currentStepIndex: startStepIndex,
-                      userResponses: [],
-                      isComplete: false,
-                    };
-
-                    setProtocolState(newProtocolState);
-                    setCtx((prev) => ({
-                      ...prev,
-                      protocolId: "primeros_7_dias",
-                      protocolStepIndex: startStepIndex,
-                      step: "protocol_step",
-                      weekProjectTitle: savedWeek.projectTitle,
-                      weekCurrentDay: currentDay,
-                      weekStartedAt: savedWeek.startedAt,
-                    }));
-
-                    setIsThinking(true);
-                    await new Promise((resolve) => setTimeout(resolve, 600));
-                    setIsThinking(false);
-
-                    const { step } = getNextProtocolStep(newProtocolState);
-                    if (step) {
-                      addSystemMessages([step.text]);
-                    }
-                  }
-                } else {
-                  // Usuario no quiere continuar ahora
-                  addUserMessage("No ahora");
-                  addSystemMessages(["Perfecto.\nCuando quieras, estaré aquí."]);
-                  setCtx((prev) => ({ ...prev, step: "end" }));
-                }
-              }}
-            />
-          )}
-          
-          {ctx.step === "free_input" && (
-            <ChatInput
-              placeholder="Escribe lo que quieras…"
-              onSend={handleFreeInput}
-            />
-          )}
-
-          {ctx.step === "suggest_blockage" && ctx.suggestedBlockages && (
-            <ChatOptions
-              options={ctx.suggestedBlockages.map((id) => {
-                const blockage = engine.blockages.find((b) => b.id === id);
-                return {
-                  id,
-                  label: blockage?.label || id,
-                };
-              })}
-              onSelect={handleBlockageSelect}
-            />
-          )}
-
-          {ctx.step === "choose_blockage" && (
-            <ChatOptions
-              options={blockageOptions}
-              onSelect={handleBlockageSelect}
-            />
-          )}
-
-          {ctx.step === "protocol_offer" && ctx.nextProtocolOffer && (
-            <ChatOptions
-              options={[
-                { id: "accept", label: "Sí, dale" },
-                { id: "decline", label: "No, lo dejo aquí" },
-              ]}
-              onSelect={async (choice) => {
-                if (choice === "accept" && ctx.nextProtocolOffer) {
-                  addUserMessage("Sí, dale");
-                  
-                  // 🔥 Si es el protocolo de 7 días, inicializar guardado
-                  if (ctx.nextProtocolOffer === "primeros_7_dias") {
-                    const projectTitle = ctx.protocolResponses?.[0] || "Proyecto";
-                    const newWeek: CurrentWeek = {
-                      projectTitle,
-                      startedAt: new Date().toISOString(),
-                      currentDay: 1,
-                      days: {
-                        1: { done: false },
-                        2: { done: false },
-                        3: { done: false },
-                        4: { done: false },
-                        5: { done: false },
-                        6: { done: false },
-                        7: { done: false },
-                      },
-                    };
-                    saveCurrentWeek(newWeek);
-                  }
-                  
-                  // Iniciar el protocolo ofrecido
-                  const newProtocolState: ProtocolState = {
-                    protocolId: ctx.nextProtocolOffer,
-                    currentStepIndex: 0,
-                    userResponses: [],
-                    isComplete: false,
-                  };
-
-                  setProtocolState(newProtocolState);
-                  setCtx((prev) => ({
-                    ...prev,
-                    protocolId: ctx.nextProtocolOffer,
-                    protocolStepIndex: 0,
-                    step: "protocol_step",
-                    nextProtocolOffer: undefined,
-                  }));
-
-                  setIsThinking(true);
-                  await new Promise((resolve) => setTimeout(resolve, 600));
-                  setIsThinking(false);
-
-                  const { step } = getNextProtocolStep(newProtocolState);
-                  if (step) {
-                    addSystemMessages([step.text]);
-                  }
-                } else {
-                  // Usuario declinó
-                  addUserMessage("No, lo dejo aquí");
-                  addSystemMessages(["Perfecto.\n¿Esto te destrabó un poco?"]);
-                  setCtx((prev) => ({ 
-                    ...prev, 
-                    step: "feedback",
-                    nextProtocolOffer: undefined 
-                  }));
-                }
-              }}
-            />
-          )}
-
-          {ctx.step === "ideas_offer" && ctx.detectedTopic && (
-            <ChatOptions
-              options={[
-                { id: "ideas_yes", label: "Sí, dame ideas" },
-                { id: "ideas_no", label: "No ahora" },
-              ]}
-              onSelect={async (choice) => {
-                if (choice === "ideas_yes") {
-                  addUserMessage("Sí, dame ideas");
-                  
-                  setIsThinking(true);
-                  await new Promise((resolve) => setTimeout(resolve, 600));
-                  
-                  try {
-                    const res = await fetch("/api/ideas", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ topic: ctx.detectedTopic }),
-                    });
-                    
-                    const data = (await res.json()) as {
-                      ideas?: string[];
-                      topic?: string;
-                      error?: string;
-                    };
-                    
-                    setIsThinking(false);
-                    
-                    if (data.ideas && data.ideas.length > 0) {
-                      // Mostrar intro
-                      addSystemMessages([
-                        "Aquí van algunas ideas posibles.",
-                        "No son para hacerlas todas."
-                      ]);
-                      
-                      // Mostrar ideas con micro-pauses
-                      for (const idea of data.ideas) {
-                        await new Promise((resolve) => setTimeout(resolve, 300));
-                        addSystemMessages([idea]);
-                      }
-                      
-                      // Mostrar cierre
-                      await new Promise((resolve) => setTimeout(resolve, 500));
-                      addSystemMessages(["Elige una que te dé ganas de empezar."]);
-                    } else {
-                      addSystemMessages(["No pude generar ideas. Intentemos de otro modo."]);
-                    }
-                  } catch (error) {
-                    setIsThinking(false);
-                    addSystemMessages(["Algo falló. Probemos después."]);
-                  }
-                  
-                  setCtx((prev) => ({
-                    ...prev,
-                    step: "feedback"
-                  }));
-                } else {
-                  addUserMessage("No ahora");
-                  addSystemMessages(["Perfecto.\n¿Esto te destrabó un poco?"]);
-                  setCtx((prev) => ({ ...prev, step: "feedback" }));
-                }
-              }}
-            />
-          )}
-
-          {ctx.step === "protocol_step" && protocolState && (() => {
-            const { step } = getNextProtocolStep(protocolState);
-            if (!step) return null;
-
-            if (step.type === "prompt") {
-              return (
-                <div className="space-y-3">
-                  <ChatInput
-                    placeholder={step.placeholder || "Escribe tu respuesta"}
-                    onSend={(text) => handleProtocolNext(text)}
-                  />
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={handleChangeExercise}
-                      className="text-sm text-neutral-500 hover:text-neutral-700 px-3 py-1 rounded-lg hover:bg-neutral-100"
-                    >
-                      Cambiar ejercicio
-                    </button>
-                  </div>
-                </div>
-              );
-            }
-
-            // Para steps de tipo "system", mostrar botón para continuar
-            return (
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => handleProtocolNext()}
-                  className="text-sm bg-neutral-800 text-white px-4 py-2 rounded-lg hover:bg-neutral-700"
-                >
-                  Siguiente
-                </button>
-              </div>
-            );
-          })()}
-
-          {ctx.step === "user_response" && (
-            <ChatInput
-              placeholder={
-                ctx.mental.energy === "low"
-                  ? "Una palabra esta bien"
-                  : "Escribe aqui"
-              }
-              onSend={handleUserText}
-            />
-          )}
-
-          {ctx.step === "feedback" && (
-            <ChatOptions
-              options={[
-                { id: "yes", label: "Sí" },
-                { id: "no", label: "No" },
-              ]}
-              onSelect={(id) => handleFeedback(id as "yes" | "no")}
-            />
-          )}
-
-          {ctx.step === "next_action" && (
-            <ChatOptions
-              options={[
-                { id: "another", label: "Otro ejercicio" },
-                { id: "deepen", label: "Profundizar" },
-                { id: "end", label: "Parar aquí" },
-              ]}
-              onSelect={handleNextAction}
-            />
-          )}
-
-          {ctx.step === "end" && (
-            <div className="text-center text-sm text-neutral-500">
-              Puedes cerrar cuando quieras.
-            </div>
-          )}
-        </div>
+        )}
+      </div>
+      <div className="chat-input mt-4">
+        <ChatInput
+          onSend={(content) => {
+            setMessages((prev) => [
+              ...prev,
+              { role: "user", content },
+            ]);
+            setIsThinking(true);
+            // Simular respuesta de la IA
+            setTimeout(() => {
+              setMessages((prev) => [
+                ...prev,
+                { role: "system", content: "Esta es una respuesta de ejemplo." },
+              ]);
+              setIsThinking(false);
+            }, 1000);
+          }}
+          placeholder="Escribe tu mensaje aquí..."
+        />
       </div>
     </div>
   );
