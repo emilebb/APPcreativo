@@ -8,12 +8,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { useAuth } from "../providers/AuthProvider";
-import { PrivateGate } from "../(protected)/PrivateGate";
+import { useAuth } from "../../src/lib/authProvider";
 import { ArrowRight, Palette, Briefcase, GraduationCap, Lightbulb, Moon, Sun } from "lucide-react";
 
 export default function OnboardingPage() {
-  const auth = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +20,7 @@ export default function OnboardingPage() {
   );
 
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [userData, setUserData] = useState({
     profession: '',
     purpose: '',
@@ -51,7 +50,7 @@ export default function OnboardingPage() {
   ];
 
   const handleComplete = async () => {
-    setLoading(true);
+    setSaving(true);
     
     try {
       // Guardar en user_metadata
@@ -70,7 +69,7 @@ export default function OnboardingPage() {
     } catch (error) {
       console.error('Error saving onboarding:', error);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -82,7 +81,13 @@ export default function OnboardingPage() {
     if (step > 1) setStep(step - 1);
   };
 
-  if (auth.status === "loading") {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
@@ -93,8 +98,10 @@ export default function OnboardingPage() {
     );
   }
 
+  if (!user) return null;
+
   return (
-    <PrivateGate>
+    <div>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="max-w-md w-full">
@@ -255,10 +262,10 @@ export default function OnboardingPage() {
                 ) : (
                   <button
                     onClick={handleComplete}
-                    disabled={loading || !userData.purpose}
+                    disabled={saving || !userData.purpose}
                     className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {loading ? 'Configurando...' : 'Comenzar a crear'}
+                    {saving ? 'Configurando...' : 'Comenzar a crear'}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
@@ -277,6 +284,6 @@ export default function OnboardingPage() {
           </div>
         </div>
       </div>
-    </PrivateGate>
+    </div>
   );
 }
