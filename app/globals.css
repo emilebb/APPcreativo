@@ -77,11 +77,18 @@
 [data-theme="dark"] {
   --background: #0f0f10;
   --foreground: #ededed;
+  --accent: #f97316;
+  --card: #18181b;
+  --text-muted: #a1a1aa;
 }
 
 [data-theme="night"] {
   --background: #050707;
   --foreground: rgba(255, 255, 255, 0.86);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -92,6 +99,11 @@ body {
 
 main {
   min-height: 100vh;
+}
+
+/* Scroll margin for anchor links (e.g. #demo-video) */
+[id] {
+  scroll-margin-top: 5rem;
 }
 
 .night .theme-toggle {
