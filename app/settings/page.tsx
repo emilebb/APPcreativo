@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/authProvider";
 import { useProfile } from "@/lib/useProfile";
 import { uploadAvatar } from "@/lib/uploadAvatar";
 import type { CreativeMode } from "@/types/profile";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SettingsLayout from "@/components/SettingsLayout";
 import GeneralSettings from "./general";
@@ -123,117 +124,136 @@ export default function SettingsPage() {
 
   return (
     <SettingsLayout>
-      <div className="settings-content">
-        <div>
+      <div className="settings-content space-y-8">
+        <header>
           <button
+            type="button"
             onClick={() => router.push("/")}
-            className="text-sm text-neutral-500 hover:text-neutral-900 transition mb-4"
+            className="inline-flex items-center gap-1.5 text-sm text-[#9ca3af] hover:text-white transition-colors mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171a] rounded"
           >
-            ← Volver
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            Volver
           </button>
-          <h1 className="text-xl font-medium text-neutral-900">Ajustes</h1>
-          <p className="text-neutral-500 mt-2">
+          <h1 className="text-xl font-semibold text-white tracking-tight">
+            Ajustes
+          </h1>
+          <p className="text-[#9ca3af] text-sm mt-1">
             Cambios pequeños. Efecto inmediato.
           </p>
-        </div>
+        </header>
 
-        <div className="flex items-center gap-4 p-4 bg-neutral-50 rounded-lg border border-neutral-200">
-          <div
-            className="h-14 w-14 rounded-full overflow-hidden bg-neutral-200 flex items-center justify-center flex-shrink-0 relative"
-            style={{ backgroundColor: profile.avatar_color }}
-          >
-            <span className="text-lg font-medium text-white" style={{ opacity: hideInitial ? 0 : 1 }}>
-              {initial}
-            </span>
-            {showImage ? (
-              <img
-                src={profile.avatar_url || ""}
-                alt="Avatar"
-                className="absolute inset-0 h-full w-full object-cover"
-                style={{ opacity: avatarLoaded ? 1 : 0 }}
-                onLoad={() => setAvatarLoaded(true)}
-                onError={() => {
-                  setAvatarError(true);
-                  setAvatarLoaded(false);
-                }}
-              />
-            ) : null}
+        {/* Avatar card */}
+        <section className="rounded-xl bg-white/5 border border-white/10 p-5 shadow-sm">
+          <div className="flex items-center gap-5">
+            <div
+              className="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 relative ring-2 ring-white/10"
+              style={{ backgroundColor: profile.avatar_color || "#374151" }}
+            >
+              <span
+                className="text-xl font-semibold text-white"
+                style={{ opacity: hideInitial ? 0 : 1 }}
+              >
+                {initial}
+              </span>
+              {showImage ? (
+                <img
+                  src={profile.avatar_url || ""}
+                  alt="Avatar"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  style={{ opacity: avatarLoaded ? 1 : 0 }}
+                  onLoad={() => setAvatarLoaded(true)}
+                  onError={() => {
+                    setAvatarError(true);
+                    setAvatarLoaded(false);
+                  }}
+                />
+              ) : null}
+            </div>
+            <div className="min-w-0">
+              <label className="text-sm font-medium text-white cursor-pointer hover:text-[#93c5fd] transition-colors">
+                Cambiar imagen
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 1024 * 1024) {
+                      alert("La imagen es demasiado grande.");
+                      return;
+                    }
+                    try {
+                      setSaving(true);
+                      await uploadAvatar(file, profile.id);
+                      router.refresh();
+                    } catch (err) {
+                      console.error("Error uploading avatar:", err);
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                />
+              </label>
+              <p className="text-xs text-[#6b7280] mt-0.5">
+                Esto es solo para reconocer tu espacio.
+              </p>
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-sm text-neutral-600 cursor-pointer">
-              Cambiar imagen
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
+        </section>
 
-                  if (file.size > 1024 * 1024) {
-                    alert("La imagen es demasiado grande.");
-                    return;
-                  }
-
-                  try {
-                    setSaving(true);
-                    await uploadAvatar(file, profile.id);
-                    router.refresh();
-                  } catch (err) {
-                    console.error("Error uploading avatar:", err);
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
-              />
-            </label>
-            <p className="text-xs text-neutral-500">
-              Esto es solo para reconocer tu espacio.
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-sm font-medium text-[#d1d5db] mb-3">
               Tema de la interfaz
-            </label>
+            </h2>
             <ThemeToggle />
-          </div>
-          {/* Ritmo */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-neutral-700">
+          </section>
+
+          <section>
+            <label className="block text-sm font-medium text-[#d1d5db] mb-3">
               Ritmo
             </label>
-            <select
-              value={profile.creative_mode}
-              onChange={handleModeChange}
-              disabled={saving}
-              className="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-400 disabled:opacity-50 transition"
-            >
-              <option value="calm">Calmado</option>
-              <option value="direct">Directo</option>
-            </select>
-          </div>
+            <div className="relative">
+              <select
+                value={profile.creative_mode}
+                onChange={handleModeChange}
+                disabled={saving}
+                className="w-full appearance-none px-4 py-3 pl-4 pr-10 bg-white/95 text-[#111827] rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 focus:border-[#3b82f6] disabled:opacity-50 transition shadow-sm"
+              >
+                <option value="calm">Calmado</option>
+                <option value="direct">Directo</option>
+              </select>
+              <ChevronDown
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b7280] pointer-events-none"
+                aria-hidden
+              />
+            </div>
+          </section>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-2">
           <button
+            type="button"
             onClick={() => setActiveCategory("general")}
-            className="text-sm font-medium text-neutral-600 border border-neutral-300 rounded-lg px-4 py-2"
+            className="text-sm font-medium rounded-lg px-4 py-2.5 bg-white text-[#111827] shadow-sm hover:bg-[#f3f4f6] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171a]"
           >
             General
           </button>
           <button
+            type="button"
             onClick={() => setActiveCategory("appearance")}
-            className="text-sm font-medium text-neutral-600 border border-neutral-300 rounded-lg px-4 py-2"
+            className="text-sm font-medium rounded-lg px-4 py-2.5 border border-white/20 text-white hover:bg-white/5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171a]"
           >
             Apariencia
           </button>
         </div>
 
         {saving && (
-          <p className="text-sm text-neutral-500">Guardando...</p>
+          <p className="text-sm text-[#9ca3af] flex items-center gap-2">
+            <span className="inline-block w-3 h-3 border-2 border-[#9ca3af] border-t-transparent rounded-full animate-spin" />
+            Guardando...
+          </p>
         )}
       </div>
     </SettingsLayout>
