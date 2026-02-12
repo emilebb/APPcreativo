@@ -3,16 +3,31 @@
 import { useState } from "react";
 import { Settings, Palette, Sparkles, Bell, Shield } from "lucide-react";
 
-const categories = [
+export const SETTINGS_CATEGORIES = [
   { id: "general", name: "General", icon: Settings },
   { id: "appearance", name: "Apariencia", icon: Palette },
   { id: "experience", name: "Experiencia Creativa", icon: Sparkles },
   { id: "notifications", name: "Notificaciones", icon: Bell },
   { id: "security", name: "Seguridad", icon: Shield },
-];
+] as const;
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-  const [activeCategory, setActiveCategory] = useState("general");
+export type SettingsCategoryId = (typeof SETTINGS_CATEGORIES)[number]["id"];
+
+type SettingsLayoutProps = {
+  children: React.ReactNode;
+  activeCategory?: SettingsCategoryId;
+  onCategoryChange?: (id: SettingsCategoryId) => void;
+};
+
+export default function SettingsLayout({
+  children,
+  activeCategory: controlledCategory,
+  onCategoryChange,
+}: SettingsLayoutProps) {
+  const [internalCategory, setInternalCategory] = useState<SettingsCategoryId>("general");
+  const activeCategory = controlledCategory ?? internalCategory;
+  const setActiveCategory = onCategoryChange ?? setInternalCategory;
+  const categories = SETTINGS_CATEGORIES;
 
   return (
     <div className="flex h-full min-h-0">
