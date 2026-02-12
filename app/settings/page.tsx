@@ -129,24 +129,24 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="inline-flex items-center gap-1.5 text-sm text-[#9ca3af] hover:text-white transition-colors mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171a] rounded"
+            className="inline-flex items-center gap-1.5 text-sm text-neutral-500 dark:text-[#9ca3af] hover:text-neutral-900 dark:hover:text-white transition-colors mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#16171a] rounded"
           >
             <ArrowLeft className="w-4 h-4" aria-hidden />
             Volver
           </button>
-          <h1 className="text-xl font-semibold text-white tracking-tight">
+          <h1 className="text-xl font-semibold text-neutral-900 dark:text-white tracking-tight">
             Ajustes
           </h1>
-          <p className="text-[#9ca3af] text-sm mt-1">
+          <p className="text-neutral-500 dark:text-[#9ca3af] text-sm mt-1">
             Cambios pequeños. Efecto inmediato.
           </p>
         </header>
 
         {/* Avatar card */}
-        <section className="rounded-xl bg-white/5 border border-white/10 p-5 shadow-sm">
+        <section className="rounded-xl bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 p-5 shadow-sm">
           <div className="flex items-center gap-5">
             <div
-              className="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 relative ring-2 ring-white/10"
+              className="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 relative ring-2 ring-neutral-200 dark:ring-white/10"
               style={{ backgroundColor: profile.avatar_color || "#374151" }}
             >
               <span
@@ -170,7 +170,7 @@ export default function SettingsPage() {
               ) : null}
             </div>
             <div className="min-w-0">
-              <label className="text-sm font-medium text-white cursor-pointer hover:text-[#93c5fd] transition-colors">
+              <label className="text-sm font-medium text-neutral-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-[#93c5fd] transition-colors">
                 Cambiar imagen
                 <input
                   type="file"
@@ -195,7 +195,7 @@ export default function SettingsPage() {
                   }}
                 />
               </label>
-              <p className="text-xs text-[#6b7280] mt-0.5">
+              <p className="text-xs text-neutral-500 dark:text-[#6b7280] mt-0.5">
                 Esto es solo para reconocer tu espacio.
               </p>
             </div>
@@ -204,14 +204,14 @@ export default function SettingsPage() {
 
         <div className="space-y-8">
           <section>
-            <h2 className="text-sm font-medium text-[#d1d5db] mb-3">
+            <h2 className="text-sm font-medium text-neutral-700 dark:text-[#d1d5db] mb-3">
               Tema de la interfaz
             </h2>
             <ThemeToggle />
           </section>
 
           <section>
-            <label className="block text-sm font-medium text-[#d1d5db] mb-3">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-[#d1d5db] mb-3">
               Ritmo
             </label>
             <div className="relative">
@@ -219,13 +219,13 @@ export default function SettingsPage() {
                 value={profile.creative_mode}
                 onChange={handleModeChange}
                 disabled={saving}
-                className="w-full appearance-none px-4 py-3 pl-4 pr-10 bg-white/95 text-[#111827] rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 focus:border-[#3b82f6] disabled:opacity-50 transition shadow-sm"
+                className="w-full appearance-none px-4 py-3 pl-4 pr-10 bg-white dark:bg-white/95 text-neutral-900 dark:text-[#111827] rounded-xl border border-neutral-200 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 transition shadow-sm"
               >
                 <option value="calm">Calmado</option>
                 <option value="direct">Directo</option>
               </select>
               <ChevronDown
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b7280] pointer-events-none"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-[#6b7280] pointer-events-none"
                 aria-hidden
               />
             </div>
@@ -236,22 +236,22 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setActiveCategory("general")}
-            className="text-sm font-medium rounded-lg px-4 py-2.5 bg-white text-[#111827] shadow-sm hover:bg-[#f3f4f6] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171a]"
+            className="text-sm font-medium rounded-lg px-4 py-2.5 bg-neutral-900 dark:bg-white text-white dark:text-[#111827] shadow-sm hover:bg-neutral-800 dark:hover:bg-[#f3f4f6] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#16171a]"
           >
             General
           </button>
           <button
             type="button"
             onClick={() => setActiveCategory("appearance")}
-            className="text-sm font-medium rounded-lg px-4 py-2.5 border border-white/20 text-white hover:bg-white/5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171a]"
+            className="text-sm font-medium rounded-lg px-4 py-2.5 border border-neutral-300 dark:border-white/20 text-neutral-700 dark:text-white hover:bg-neutral-50 dark:hover:bg-white/5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#16171a]"
           >
             Apariencia
           </button>
         </div>
 
         {saving && (
-          <p className="text-sm text-[#9ca3af] flex items-center gap-2">
-            <span className="inline-block w-3 h-3 border-2 border-[#9ca3af] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-neutral-500 dark:text-[#9ca3af] flex items-center gap-2">
+            <span className="inline-block w-3 h-3 border-2 border-neutral-400 dark:border-[#9ca3af] border-t-transparent rounded-full animate-spin" />
             Guardando...
           </p>
         )}
