@@ -8,11 +8,13 @@ const PUBLIC_PATHS = [
   '/auth',
   '/confirm-email',
   '/review',
+  '/monitoring', // Sentry tunnel (no redirigir para no provocar 405 en /login)
 ]
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) return true
   if (pathname.startsWith('/auth/')) return true // /auth/callback etc.
+  if (pathname === '/manifest.webmanifest' || pathname.startsWith('/manifest')) return true // PWA manifest
   return false
 }
 
