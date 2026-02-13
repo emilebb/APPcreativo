@@ -53,11 +53,6 @@ export default function NewMindMapPage() {
     "#8B5CF6", "#EC4899", "#6B7280", "#059669"
   ];
 
-  if (!session) {
-    router.push("/");
-    return null;
-  }
-
   const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (isConnecting) return;
     

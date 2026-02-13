@@ -17,15 +17,10 @@ export default function ProjectPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!session) {
-      router.push("/");
-      return;
-    }
-
     if (projectId) {
       loadProject();
     }
-  }, [session, projectId]);
+  }, [projectId]);
 
   const loadProject = async () => {
     try {

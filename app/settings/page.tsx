@@ -23,13 +23,6 @@ export default function SettingsPage() {
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState<SettingsCategoryId>("general");
 
-  // Redirigir si no hay sesión
-  useEffect(() => {
-    if (!authLoading && !session) {
-      router.replace("/login");
-    }
-  }, [authLoading, session, router]);
-
   useEffect(() => {
     setAvatarError(false);
     setAvatarLoaded(false);

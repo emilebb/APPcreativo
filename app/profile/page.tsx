@@ -18,13 +18,6 @@ export default function ProfilePage() {
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Redirigir si no hay sesión
-  useEffect(() => {
-    if (!authLoading && !session) {
-      router.replace("/login");
-    }
-  }, [authLoading, session, router]);
-
   useEffect(() => {
     setAvatarError(false);
     setAvatarLoaded(false);

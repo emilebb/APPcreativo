@@ -81,12 +81,6 @@ export default function OnboardingPage() {
     if (step > 1) setStep(step - 1);
   };
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/login');
-    }
-  }, [authLoading, user, router]);
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
@@ -98,7 +92,16 @@ export default function OnboardingPage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 p-4">
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">Puedes explorar la app sin cuenta o iniciar sesión para guardar tu progreso.</p>
+          <a href="/" className="text-blue-600 dark:text-blue-400 font-medium">Ir al inicio</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

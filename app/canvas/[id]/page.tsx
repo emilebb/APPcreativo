@@ -72,14 +72,9 @@ export default function CanvasPage() {
   ];
 
   useEffect(() => {
-    if (!session) {
-      router.push('/');
-      return;
-    }
-
     if (canvasId) {
       loadCanvas();
-      loadProject();
+      if (session?.user) loadProject();
     }
   }, [session, canvasId]);
 
@@ -242,27 +237,6 @@ export default function CanvasPage() {
     link.href = canvas.toDataURL();
     link.click();
   };
-
-  if (!session) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 p-4">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
-            Canvas no encontrado
-          </h2>
-          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-            El canvas que buscas no existe o no tienes permiso para verlo.
-          </p>
-          <Link
-            href="/canvas"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Volver a Canvas
-          </Link>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">

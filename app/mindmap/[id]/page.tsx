@@ -36,15 +36,10 @@ export default function MindMapDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!session) {
-      router.push("/");
-      return;
-    }
-
     if (mindMapId) {
       loadMindMap();
     }
-  }, [session, mindMapId]);
+  }, [mindMapId]);
 
   const loadMindMap = async () => {
     try {

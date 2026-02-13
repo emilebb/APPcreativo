@@ -20,12 +20,10 @@ export default function ExplorePage() {
   const [projectToDelete, setProjectToDelete] = useState<any | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
+    if (!user) {
+      setLoading(false);
       return;
     }
-
-    if (!user) return;
 
     const loadProjects = async () => {
       try {
@@ -51,8 +49,6 @@ export default function ExplorePage() {
       </div>
     );
   }
-
-  if (!user) return null;
 
   const handleDelete = async (id: string) => {
     try {

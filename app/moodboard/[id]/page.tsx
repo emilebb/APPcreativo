@@ -42,15 +42,10 @@ export default function MoodboardDetailPage() {
   const [selectedImage, setSelectedImage] = useState<MoodboardImage | null>(null);
 
   useEffect(() => {
-    if (!session) {
-      router.push("/");
-      return;
-    }
-
     if (moodboardId) {
       loadMoodboard();
     }
-  }, [session, moodboardId]);
+  }, [moodboardId]);
 
   const loadMoodboard = async () => {
     try {

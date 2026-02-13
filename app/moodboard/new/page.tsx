@@ -29,11 +29,6 @@ export default function NewMoodboardPage() {
   // Colores extraídos de las imágenes (simulación)
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
 
-  if (!session) {
-    router.push("/");
-    return null;
-  }
-
   const handleFileSelect = useCallback((files: FileList | null) => {
     if (!files) return;
 
