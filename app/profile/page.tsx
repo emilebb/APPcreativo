@@ -21,7 +21,7 @@ export default function ProfilePage() {
   // Redirigir si no hay sesión
   useEffect(() => {
     if (!authLoading && !session) {
-      router.push("/");
+      router.replace("/login");
     }
   }, [authLoading, session, router]);
 
@@ -247,10 +247,10 @@ export default function ProfilePage() {
           </button>
           
           <button
-            onClick={() => {
+            onClick={async () => {
               if (supabase) {
-                supabase.auth.signOut();
-                router.push("/");
+                await supabase.auth.signOut();
+                window.location.href = "/api/auth/signout";
               }
             }}
             className="w-full px-4 py-3 text-left text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition flex items-center justify-between group"

@@ -31,6 +31,7 @@ export default function AuthButton() {
     if (supabase) {
       await supabase.auth.signOut();
       setIsMenuOpen(false);
+      window.location.href = "/api/auth/signout";
     }
   };
 

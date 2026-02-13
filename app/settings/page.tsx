@@ -26,7 +26,7 @@ export default function SettingsPage() {
   // Redirigir si no hay sesión
   useEffect(() => {
     if (!authLoading && !session) {
-      router.push("/");
+      router.replace("/login");
     }
   }, [authLoading, session, router]);
 

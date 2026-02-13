@@ -7,13 +7,14 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/authProvider";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Sparkles, Loader2, Check } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   
   // Estados del flujo TOP 1
@@ -28,18 +29,21 @@ export default function LoginPage() {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [checkingEmail, setCheckingEmail] = useState(false);
 
-  // Redirección inteligente
+  // Redirección inteligente tras login
   useEffect(() => {
     if (!authLoading && user) {
-      // Post-login inteligente
       if (!user.user_metadata?.onboarding_completed) {
-        router.push('/onboarding');
+        router.replace('/onboarding');
+        return;
+      }
+      const from = searchParams.get('from');
+      if (from && from.startsWith('/') && !from.startsWith('/login') && !from.startsWith('/signup') && !from.startsWith('/auth')) {
+        router.replace(from);
       } else {
-        // TODO: Redirigir al último proyecto o explore
-        router.push('/explore');
+        router.replace('/explore');
       }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, searchParams]);
 
   // Detección inteligente de email
   const checkEmailExists = async (emailToCheck: string) => {

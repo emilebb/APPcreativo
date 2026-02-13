@@ -2,13 +2,17 @@
 
 import { Shield, Key, Smartphone, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/authProvider";
-import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import { useState } from "react";
 
 export default function SecuritySettings() {
   const { user } = useAuth();
-  const router = useRouter();
   const [showChangePassword, setShowChangePassword] = useState(false);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/api/auth/signout";
+  };
 
   return (
     <div className="space-y-8">
@@ -118,11 +122,11 @@ export default function SecuritySettings() {
       <section className="pt-4 border-t border-neutral-200 dark:border-white/10">
         <button
           type="button"
-          onClick={() => router.push("/auth")}
+          onClick={handleSignOut}
           className="inline-flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 hover:underline"
         >
           <LogOut className="w-4 h-4" />
-          Cerrar sesión en todos los dispositivos
+          Cerrar sesión
         </button>
       </section>
     </div>

@@ -1,10 +1,17 @@
 "use client";
+
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function UserMenu({ user }: { user: any }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/api/auth/signout";
+  };
 
   return (
     <div className="flex items-center gap-2">
@@ -12,8 +19,9 @@ export default function UserMenu({ user }: { user: any }) {
         {user?.email || "Sin email"}
       </span>
       <button
-        className="text-xs px-2 py-1 rounded bg-red-100 text-red-700"
-        onClick={() => alert("Cerrar sesión (implementa aquí tu lógica)")}
+        type="button"
+        className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200"
+        onClick={handleSignOut}
       >
         Cerrar sesión
       </button>

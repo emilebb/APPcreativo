@@ -1,6 +1,21 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/signup',
+  '/auth',
+  '/confirm-email',
+  '/review',
+]
+
+function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) return true
+  if (pathname.startsWith('/auth/')) return true // /auth/callback etc.
+  return false
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
 
@@ -9,12 +24,14 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) { return request.cookies.get(name)?.value },
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
         set(name: string, value: string, options: CookieOptions) {
           response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
-          response.cookies.set({ name, value: '', ...options })
+          response.cookies.set({ name, value: '', maxAge: 0, ...options })
         },
       },
     }
@@ -22,14 +39,17 @@ export async function middleware(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Si intenta ir a /projects sin estar logueado, lo manda al home
-  if (!session && request.nextUrl.pathname.startsWith('/projects')) {
-    return NextResponse.redirect(new URL('/', request.url))
+  if (!session && !isPublicPath(request.nextUrl.pathname)) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('from', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
   return response
 }
 
 export const config = {
-  matcher: ['/projects/:path*', '/moodboard/:path*', '/canvas/:path*'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|icon.svg|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
