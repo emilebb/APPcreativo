@@ -4,9 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import { 
   Pencil, Eraser, Square, Circle, Type, Download, 
   Trash2, Undo, Redo, Palette, Move, 
-  MousePointer, Save, Share2, Sparkles 
+  MousePointer, Save, Share2, Sparkles, Zap, Trophy 
 } from "lucide-react";
 import AIAssistantPanel from "@/components/AIAssistantPanel";
+import FocusMode from "@/components/FocusMode";
+import ProgressDashboard from "@/components/ProgressDashboard";
+import { initializeProgress } from "@/lib/progressSystem";
 
 interface Tool {
   id: string;
@@ -37,6 +40,9 @@ export default function Canvas() {
   const [history, setHistory] = useState<DrawingElement[][]>([]);
   const [historyStep, setHistoryStep] = useState(0);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showFocusMode, setShowFocusMode] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [userProgress, setUserProgress] = useState(initializeProgress());
 
   const tools: Tool[] = [
     { id: 'pencil', name: 'Lápiz', icon: <Pencil className="w-4 h-4" />, cursor: 'crosshair' },
@@ -542,6 +548,20 @@ export default function Canvas() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowFocusMode(true)}
+              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              title="Modo Enfoque"
+            >
+              <Zap className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowProgress(true)}
+              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              title="Ver Progreso"
+            >
+              <Trophy className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setShowAIPanel(!showAIPanel)}
               className={`p-2 rounded-lg transition ${
                 showAIPanel
@@ -742,6 +762,26 @@ export default function Canvas() {
           />
         )}
       </div>
+
+      {/* Modo Enfoque */}
+      <FocusMode
+        isActive={showFocusMode}
+        onClose={() => setShowFocusMode(false)}
+        taskName="Crear en Canvas"
+        duration={25}
+      />
+
+      {/* Dashboard de Progreso */}
+      {showProgress && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowProgress(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <ProgressDashboard
+              progress={userProgress}
+              onClose={() => setShowProgress(false)}
+            />
+          </div>
+        </div>
+      )}
     </main>
   );
 }
