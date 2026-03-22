@@ -299,9 +299,6 @@ export default function CanvasPage() {
 
       // Dibujar imagen en el canvas
       ctx.drawImage(img, 50, 50, width, height);
-
-      // Redibujar elementos existentes
-      redrawCanvas();
     };
     img.src = imageData;
   };
