@@ -8,7 +8,7 @@ import { ArrowLeft, Settings, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export default function ProjectPage() {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;

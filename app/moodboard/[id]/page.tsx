@@ -31,7 +31,7 @@ interface Moodboard {
 }
 
 export default function MoodboardDetailPage() {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
   const moodboardId = params.id as string;
@@ -42,10 +42,10 @@ export default function MoodboardDetailPage() {
   const [selectedImage, setSelectedImage] = useState<MoodboardImage | null>(null);
 
   useEffect(() => {
-    if (moodboardId) {
+    if (moodboardId && user) {
       loadMoodboard();
     }
-  }, [moodboardId]);
+  }, [moodboardId, user]);
 
   const loadMoodboard = async () => {
     try {

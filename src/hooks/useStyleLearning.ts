@@ -10,7 +10,7 @@ import styleLearningService, {
 } from '@/lib/styleLearningService';
 
 export function useStyleLearning(projectId?: string) {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const [patterns, setPatterns] = useState<ProjectStylePattern[]>([]);
   const [suggestions, setSuggestions] = useState<StyleSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -18,28 +18,29 @@ export function useStyleLearning(projectId?: string) {
 
   // Cargar patrones del usuario
   const loadPatterns = useCallback(async () => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
 
     setLoading(true);
     try {
-      const data = await styleLearningService.getUserStylePatterns(session.user.id);
-      setPatterns(data);
+      const userPatterns = await getStylePatterns(user.id);
+      setPatterns(userPatterns);
     } catch (error) {
       console.error('Error loading patterns:', error);
     } finally {
       setLoading(false);
     }
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
   // Analizar y guardar proyecto
   const analyzeProject = useCallback(async (
     projectType: 'canvas' | 'moodboard' | 'mindmap',
     projectData: any
   ) => {
-    if (!session?.user?.id || !projectId) return null;
+    if (!user?.id || !projectId) return null;
 
     setAnalyzing(true);
     try {
+      const pattern = await analyzeProjectStyle(user.id, projectType, projectData);
       const pattern = await styleLearningService.analyzeAndSaveProject(
         session.user.id,
         projectId,

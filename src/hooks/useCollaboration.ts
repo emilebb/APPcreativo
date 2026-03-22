@@ -12,7 +12,7 @@ import collaborationService, {
 } from '@/lib/collaborationService';
 
 export function useCollaboration(projectId: string) {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const [share, setShare] = useState<ProjectShare | null>(null);
   const [comments, setComments] = useState<ProjectComment[]>([]);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
@@ -29,8 +29,8 @@ export function useCollaboration(projectId: string) {
   // Cargar tareas
   const loadTasks = useCallback(async () => {
     if (!projectId) return;
-    const data = await collaborationService.getTasks(projectId);
-    setTasks(data);
+    const shareData = await getProjectShare(user.id, projectId);
+    setTasks(shareData);
   }, [projectId]);
 
   // Crear share link
@@ -63,16 +63,18 @@ export function useCollaboration(projectId: string) {
     pinPosition?: { x: number; y: number },
     shareId?: string
   ) => {
-    if (!projectId || !session?.user) return null;
+    if (!projectId || !user) return null;
+
+    await addProjectComment(user.id, projectId, content);
 
     const comment = await collaborationService.createComment(
       projectId,
       content,
       {
         type: 'owner',
-        name: session.user.email || 'Usuario',
-        email: session.user.email,
-        id: session.user.id
+        name: user.email || 'Usuario',
+        email: user.email,
+        id: user.id
       },
       pinPosition,
       shareId
@@ -82,8 +84,10 @@ export function useCollaboration(projectId: string) {
       setComments(prev => [...prev, comment]);
     }
 
+    await createProjectTask(user.id, projectId, title, assignedTo);
+
     return comment;
-  }, [projectId, session]);
+  }, [projectId, user]);
 
   // Resolver comentario
   const resolveComment = useCallback(async (commentId: string) => {
@@ -127,13 +131,13 @@ export function useCollaboration(projectId: string) {
 
   // Actualizar cursor
   const updateCursor = useCallback((position: { x: number; y: number }) => {
-    if (!session?.user) return;
+    if (!user?.id) return;
     
     const userColor = `#${Math.floor(Math.random()*16777215).toString(16)}`;
     
     collaborationService.updateCursor(
       projectId,
-      session.user.email || 'Usuario',
+      user.email || 'Usuario',
       position,
       userColor,
       session.user.id

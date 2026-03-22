@@ -28,7 +28,7 @@ interface MindMap {
 }
 
 export default function MindMapDetailPage() {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
   const mindMapId = params.id as string;
@@ -37,10 +37,10 @@ export default function MindMapDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (mindMapId) {
+    if (user && mindMapId) {
       loadMindMap();
     }
-  }, [mindMapId]);
+  }, [user, mindMapId]);
 
   const loadMindMap = async () => {
     try {

@@ -23,7 +23,7 @@ interface MindMapConnection {
 }
 
 export default function NewMindMapPage() {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const canvasRef = useRef<HTMLDivElement>(null);
   

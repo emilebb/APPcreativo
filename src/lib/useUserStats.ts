@@ -23,7 +23,7 @@ type UseUserStatsReturn = {
 };
 
 export function useUserStats(): UseUserStatsReturn {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const [stats, setStats] = useState<UserStats>({
     totalSessions: 0,
     totalProjects: 0,
@@ -39,7 +39,7 @@ export function useUserStats(): UseUserStatsReturn {
 
   const fetchStats = async () => {
     const supabase = getSupabaseClient();
-    if (!supabase || !session?.user?.id) {
+    if (!supabase || !user?.id) {
       setLoading(false);
       // Establecer valores por defecto cuando no hay sesión
       setStats({
@@ -62,7 +62,7 @@ export function useUserStats(): UseUserStatsReturn {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("created_at, last_seen")
-        .eq("id", session.user.id)
+        .eq("id", user.id)
         .single() as any;
 
       if (profileError) throw profileError;
@@ -73,7 +73,7 @@ export function useUserStats(): UseUserStatsReturn {
         const { count: projectsCount } = await supabase
           .from("projects")
           .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id) as any;
+          .eq("user_id", user.id) as any;
         totalProjects = projectsCount || 0;
       } catch (err) {
         console.log("Projects table not found, using default 0");
@@ -85,7 +85,7 @@ export function useUserStats(): UseUserStatsReturn {
         const { count: mindMapsCount } = await supabase
           .from("mindmaps")
           .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id) as any;
+          .eq("user_id", user.id) as any;
         totalMindMaps = mindMapsCount || 0;
       } catch (err) {
         console.log("Mindmaps table not found, using default 0");
@@ -97,7 +97,7 @@ export function useUserStats(): UseUserStatsReturn {
         const { count: moodBoardsCount } = await supabase
           .from("moodboards")
           .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id) as any;
+          .eq("user_id", user.id) as any;
         totalMoodBoards = moodBoardsCount || 0;
       } catch (err) {
         console.log("Moodboards table not found, using default 0");
@@ -113,7 +113,7 @@ export function useUserStats(): UseUserStatsReturn {
         const { count: sessionsCount } = await supabase
           .from("user_sessions")
           .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id) as any;
+          .eq("user_id", user.id) as any;
         totalSessions = sessionsCount || 0;
       } catch (err) {
         console.log("Sessions table not found, calculating from profile activity");
@@ -162,7 +162,7 @@ export function useUserStats(): UseUserStatsReturn {
 
   useEffect(() => {
     fetchStats();
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
   return {
     stats,

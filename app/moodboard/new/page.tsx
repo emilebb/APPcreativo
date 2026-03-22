@@ -13,7 +13,7 @@ interface MoodboardImage {
 }
 
 export default function NewMoodboardPage() {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   

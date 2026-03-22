@@ -10,7 +10,7 @@ import ProfileEdit from "@/components/ProfileEdit";
 import type { Profile } from "@/types/profile";
 
 export default function ProfilePage() {
-  const { session, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading, error: profileError, updateProfile } = useProfile();
   const { stats, loading: statsLoading, error: statsError } = useUserStats();
   const router = useRouter();
