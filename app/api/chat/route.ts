@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-});
+}) : null;
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +14,21 @@ export async function POST(request: NextRequest) {
         { error: 'Messages array is required' },
         { status: 400 }
       );
+    }
+
+    // Si no hay API key, devolver respuesta de demostración
+    if (!openai) {
+      const demoResponses = [
+        '💡 **Análisis**\n\nVeo que estás buscando inspiración creativa. Es completamente normal tener momentos donde las ideas no fluyen como quisieras.\n\n🎯 **Recomendaciones**\n1. Toma un descanso de 10 minutos y cambia de ambiente\n2. Haz un brainstorming rápido sin juzgar las ideas\n3. Mira referencias de proyectos similares para inspirarte\n\n✨ **Próximo Paso**\nEscribe 3 palabras que describan lo que quieres crear. No pienses demasiado, solo escribe lo primero que venga a tu mente.',
+        '💡 **Análisis**\n\nEntiendo tu situación. Los bloqueos creativos son parte del proceso, pero podemos superarlos juntos.\n\n🎯 **Recomendaciones**\n1. Define claramente qué quieres lograr (objetivo específico)\n2. Divide el proyecto en tareas pequeñas y manejables\n3. Empieza por la parte que más te emociona\n\n✨ **Próximo Paso**\nElige UNA tarea pequeña que puedas completar en los próximos 15 minutos y hazla ahora mismo.',
+        '💡 **Análisis**\n\n¡Excelente pregunta! La creatividad se nutre de la curiosidad y la experimentación.\n\n🎯 **Recomendaciones**\n1. Explora referencias fuera de tu área habitual\n2. Combina dos ideas aparentemente no relacionadas\n3. Pregúntate "¿Y si...?" para abrir posibilidades\n\n✨ **Próximo Paso**\nBusca 3 ejemplos de proyectos que admires y anota qué te gusta de cada uno.'
+      ];
+      
+      const randomResponse = demoResponses[Math.floor(Math.random() * demoResponses.length)];
+      
+      return NextResponse.json({ 
+        message: randomResponse + '\n\n_Nota: Esta es una respuesta de demostración. Configura OPENAI_API_KEY para respuestas personalizadas con IA._'
+      });
     }
 
     const systemPrompt = `Eres un Coach Creativo con IA llamado CreativoX AI. Tu misión es ayudar a personas creativas a:
