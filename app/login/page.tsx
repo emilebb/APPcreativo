@@ -32,10 +32,10 @@ function LoginContent() {
   // Redirección inteligente tras login
   useEffect(() => {
     if (!authLoading && user) {
-      if (!user.user_metadata?.onboarding_completed) {
-        router.replace('/onboarding');
-        return;
-      }
+      // if (!user.user_metadata?.onboarding_completed) {
+      //   router.replace('/onboarding');
+      //   return;
+      // }
       const from = searchParams.get('from');
       if (from && from.startsWith('/') && !from.startsWith('/login') && !from.startsWith('/signup') && !from.startsWith('/auth')) {
         router.replace(from);
