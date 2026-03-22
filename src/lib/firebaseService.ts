@@ -64,6 +64,7 @@ export const deleteProject = async (projectId: string) => {
 export const moodboardsCollection = 'moodboards';
 
 export const saveMoodboard = async (moodboardId: string, userId: string, data: any) => {
+  if (!db) throw new Error('Firebase not initialized');
   const moodboardRef = doc(db, moodboardsCollection, moodboardId);
   const moodboard = {
     ...data,
@@ -77,6 +78,7 @@ export const saveMoodboard = async (moodboardId: string, userId: string, data: a
 };
 
 export const getMoodboard = async (moodboardId: string) => {
+  if (!db) return null;
   const moodboardRef = doc(db, moodboardsCollection, moodboardId);
   const snapshot = await getDoc(moodboardRef);
   
@@ -87,6 +89,7 @@ export const getMoodboard = async (moodboardId: string) => {
 };
 
 export const getAllMoodboards = async (userId: string) => {
+  if (!db) return [];
   const q = query(
     collection(db, moodboardsCollection),
     where('user_id', '==', userId),
@@ -101,6 +104,7 @@ export const getAllMoodboards = async (userId: string) => {
 export const profilesCollection = 'profiles';
 
 export const getProfile = async (userId: string) => {
+  if (!db) return null;
   const profileRef = doc(db, profilesCollection, userId);
   const snapshot = await getDoc(profileRef);
   
@@ -111,6 +115,7 @@ export const getProfile = async (userId: string) => {
 };
 
 export const createProfile = async (userId: string, profileData: any) => {
+  if (!db) throw new Error('Firebase not initialized');
   const profileRef = doc(db, profilesCollection, userId);
   const profile = {
     ...profileData,
@@ -124,6 +129,7 @@ export const createProfile = async (userId: string, profileData: any) => {
 };
 
 export const updateProfile = async (userId: string, updates: any) => {
+  if (!db) throw new Error('Firebase not initialized');
   const profileRef = doc(db, profilesCollection, userId);
   await updateDoc(profileRef, {
     ...updates,
