@@ -22,7 +22,7 @@ export function useStyleLearning(projectId?: string) {
 
     setLoading(true);
     try {
-      const userPatterns = await getStylePatterns(user.id);
+      const userPatterns = await styleLearningService.getUserPatterns(user.id);
       setPatterns(userPatterns);
     } catch (error) {
       console.error('Error loading patterns:', error);
@@ -40,9 +40,8 @@ export function useStyleLearning(projectId?: string) {
 
     setAnalyzing(true);
     try {
-      const pattern = await analyzeProjectStyle(user.id, projectType, projectData);
       const pattern = await styleLearningService.analyzeAndSaveProject(
-        session.user.id,
+        user.id,
         projectId,
         projectType,
         projectData
@@ -60,17 +59,17 @@ export function useStyleLearning(projectId?: string) {
     } finally {
       setAnalyzing(false);
     }
-  }, [session?.user?.id, projectId]);
+  }, [user?.id, projectId]);
 
   // Generar sugerencias
   const generateSuggestions = useCallback(async (
     contextType: 'color_palette' | 'composition' | 'shape'
   ) => {
-    if (!session?.user?.id || !projectId) return [];
+    if (!user?.id || !projectId) return [];
 
     try {
       const newSuggestions = await styleLearningService.generateSuggestions(
-        session.user.id,
+        user.id,
         projectId,
         contextType
       );
@@ -81,7 +80,7 @@ export function useStyleLearning(projectId?: string) {
       console.error('Error generating suggestions:', error);
       return [];
     }
-  }, [session?.user?.id, projectId]);
+  }, [user?.id, projectId]);
 
   // Registrar feedback
   const recordFeedback = useCallback(async (
@@ -108,10 +107,10 @@ export function useStyleLearning(projectId?: string) {
 
   // Cargar patrones al montar
   useEffect(() => {
-    if (session?.user?.id) {
+    if (user?.id) {
       loadPatterns();
     }
-  }, [session?.user?.id, loadPatterns]);
+  }, [user?.id, loadPatterns]);
 
   return {
     patterns,
