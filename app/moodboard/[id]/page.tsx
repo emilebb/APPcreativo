@@ -69,7 +69,7 @@ export default function MoodboardDetailPage() {
           tags: [],
           created_at: data.createdAt,
           updated_at: data.updatedAt,
-          color_palette: data.colorPalette || [],
+          color_palette: [],
           is_public: false,
           likes: 0,
           is_liked: false
