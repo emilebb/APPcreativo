@@ -60,6 +60,7 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
     }
 
     syncTimeoutRef.current = setTimeout(async () => {
+      if (!db) return;
       try {
         setIsSyncing(true);
         const mapRef = doc(db, 'mindmaps', mindmapId);
