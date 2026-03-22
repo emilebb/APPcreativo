@@ -3,7 +3,7 @@
 import { Bell, Mail, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useProfile } from "@/lib/useProfile";
-import type { EmailDigestFrequency } from "@/types/profile";
+import type { EmailDigestFrequency, NotificationPreferences } from "@/types/profile";
 
 export default function NotificationsSettings() {
   const { profile, updateProfile } = useProfile();
