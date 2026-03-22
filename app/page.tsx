@@ -54,23 +54,23 @@ export default function HomePage() {
                 </div>
                 <div className="text-left">
                   <div className="text-2xl font-bold text-white tracking-tight">
-                    CreationX
+                    CreativoX AI
                   </div>
-                  <div className="text-sm text-white/80">Plataforma Creativa</div>
+                  <div className="text-sm text-white/80">Coach Creativo Inteligente</div>
                 </div>
               </div>
             </div>
             <div className="inline-block mb-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
-              🚀 La primera app que detecta tus bloqueos creativos
+              🧠 Powered by Inteligencia Artificial
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-6 leading-[1.1] tracking-tight">
-              Tu Coach Creativo con IA
+              Detecta tus bloqueos creativos
               <br />
-              <span className="text-white/90">que te guía paso a paso</span>
+              <span className="text-white/90">y genera ideas con IA en segundos</span>
             </h1>
             <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-10 max-w-3xl mx-auto leading-relaxed">
-              <strong>¿Bloqueado creativo?</strong> CreationX detecta exactamente dónde estás atorado 
-              y te da el siguiente paso perfecto. Canvas inteligente + Moodboards + IA que entiende tu proceso.
+              <strong>Coach Creativo Inteligente</strong> que analiza tu situación, detecta bloqueos 
+              y genera ideas, planes y contenido al instante. Sin vueltas, solo resultados.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
