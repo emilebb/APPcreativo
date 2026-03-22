@@ -1,5 +1,6 @@
 import Sidebar from "@/components/Sidebar"
 import BottomNav from "@/components/BottomNav"
+import PWAInstallPrompt from "@/components/PWAInstallPrompt"
 import { Providers } from "@/components/Providers"
 import { AuthProvider } from "../src/lib/authProvider";
 import { SentryInit } from "@/components/SentryInit";
@@ -58,6 +59,9 @@ export default function RootLayout({
               
               {/* Bottom Navigation (solo móvil) */}
               <BottomNav />
+              
+              {/* PWA Install Prompt */}
+              <PWAInstallPrompt />
             </div>
           </Providers>
         </AuthProvider>
