@@ -27,7 +27,7 @@ export default function ProjectPage() {
       setLoading(true);
       // For now, we'll redirect based on project type
       // In the future, this could load project details
-      const projects = await projectService.getProjects(session?.user?.id || '');
+      const projects = await projectService.getProjects(user?.id || '');
       const currentProject = projects.find(p => p.id === projectId);
       
       if (currentProject) {
