@@ -32,7 +32,7 @@ export default function ProfilePage() {
           <div>Auth loading: {authLoading ? 'true' : 'false'}</div>
           <div>Profile loading: {profileLoading ? 'true' : 'false'}</div>
           <div>Stats loading: {statsLoading ? 'true' : 'false'}</div>
-          <div>Session: {session ? 'exists' : 'null'}</div>
+          <div>User: {user ? 'exists' : 'null'}</div>
         </div>
       </main>
     );
@@ -59,7 +59,7 @@ export default function ProfilePage() {
   }
 
   // Si no hay sesión, redirigir inmediatamente
-  if (!session) {
+  if (!user) {
     router.push("/");
     return null;
   }
