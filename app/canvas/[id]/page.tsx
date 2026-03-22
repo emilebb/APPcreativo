@@ -255,7 +255,14 @@ export default function CanvasPage() {
         strokeWidth: strokeWidth 
       }
     };
-    addElement(newElement);
+    const newElements = [...elements, newElement];
+    setElements(newElements);
+    
+    // Actualizar historial
+    const newHistory = history.slice(0, historyStep + 1);
+    newHistory.push(newElements);
+    setHistory(newHistory);
+    setHistoryStep(newHistory.length - 1);
   };
 
   const handleApplyPalette = (colors: string[]) => {
@@ -293,14 +300,8 @@ export default function CanvasPage() {
       // Dibujar imagen en el canvas
       ctx.drawImage(img, 50, 50, width, height);
 
-      // Agregar a elementos para historial
-      const newElement: DrawingElement = {
-        id: Date.now().toString(),
-        type: 'path',
-        data: [{ x: 50, y: 50 }],
-        style: { color: '#000000', strokeWidth: 1 }
-      };
-      addElement(newElement);
+      // Redibujar elementos existentes
+      redrawCanvas();
     };
     img.src = imageData;
   };
