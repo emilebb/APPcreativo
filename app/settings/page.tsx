@@ -131,7 +131,6 @@ export default function SettingsPage() {
       case "security":
         return <SecuritySettings />;
       case "general":
-      case "appearance":
       default:
         return (
           <div className="settings-content space-y-8">
