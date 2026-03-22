@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import PWAInstallLink from "@/components/PWAInstallLink";
+import InstallButton from "@/components/InstallButton";
 
 const testimonials = [
   {
@@ -85,6 +86,25 @@ export default function HomePage() {
               >
                 Iniciar Sesión
               </Link>
+            </div>
+            
+            {/* Botón de instalación PWA */}
+            <div className="mt-6 flex justify-center">
+              <InstallButton />
+            </div>
+            
+            {/* Instrucciones para instalar */}
+            <div className="mt-8 max-w-2xl mx-auto">
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <Download className="w-5 h-5" />
+                  Instala la app en tu celular
+                </h3>
+                <div className="space-y-2 text-sm text-white/90">
+                  <p><strong>Chrome (Android):</strong> Menú (⋮) → "Instalar app"</p>
+                  <p><strong>Safari (iPhone):</strong> Compartir (⎙) → "Agregar a pantalla de inicio"</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
