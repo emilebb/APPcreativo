@@ -17,6 +17,7 @@ import {
   Download, Save, Share2, Sparkles, MessageSquare 
 } from "lucide-react";
 import Link from "next/link";
+import AIAssistantPanel from "@/components/AIAssistantPanel";
 
 interface DrawingElement {
   id: string;
@@ -48,6 +49,7 @@ export default function CanvasPage() {
   const [project, setProject] = useState<any>(null);
   const [showInspiration, setShowInspiration] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -238,6 +240,71 @@ export default function CanvasPage() {
     link.click();
   };
 
+  // Funciones para el panel de IA
+  const handleApplyIdea = (idea: string) => {
+    // Agregar la idea como texto en el canvas
+    const newElement: DrawingElement = {
+      id: Date.now().toString(),
+      type: 'text',
+      data: { 
+        text: idea, 
+        position: { x: 100, y: 100 } 
+      },
+      style: { 
+        color: currentColor, 
+        strokeWidth: strokeWidth 
+      }
+    };
+    addElement(newElement);
+  };
+
+  const handleApplyPalette = (colors: string[]) => {
+    // Actualizar la paleta de colores disponibles
+    if (colors.length > 0) {
+      setCurrentColor(colors[0]);
+    }
+  };
+
+  const handleImageUpload = (imageData: string, file: File) => {
+    // Crear un elemento de imagen en el canvas
+    const img = new Image();
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Calcular tamaño proporcional
+      const maxWidth = 400;
+      const maxHeight = 400;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+
+      // Dibujar imagen en el canvas
+      ctx.drawImage(img, 50, 50, width, height);
+
+      // Agregar a elementos para historial
+      const newElement: DrawingElement = {
+        id: Date.now().toString(),
+        type: 'path',
+        data: [{ x: 50, y: 50 }],
+        style: { color: '#000000', strokeWidth: 1 }
+      };
+      addElement(newElement);
+    };
+    img.src = imageData;
+  };
+
   return (
     <main className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
@@ -301,17 +368,17 @@ export default function CanvasPage() {
                 </span>
               )}
             </button> */}
-            {/* <button
-              onClick={() => setShowInspiration(!showInspiration)}
+            <button
+              onClick={() => setShowAIPanel(!showAIPanel)}
               className={`p-2 rounded-lg transition ${
-                showInspiration
+                showAIPanel
                   ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
               }`}
-              title="Panel de Inspiración"
+              title="Asistente IA"
             >
               <Sparkles className="w-4 h-4" />
-            </button> */}
+            </button>
             <button
               onClick={downloadCanvas}
               className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
@@ -472,6 +539,16 @@ export default function CanvasPage() {
             }}
           />
         )} */}
+
+        {/* Panel de Asistente IA */}
+        {showAIPanel && (
+          <AIAssistantPanel
+            projectType="canvas"
+            onApplyIdea={handleApplyIdea}
+            onApplyPalette={handleApplyPalette}
+            onImageUpload={handleImageUpload}
+          />
+        )}
       </div>
 
       {/* Modal de Compartir Proyecto */}
