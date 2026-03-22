@@ -30,7 +30,7 @@ interface DrawingElement {
 }
 
 export default function CanvasPage() {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
   const canvasId = params.id as string;
@@ -74,15 +74,15 @@ export default function CanvasPage() {
   useEffect(() => {
     if (canvasId) {
       loadCanvas();
-      if (session?.user) loadProject();
+      if (user) loadProject();
     }
-  }, [session, canvasId]);
+  }, [user, canvasId]);
 
   const loadProject = async () => {
     try {
       console.log('Loading project for ID:', canvasId);
-      if (!session?.user) return;
-      const projects = await projectService.getProjects(session.user.id);
+      if (!user) return;
+      const projects = await projectService.getProjects(user.id);
       const currentProject = projects.find(p => p.id === canvasId);
       if (currentProject) {
         setProject(currentProject);
@@ -118,7 +118,7 @@ export default function CanvasPage() {
 
       // 🎨 ANÁLISIS AUTOMÁTICO DE ESTILO
       // Analizar y guardar patrones de estilo del proyecto
-      if (session?.user?.id && elements.length > 0) {
+      if (user?.id && elements.length > 0) {
         console.log('🎨 Analizando estilo del proyecto...');
         await analyzeProject('canvas', {
           elements: elements,
