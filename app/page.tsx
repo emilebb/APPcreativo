@@ -45,52 +45,45 @@ export default function HomePage() {
         <div className="absolute top-0 right-0 w-[28rem] h-[28rem] bg-white/5 rounded-full blur-3xl" aria-hidden />
         <div className="absolute bottom-0 left-0 w-[28rem] h-[28rem] bg-indigo-400/20 rounded-full blur-3xl" aria-hidden />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-28">
           <div className="text-center">
-            <div className="flex justify-center mb-8">
-              <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 shadow-2xl border border-white/10">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-7 h-7 text-white" aria-hidden />
+            <div className="flex justify-center mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl px-4 py-3 sm:px-6 sm:py-4 shadow-2xl border border-white/10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 sm:w-7 sm:h-7 text-white" aria-hidden />
                 </div>
                 <div className="text-left">
-                  <div className="text-2xl font-bold text-white tracking-tight">
+                  <div className="text-lg sm:text-2xl font-bold text-white tracking-tight">
                     CreativoX AI
                   </div>
-                  <div className="text-sm text-white/80">Coach Creativo Inteligente</div>
+                  <div className="text-xs sm:text-sm text-white/80">Coach Creativo Inteligente</div>
                 </div>
               </div>
             </div>
-            <div className="inline-block mb-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
-              🧠 Powered by Inteligencia Artificial
+            <div className="inline-block mb-3 sm:mb-4 px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-semibold text-white border border-white/30">
+              Powered by IA
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-6 leading-[1.1] tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 sm:mb-6 leading-[1.15] tracking-tight px-2">
               Detecta tus bloqueos creativos
-              <br />
-              <span className="text-white/90">y genera ideas con IA en segundos</span>
+              <br className="hidden sm:block" />
+              <span className="block sm:inline text-white/90"> y genera ideas con IA</span>
             </h1>
-            <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-10 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-4">
               <strong>Coach Creativo Inteligente</strong> que analiza tu situación, detecta bloqueos 
-              y genera ideas, planes y contenido al instante. Sin vueltas, solo resultados.
+              y genera ideas, planes y contenido al instante.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
               <Link
-                href="/auth/register"
-                className="px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl hover:from-violet-700 hover:to-blue-700 transition-all font-semibold shadow-lg shadow-violet-500/30"
+                href="/start"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl hover:from-violet-700 hover:to-blue-700 transition-all font-semibold shadow-lg shadow-violet-500/30 text-center text-base sm:text-lg"
               >
                 Comenzar Gratis
               </Link>
               <Link
                 href="/auth/login"
-                className="px-8 py-4 border-2 border-neutral-800 dark:border-white text-neutral-800 dark:text-white rounded-xl hover:bg-neutral-800 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all font-semibold"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 border-2 border-white/40 text-white rounded-xl hover:bg-white/15 backdrop-blur-sm transition-all font-semibold text-center text-base sm:text-lg"
               >
                 Iniciar Sesión
-              </Link>
-              <Link
-                href="#demo-video"
-                className="px-8 py-4 min-h-[48px] text-base sm:text-lg border-2 border-white/40 text-white rounded-xl hover:bg-white/15 backdrop-blur-sm transition-all duration-200 font-semibold flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-              >
-                <Play className="w-5 h-5 mr-2 fill-current" aria-hidden />
-                Ver demo en 1 min
               </Link>
             </div>
           </div>
