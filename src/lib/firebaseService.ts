@@ -18,6 +18,7 @@ import { db } from './firebase';
 export const projectsCollection = 'projects';
 
 export const createProject = async (userId: string, projectData: any) => {
+  if (!db) throw new Error('Firebase not initialized');
   const projectRef = doc(collection(db, projectsCollection));
   const project = {
     ...projectData,
@@ -32,6 +33,7 @@ export const createProject = async (userId: string, projectData: any) => {
 };
 
 export const getProjects = async (userId: string) => {
+  if (!db) return [];
   const q = query(
     collection(db, projectsCollection),
     where('user_id', '==', userId),
@@ -44,6 +46,7 @@ export const getProjects = async (userId: string) => {
 };
 
 export const updateProject = async (projectId: string, updates: any) => {
+  if (!db) throw new Error('Firebase not initialized');
   const projectRef = doc(db, projectsCollection, projectId);
   await updateDoc(projectRef, {
     ...updates,
