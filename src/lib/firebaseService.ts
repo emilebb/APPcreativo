@@ -55,6 +55,7 @@ export const updateProject = async (projectId: string, updates: any) => {
 };
 
 export const deleteProject = async (projectId: string) => {
+  if (!db) throw new Error('Firebase not initialized');
   const projectRef = doc(db, projectsCollection, projectId);
   await deleteDoc(projectRef);
 };
