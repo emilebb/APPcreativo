@@ -442,6 +442,50 @@ export default function Canvas() {
     }
   };
 
+  // Funciones para el panel de IA
+  const handleApplyIdea = (idea: string) => {
+    const newElement: DrawingElement = {
+      id: Date.now().toString(),
+      type: 'text',
+      data: { text: idea, position: { x: 100, y: 100 } },
+      style: { color: currentColor, strokeWidth: strokeWidth }
+    };
+    addElement(newElement);
+  };
+
+  const handleApplyPalette = (colors: string[]) => {
+    if (colors.length > 0) {
+      setCurrentColor(colors[0]);
+    }
+  };
+
+  const handleImageUpload = (imageData: string, file: File) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const maxWidth = 400;
+      const maxHeight = 400;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+
+      ctx.drawImage(img, 50, 50, width, height);
+    };
+    img.src = imageData;
+  };
+
   return (
     <main className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* SEO h1 - hidden but accessible */}
