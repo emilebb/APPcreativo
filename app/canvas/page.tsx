@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { 
   Pencil, Eraser, Square, Circle, Type, Download, 
   Trash2, Undo, Redo, Palette, Move, 
-  MousePointer, Save, Share2 
+  MousePointer, Save, Share2, Sparkles 
 } from "lucide-react";
+import AIAssistantPanel from "@/components/AIAssistantPanel";
 
 interface Tool {
   id: string;
@@ -35,6 +36,7 @@ export default function Canvas() {
   const [currentPath, setCurrentPath] = useState<{x: number, y: number}[]>([]);
   const [history, setHistory] = useState<DrawingElement[][]>([]);
   const [historyStep, setHistoryStep] = useState(0);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   const tools: Tool[] = [
     { id: 'pencil', name: 'Lápiz', icon: <Pencil className="w-4 h-4" />, cursor: 'crosshair' },
@@ -467,6 +469,17 @@ export default function Canvas() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowAIPanel(!showAIPanel)}
+              className={`p-2 rounded-lg transition ${
+                showAIPanel
+                  ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+              title="Asistente IA"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => saveCanvas()}
               className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
               title="Guardar"
@@ -645,6 +658,16 @@ export default function Canvas() {
             />
           </div>
         </div>
+
+        {/* Panel de Asistente IA */}
+        {showAIPanel && (
+          <AIAssistantPanel
+            projectType="canvas"
+            onApplyIdea={handleApplyIdea}
+            onApplyPalette={handleApplyPalette}
+            onImageUpload={handleImageUpload}
+          />
+        )}
       </div>
     </main>
   );
