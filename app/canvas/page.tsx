@@ -177,8 +177,33 @@ export default function Canvas() {
           break;
         case 'text':
           if (element.data.text && element.data.position) {
-            ctx.font = `${element.style.strokeWidth * 8}px Arial`;
-            ctx.fillText(element.data.text, element.data.position.x, element.data.position.y);
+            const fontSize = element.style.strokeWidth * 6;
+            ctx.font = `${fontSize}px Inter, Arial, sans-serif`;
+            ctx.fillStyle = element.style.color;
+            
+            // Dividir texto en líneas si es muy largo
+            const maxWidth = 400;
+            const words = element.data.text.split(' ');
+            const lines: string[] = [];
+            let currentLine = '';
+            
+            words.forEach((word: string) => {
+              const testLine = currentLine + (currentLine ? ' ' : '') + word;
+              const metrics = ctx.measureText(testLine);
+              if (metrics.width > maxWidth && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+              } else {
+                currentLine = testLine;
+              }
+            });
+            if (currentLine) lines.push(currentLine);
+            
+            // Dibujar cada línea
+            const lineHeight = fontSize * 1.4;
+            lines.forEach((line: string, index: number) => {
+              ctx.fillText(line, element.data.position.x, element.data.position.y + (index * lineHeight));
+            });
           }
           break;
       }
@@ -444,11 +469,15 @@ export default function Canvas() {
 
   // Funciones para el panel de IA
   const handleApplyIdea = (idea: string) => {
+    // Generar posición aleatoria para evitar superposición
+    const randomX = 50 + Math.random() * 200;
+    const randomY = 50 + Math.random() * 200;
+    
     const newElement: DrawingElement = {
       id: Date.now().toString(),
       type: 'text',
-      data: { text: idea, position: { x: 100, y: 100 } },
-      style: { color: currentColor, strokeWidth: strokeWidth }
+      data: { text: `💡 ${idea}`, position: { x: randomX, y: randomY } },
+      style: { color: currentColor, strokeWidth: 2 }
     };
     addElement(newElement);
   };
