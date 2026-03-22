@@ -9,6 +9,12 @@ import {
   generateWelcomeMessage,
   type ExerciseResponse
 } from '@/lib/creativeCoach';
+import {
+  analyzeUserMessage,
+  generateCoachResponse as generateAdaptiveResponse,
+  formatCoachMessage
+} from '@/lib/adaptiveCoach';
+import Brain from '@/lib/brainSystem';
 
 interface ChatRequest {
   message: string;
@@ -121,7 +127,7 @@ async function generateCoachResponse(request: ChatRequest): Promise<ChatResponse
   }
 }
 
-// Sistema inteligente de respuestas sin OpenAI
+// Sistema inteligente de respuestas sin OpenAI - ADAPTATIVO
 function generateIntelligentResponse(request: ChatRequest): ChatResponse {
   const { message, context } = request;
   const lowerMessage = message.toLowerCase();
@@ -141,7 +147,7 @@ function generateIntelligentResponse(request: ChatRequest): ChatResponse {
   // Detectar si quiere iniciar protocolo
   if (lowerMessage.includes('protocolo') || lowerMessage.includes('7 días') || lowerMessage.includes('empezar proyecto')) {
     return {
-      response: `¡Perfecto! Vamos a iniciar el protocolo "Primeros 7 días" 🎯\n\nEste protocolo te ayudará a construir tu proyecto paso a paso, con ejercicios diarios de 1-5 minutos.\n\n**¿Cuál es el nombre de tu proyecto?**\n\nEscríbelo aquí y comenzamos con el Día 1.`,
+      response: `Protocolo de 7 días activado.\n\n💡 **Acción:** Escribe el nombre de tu proyecto en 1 frase.\n\n❓ ¿Cuál es?`,
       shouldAdvanceProtocol: false,
       memoryUpdate: {
         interested_in_protocol: true,
@@ -150,74 +156,44 @@ function generateIntelligentResponse(request: ChatRequest): ChatResponse {
     };
   }
 
-  // Detectar bloqueo creativo
-  const blockageDetection = detectBlockage(message);
+  // BRAIN SYSTEM - Sistema modular de procesamiento
+  const userMode = context.profile?.creative_mode === 'direct' ? 'directo' : 'calmado';
+  const brain = new Brain(userMode);
   
-  let exerciseResponse: ExerciseResponse;
+  // Procesar mensaje con BrainSystem
+  const brainResponse = brain.processMessage(message);
   
-  if (blockageDetection.confidence > 0.5) {
-    // Bloqueo detectado con confianza
-    switch (blockageDetection.type) {
-      case 'inicio':
-        exerciseResponse = generateInicioResponse();
-        break;
-      case 'direccion':
-        exerciseResponse = generateDireccionResponse();
-        break;
-      case 'motivacion':
-        exerciseResponse = generateMotivacionResponse();
-        break;
-      default:
-        exerciseResponse = generateInicioResponse();
-    }
-    
-    return {
-      response: `${exerciseResponse.message}\n\n${exerciseResponse.exercise}`,
-      shouldAdvanceProtocol: false,
-      memoryUpdate: exerciseResponse.memoryUpdate
-    };
+  // Formatear respuesta
+  let formattedResponse = brainResponse.message;
+  
+  if (brainResponse.action) {
+    formattedResponse += `\n\n💡 **Acción:** ${brainResponse.action}`;
   }
-
-  // Respuestas a preguntas comunes
-  if (lowerMessage.includes('logo') || lowerMessage.includes('marca')) {
-    return {
-      response: `¡Un logo! Eso es emocionante �\n\nEl diseño de identidad visual es un proceso creativo muy poderoso.\n\n**Mi recomendación:** Iniciemos el protocolo "Primeros 7 días" específicamente para tu logo.\n\nPodemos:\n- Definir el propósito de tu marca (Día 1)\n- Explorar ideas visuales (Día 2-3)\n- Definir colores y estilo (Día 4-5)\n- Crear variantes (Día 6)\n- Seleccionar la final (Día 7)\n\n¿Quieres empezar con el protocolo para tu logo?`,
-      memoryUpdate: {
-        project_type: 'logo',
-        last_interest: 'branding'
-      }
-    };
+  
+  formattedResponse += `\n\n❓ ${brainResponse.question}`;
+  
+  // Obtener contexto del brain
+  const brainContext = brain.getContext();
+  
+  // Determinar memoryUpdate basado en BrainSystem
+  const memoryUpdate: Record<string, any> = {
+    last_interaction: new Date().toISOString(),
+    last_intent: brainContext.currentIntent,
+    last_blockage: brainContext.currentBlockage,
+    last_action: brainContext.lastAction,
+    momentum: brainContext.momentum
+  };
+  
+  // Si detectó bloqueo, guardarlo
+  if (brainContext.currentBlockage) {
+    memoryUpdate.blockage_detected = brainContext.currentBlockage;
+    memoryUpdate.blockage_date = new Date().toISOString();
   }
-
-  if (lowerMessage.includes('ideas') || lowerMessage.includes('inspiración')) {
-    return {
-      response: `¡Necesitas ideas! Me encanta 💡\n\nLa inspiración viene del movimiento, no de esperarla.\n\n**Ejercicio rápido de 2 minutos:**\n1. Piensa en 3 palabras que describan tu proyecto\n2. Para cada palabra, anota 2 imágenes que te vengan a la mente\n3. Elige la imagen que más te motive\n\n¿Qué proyecto necesitas ideas? ¿Cuál es tu tema principal?`,
-      memoryUpdate: {
-        last_request_type: 'ideas',
-        request_date: new Date().toISOString()
-      }
-    };
-  }
-
-  if (lowerMessage.includes('ayuda') || lowerMessage.includes('qué hago')) {
-    return {
-      response: `Estoy aquí para ayudarte paso a paso 🌟\n\nPuedo ayudarte con:\n\n**1. Detectar tu bloqueo creativo**\n   - Dime: ¿qué te está bloqueando hoy?\n\n**2. Iniciar un protocolo de 7 días**\n   - Para construir tu proyecto paso a paso\n\n**3. Ejercicios rápidos**\n   - De 1-5 minutos para desbloquear\n\n¿Por dónde quieres empezar?`,
-      memoryUpdate: {
-        needs_guidance: true,
-        last_interaction: new Date().toISOString()
-      }
-    };
-  }
-
-  // Respuesta por defecto empática y motivadora
-  const mode = context.profile?.creative_mode === 'direct' ? 'directo' : 'calm';
   
   return {
-    response: `Gracias por compartir eso conmigo 🌟\n\nCada paso que das es progreso real.\n\nBasado en tu perfil ${mode}, te sugiero:\n\n- Tomarte 1 minuto para respirar profundamente\n- Escribir 3 ideas rápidas sin juzgar\n- Elegir la que más energía te dé\n\n¿Quieres que exploremos alguna de estas ideas o prefieres que detecte tu bloqueo actual?`,
-    memoryUpdate: {
-      last_interaction: new Date().toISOString(),
-      interaction_type: 'general'
-    }
+    response: formattedResponse,
+    shouldAdvanceProtocol: false,
+    memoryUpdate
   };
 }
 

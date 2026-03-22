@@ -9,19 +9,19 @@ import type { CreativeMode } from "@/types/profile";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SettingsLayout, { type SettingsCategoryId } from "@/components/SettingsLayout";
-import AppearanceContent from "./appearance";
 import ExperienceSettings from "./experience";
 import NotificationsSettings from "./notifications";
 import SecuritySettings from "./security";
 
 export default function SettingsPage() {
-  const { session, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading, error: profileError, updateProfile } = useProfile();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState<SettingsCategoryId>("general");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     setAvatarError(false);
@@ -71,11 +71,11 @@ export default function SettingsPage() {
         <div className="text-center">
           <div className="text-neutral-600 mb-4">No se encontró el perfil de usuario</div>
           <div className="text-neutral-500 text-sm mb-4">
-            {session ? "El perfil está siendo creado..." : "Debes iniciar sesión para acceder a la configuración"}
+            {user ? "El perfil está siendo creado..." : "Debes iniciar sesión para acceder a la configuración"}
           </div>
-          {!session && (
+          {!user && (
             <button 
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/auth/login")}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Iniciar Sesión
@@ -89,6 +89,7 @@ export default function SettingsPage() {
   const handleModeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedMode = e.target.value as CreativeMode;
     setSaving(true);
+    setUploadError(null);
 
     try {
       await updateProfile({ creative_mode: selectedMode });
@@ -97,9 +98,13 @@ export default function SettingsPage() {
         ? "Vale. Voy a ir más al grano."
         : "De acuerdo. Vamos despacio.";
 
-      handleSaveSettings(message);
+      // Mostrar feedback temporal
+      setTimeout(() => {
+        handleSaveSettings(message);
+      }, 500);
     } catch (err) {
       console.error("Error updating mode:", err);
+      setUploadError("Error al actualizar el modo. Intenta de nuevo.");
       setSaving(false);
     }
   };
@@ -119,8 +124,6 @@ export default function SettingsPage() {
 
   const renderContent = () => {
     switch (activeCategory) {
-      case "appearance":
-        return <AppearanceContent />;
       case "experience":
         return <ExperienceSettings />;
       case "notifications":
@@ -128,6 +131,7 @@ export default function SettingsPage() {
       case "security":
         return <SecuritySettings />;
       case "general":
+      case "appearance":
       default:
         return (
           <div className="settings-content space-y-8">
@@ -181,19 +185,40 @@ export default function SettingsPage() {
                       type="file"
                       accept="image/*"
                       className="hidden"
+                      disabled={saving}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
+                        
+                        setUploadError(null);
+                        
+                        // Validar tamaño (máximo 1MB)
                         if (file.size > 1024 * 1024) {
-                          alert("La imagen es demasiado grande.");
+                          setUploadError("La imagen debe ser menor a 1MB");
                           return;
                         }
+                        
+                        // Validar tipo
+                        if (!file.type.startsWith('image/')) {
+                          setUploadError("Solo se permiten archivos de imagen");
+                          return;
+                        }
+                        
                         try {
                           setSaving(true);
                           await uploadAvatar(file, profile.id);
-                          router.refresh();
+                          
+                          // Actualizar el perfil con la nueva URL
+                          const reader = new FileReader();
+                          reader.onloadend = async () => {
+                            const base64 = reader.result as string;
+                            await updateProfile({ avatar_url: base64 });
+                          };
+                          reader.readAsDataURL(file);
+                          
                         } catch (err) {
                           console.error("Error uploading avatar:", err);
+                          setUploadError("Error al subir la imagen. Intenta de nuevo.");
                         } finally {
                           setSaving(false);
                         }
@@ -201,8 +226,13 @@ export default function SettingsPage() {
                     />
                   </label>
                   <p className="text-xs text-neutral-500 dark:text-[#6b7280] mt-0.5">
-                    Esto es solo para reconocer tu espacio.
+                    Esto es solo para reconocer tu espacio. Máx 1MB.
                   </p>
+                  {uploadError && (
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                      {uploadError}
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -237,11 +267,21 @@ export default function SettingsPage() {
               </section>
             </div>
 
+            {uploadError && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {uploadError}
+                </p>
+              </div>
+            )}
+
             {saving && (
-              <p className="text-sm text-neutral-500 dark:text-[#9ca3af] flex items-center gap-2">
-                <span className="inline-block w-3 h-3 border-2 border-neutral-400 dark:border-[#9ca3af] border-t-transparent rounded-full animate-spin" />
-                Guardando...
-              </p>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  Guardando cambios...
+                </p>
+              </div>
             )}
           </div>
         );

@@ -46,224 +46,118 @@ export interface ProtocolProgress {
 }
 
 export const chatSupabaseService = {
-  // Cargar perfil del usuario
+  // Cargar perfil del usuario - DESHABILITADO (sin Supabase)
   async getUserProfile(userId: string): Promise<UserProfile | null> {
-    const supabase = getSupabaseClient();
-    if (!supabase) return null;
-
-    const { data, error } = await supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error loading user profile:", error);
-      return null;
-    }
-
-    return data;
+    return null;
   },
 
-  // Crear o actualizar perfil
+  // Crear o actualizar perfil - DESHABILITADO (sin Supabase)
   async upsertUserProfile(userId: string, profile: Partial<UserProfile>): Promise<UserProfile> {
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not available");
-
-    const { data, error } = await supabase
-      .from("user_profiles")
-      .upsert({
-        user_id: userId,
-        ...profile,
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    // Retornar perfil mock
+    return {
+      id: 'mock-profile',
+      user_id: userId,
+      creative_mode: 'calm',
+      preferences: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...profile
+    } as UserProfile;
   },
 
-  // Cargar protocolo activo
+  // Cargar protocolo activo - DESHABILITADO (sin Supabase)
   async getActiveProtocol(userId: string): Promise<ProtocolProgress | null> {
-    const supabase = getSupabaseClient();
-    if (!supabase) return null;
-
-    const { data, error } = await supabase
-      .from("protocol_progress")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("is_complete", false)
-      .order("started_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error loading active protocol:", error);
-      return null;
-    }
-
-    return data;
+    return null;
   },
 
-  // Actualizar progreso del protocolo
+  // Actualizar progreso del protocolo - DESHABILITADO (sin Supabase)
   async updateProtocolProgress(
     protocolId: string, 
     updates: Partial<ProtocolProgress>
   ): Promise<ProtocolProgress> {
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not available");
-
-    const { data, error } = await supabase
-      .from("protocol_progress")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", protocolId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    return {
+      id: protocolId,
+      user_id: 'mock-user',
+      protocol_id: 'mock-protocol',
+      current_step: 0,
+      user_responses: [],
+      is_complete: false,
+      started_at: new Date().toISOString(),
+      ...updates
+    } as ProtocolProgress;
   },
 
-  // Crear nuevo protocolo
+  // Crear nuevo protocolo - DESHABILITADO (sin Supabase)
   async createProtocolProgress(
     userId: string,
     protocolId: string,
     projectTitle?: string
   ): Promise<ProtocolProgress> {
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not available");
-
-    const { data, error } = await supabase
-      .from("protocol_progress")
-      .insert({
-        user_id: userId,
-        protocol_id: protocolId,
-        current_step: 0,
-        user_responses: [],
-        is_complete: false,
-        project_title: projectTitle,
-        started_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    return {
+      id: 'mock-progress',
+      user_id: userId,
+      protocol_id: protocolId,
+      current_step: 0,
+      user_responses: [],
+      is_complete: false,
+      project_title: projectTitle,
+      started_at: new Date().toISOString()
+    } as ProtocolProgress;
   },
 
-  // Cargar memoria del usuario
+  // Cargar memoria del usuario - DESHABILITADO (sin Supabase)
   async getUserMemory(userId: string): Promise<UserMemory | null> {
-    const supabase = getSupabaseClient();
-    if (!supabase) return null;
-
-    const { data, error } = await supabase
-      .from("user_memory")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("memory_type", "session_stats")
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error loading user memory:", error);
-      return null;
-    }
-
-    return data;
+    return null;
   },
 
-  // Actualizar memoria del usuario
+  // Actualizar memoria del usuario - DESHABILITADO (sin Supabase)
   async updateUserMemory(
     userId: string,
     memoryData: Record<string, any>
   ): Promise<UserMemory> {
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not available");
-
-    const { data, error } = await supabase
-      .from("user_memory")
-      .upsert({
-        user_id: userId,
-        memory_type: "session_stats",
-        data: memoryData,
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    return {
+      id: 'mock-memory',
+      user_id: userId,
+      memory_type: 'session_stats',
+      data: memoryData,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as UserMemory;
   },
 
-  // Crear nueva sesión de chat
+  // Crear nueva sesión de chat - DESHABILITADO (sin Supabase)
   async createChatSession(
     userId: string,
     sessionData: Partial<ChatSession>
   ): Promise<ChatSession> {
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not available");
-
-    const { data, error } = await supabase
-      .from("chat_sessions")
-      .insert({
-        user_id: userId,
-        messages: [],
-        metadata: {},
-        started_at: new Date().toISOString(),
-        ...sessionData
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    return {
+      id: 'mock-session',
+      user_id: userId,
+      started_at: new Date().toISOString(),
+      messages: [],
+      metadata: {},
+      ...sessionData
+    } as ChatSession;
   },
 
-  // Actualizar sesión de chat
+  // Actualizar sesión de chat - DESHABILITADO (sin Supabase)
   async updateChatSession(
     sessionId: string,
     updates: Partial<ChatSession>
   ): Promise<ChatSession> {
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not available");
-
-    const { data, error } = await supabase
-      .from("chat_sessions")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", sessionId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    return {
+      id: sessionId,
+      user_id: 'mock-user',
+      started_at: new Date().toISOString(),
+      messages: [],
+      metadata: {},
+      ...updates
+    } as ChatSession;
   },
 
-  // Cargar últimas sesiones
+  // Cargar últimas sesiones - DESHABILITADO (sin Supabase)
   async getRecentSessions(userId: string, limit = 3): Promise<ChatSession[]> {
-    const supabase = getSupabaseClient();
-    if (!supabase) return [];
-
-    const { data, error } = await supabase
-      .from("chat_sessions")
-      .select("*")
-      .eq("user_id", userId)
-      .order("started_at", { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      console.error("Error loading recent sessions:", error);
-      return [];
-    }
-
-    return data || [];
+    return [];
   }
 };
 

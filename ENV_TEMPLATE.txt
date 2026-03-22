@@ -1,0 +1,8 @@
+# Firebase Configuration
+# Copia este archivo como .env.local en la raíz del proyecto
+
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyDOh4LbA8v3tgg7lVI-fmcOfUEeOLbjgbM
+NEXT_PUBLIC_FIREBASE_APP_ID=1:425259247669:web:9f8ac519ad480d836d297c
+
+# Nota: Estas credenciales ya están incluidas como fallback en el código,
+# pero es mejor práctica usarlas desde variables de entorno.

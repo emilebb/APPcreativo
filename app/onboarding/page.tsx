@@ -105,7 +105,56 @@ export default function OnboardingPage() {
 
   return (
     <div>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      {/* Header con Login/Registro */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-blue-600 rounded-xl flex items-center justify-center">
+              <span className="text-xl">🎨</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">CreationX</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {user && user.email !== 'usuario@creationx.app' ? (
+              // Usuario autenticado con Firebase
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {user.user_metadata?.name || user.email}
+                </span>
+                <button
+                  onClick={async () => {
+                    const { signOut } = await import('@/lib/firebaseAuth');
+                    await signOut();
+                    router.push('/');
+                  }}
+                  className="px-4 py-2 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            ) : (
+              // Usuario no autenticado - mostrar login/registro
+              <div className="flex items-center gap-3">
+                <a
+                  href="/auth/login"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  Iniciar Sesión
+                </a>
+                <a
+                  href="/auth/register"
+                  className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-lg hover:from-violet-700 hover:to-blue-700 transition-all shadow-md"
+                >
+                  Registrarse
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 pt-20">
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="max-w-md w-full">
             {/* Progress Bar */}

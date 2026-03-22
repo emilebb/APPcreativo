@@ -1,12 +1,72 @@
 "use client";
 
 import { Bell, Mail, MessageSquare } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useProfile } from "@/lib/useProfile";
+import type { EmailDigestFrequency } from "@/types/profile";
 
 export default function NotificationsSettings() {
-  const [emailDigest, setEmailDigest] = useState("weekly");
-  const [coachReminders, setCoachReminders] = useState(true);
-  const [projectUpdates, setProjectUpdates] = useState(true);
+  const { profile, updateProfile } = useProfile();
+  const [saving, setSaving] = useState(false);
+  const [browserPermission, setBrowserPermission] = useState<NotificationPermission>("default");
+
+  // Cargar preferencias del perfil
+  const emailDigest = profile?.notifications?.email_digest ?? "weekly";
+  const coachReminders = profile?.notifications?.coach_reminders ?? true;
+  const projectUpdates = profile?.notifications?.project_updates ?? true;
+  const browserNotifications = profile?.notifications?.browser_notifications ?? false;
+
+  // Verificar permisos de notificaciones del navegador
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setBrowserPermission(Notification.permission);
+    }
+  }, []);
+
+  // Actualizar preferencia de notificaciones
+  const updateNotificationPref = async (updates: Partial<typeof profile.notifications>) => {
+    setSaving(true);
+    try {
+      await updateProfile({
+        notifications: {
+          email_digest: emailDigest,
+          coach_reminders: coachReminders,
+          project_updates: projectUpdates,
+          browser_notifications: browserNotifications,
+          ...updates
+        }
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Solicitar permisos de notificaciones del navegador
+  const requestBrowserPermission = async () => {
+    if (!('Notification' in window)) {
+      alert('Tu navegador no soporta notificaciones');
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setBrowserPermission(permission);
+      
+      if (permission === 'granted') {
+        await updateNotificationPref({ browser_notifications: true });
+        
+        // Mostrar notificación de prueba
+        new Notification('¡Notificaciones activadas!', {
+          body: 'Recibirás recordatorios del Coach cuando sea necesario.',
+          icon: '/icon.svg'
+        });
+      } else {
+        await updateNotificationPref({ browser_notifications: false });
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -34,8 +94,9 @@ export default function NotificationsSettings() {
             <div className="relative">
               <select
                 value={emailDigest}
-                onChange={(e) => setEmailDigest(e.target.value)}
-                className="w-full appearance-none px-4 py-3 bg-white dark:bg-white/95 text-neutral-900 dark:text-[#111827] rounded-xl border border-neutral-200 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                onChange={(e) => updateNotificationPref({ email_digest: e.target.value as EmailDigestFrequency })}
+                disabled={saving}
+                className="w-full appearance-none px-4 py-3 bg-white dark:bg-white/95 text-neutral-900 dark:text-[#111827] rounded-xl border border-neutral-200 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-50"
               >
                 <option value="off">Desactivado</option>
                 <option value="daily">Diario</option>
@@ -66,9 +127,10 @@ export default function NotificationsSettings() {
             type="button"
             role="switch"
             aria-checked={coachReminders}
-            onClick={() => setCoachReminders(!coachReminders)}
+            onClick={() => updateNotificationPref({ coach_reminders: !coachReminders })}
+            disabled={saving}
             className={`
-              relative w-11 h-6 rounded-full transition-colors flex-shrink-0
+              relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50
               ${coachReminders ? "bg-blue-500" : "bg-neutral-200 dark:bg-white/10"}
             `}
           >
@@ -96,9 +158,10 @@ export default function NotificationsSettings() {
             type="button"
             role="switch"
             aria-checked={projectUpdates}
-            onClick={() => setProjectUpdates(!projectUpdates)}
+            onClick={() => updateNotificationPref({ project_updates: !projectUpdates })}
+            disabled={saving}
             className={`
-              relative w-11 h-6 rounded-full transition-colors flex-shrink-0
+              relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50
               ${projectUpdates ? "bg-blue-500" : "bg-neutral-200 dark:bg-white/10"}
             `}
           >
@@ -111,6 +174,77 @@ export default function NotificationsSettings() {
           </button>
         </div>
       </section>
+
+      <section className="rounded-xl bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <Bell className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <h2 className="text-sm font-medium text-neutral-700 dark:text-[#d1d5db]">
+                Notificaciones del navegador
+              </h2>
+              <p className="text-xs text-neutral-500 dark:text-[#6b7280] mt-0.5">
+                Recibe alertas en tu escritorio incluso cuando no estés en la app.
+              </p>
+              {browserPermission === 'denied' && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                  ⚠️ Permisos denegados. Habilítalos en la configuración de tu navegador.
+                </p>
+              )}
+              {browserPermission === 'granted' && browserNotifications && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                  ✓ Notificaciones activadas
+                </p>
+              )}
+            </div>
+          </div>
+          {browserPermission === 'default' ? (
+            <button
+              onClick={requestBrowserPermission}
+              disabled={saving}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              Activar
+            </button>
+          ) : (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={browserNotifications && browserPermission === 'granted'}
+              onClick={() => {
+                if (browserPermission === 'granted') {
+                  updateNotificationPref({ browser_notifications: !browserNotifications });
+                } else {
+                  requestBrowserPermission();
+                }
+              }}
+              disabled={saving || browserPermission === 'denied'}
+              className={`
+                relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50
+                ${browserNotifications && browserPermission === 'granted' ? "bg-blue-500" : "bg-neutral-200 dark:bg-white/10"}
+              `}
+            >
+              <span
+                className={`
+                  absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform
+                  ${browserNotifications && browserPermission === 'granted' ? "left-6 translate-x-0" : "left-1"}
+                `}
+              />
+            </button>
+          )}
+        </div>
+      </section>
+
+      {saving && (
+        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-2">
+            <span className="inline-block w-3 h-3 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin" />
+            Guardando preferencias...
+          </p>
+        </div>
+      )}
     </div>
   );
 }

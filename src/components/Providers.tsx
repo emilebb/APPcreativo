@@ -10,9 +10,10 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider
       attribute="class"
-      themes={["light", "dark", "night"]}
-      defaultTheme="light"
-      enableSystem={false}
+      defaultTheme="system"
+      enableSystem={true}
+      disableTransitionOnChange={false}
+      storageKey="theme"
     >
       {children}
     </ThemeProvider>

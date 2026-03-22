@@ -114,18 +114,40 @@ function LoginContent() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      setError("La contraseña no coincide");
+      if (error.message.includes('Email not confirmed')) {
+        // Permitir acceso temporal para usuarios no confirmados
+        setError("Tu email aún no está confirmado. Puedes usar la app, pero te recomendamos confirmar tu email pronto.");
+        
+        // Guardar acceso temporal
+        localStorage.setItem('temp_user', JSON.stringify({
+          email,
+          pending_confirmation: true,
+          created_at: new Date().toISOString()
+        }));
+        
+        // Esperar 2 segundos para que el usuario lea el mensaje
+        setTimeout(() => {
+          router.push('/explore');
+        }, 2000);
+        
+        setLoading(false);
+        return;
+      } else if (error.message.includes('Invalid login credentials')) {
+        setError("Email o contraseña incorrectos");
+      } else {
+        setError(error.message);
+      }
       setLoading(false);
       return;
     }
 
-    // Loading con mensaje creativo
+    // Login exitoso
     setLoading(false);
   }
 
@@ -142,11 +164,14 @@ function LoginContent() {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/login`,
+        data: {
+          onboarding_completed: false
+        }
       }
     });
 
@@ -156,7 +181,20 @@ function LoginContent() {
       return;
     }
 
-    // Mostrar mensaje de verificación
+    // Si el registro fue exitoso, guardar credenciales temporalmente
+    // y redirigir al usuario (incluso sin confirmación)
+    if (data.user) {
+      // Guardar en localStorage para acceso temporal
+      localStorage.setItem('temp_user', JSON.stringify({
+        email,
+        id: data.user.id,
+        created_at: new Date().toISOString()
+      }));
+      
+      // Redirigir a onboarding o explore
+      router.push('/onboarding');
+    }
+
     setLoading(false);
   }
 

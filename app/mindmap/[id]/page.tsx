@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
 import { ArrowLeft, Share2, Download, Edit, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
+import SimpleMindMap from "@/components/mindmap/SimpleMindMap";
 
 export const dynamic = "force-dynamic";
 
@@ -182,77 +183,51 @@ export default function MindMapDetailPage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="w-full h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Link
-            href="/mindmap"
-            className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
-          >
-            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Link>
-          <div>
-            <h1 className="text-xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
-              {mindMap.title}
-            </h1>
-            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
-              Actualizado {formatDate(mindMap.updated_at)}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleShare}
-            className="p-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-          >
-            <Share2 className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={() => router.push(`/mindmap/${mindMap.id}/edit`)}
-            className="p-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
-
-          <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-700 pl-2">
-            <button
-              onClick={handleAddNode}
-              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+      <div className="flex-shrink-0 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-700 px-4 sm:px-6 py-3 z-10 shadow-sm">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/mindmap"
+              className="flex-shrink-0 p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition"
             >
-              <Plus className="w-4 h-4" />
+              <ArrowLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+            </Link>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white truncate">
+                {mindMap.title}
+              </h1>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                Actualizado {formatDate(mindMap.updated_at)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={handleShare}
+              className="p-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+              title="Compartir"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+            
+            <button
+              onClick={() => router.push(`/mindmap/${mindMap.id}/edit`)}
+              className="p-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+              title="Editar"
+            >
+              <Edit className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mind Map Canvas */}
-      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 h-[600px] relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center text-neutral-400 dark:text-neutral-500">
-          <div className="text-center">
-            <div className="mb-4">
-              <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto">
-                <div className="w-8 h-8 bg-neutral-300 dark:bg-neutral-600 rounded-full"></div>
-              </div>
-            </div>
-            <h3 className="font-medium mb-2">Mapa Mental Visual</h3>
-            <p className="text-sm">Interfaz de mapa mental en desarrollo</p>
-            <div className="mt-4 space-y-2">
-              {mindMap.nodes.map((node) => (
-                <div key={node.id} className="flex items-center justify-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: node.color }}
-                  ></div>
-                  <span className="text-xs">{node.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Mind Map Canvas - Ocupa todo el espacio disponible */}
+      <div className="flex-1 w-full relative overflow-hidden">
+        <SimpleMindMap mindmapId={mindMapId} />
       </div>
-    </main>
+    </div>
   );
 }

@@ -140,42 +140,21 @@ export function useCollaboration(projectId: string) {
     );
   }, [projectId, session]);
 
-  // Suscribirse a cambios en tiempo real
+  // Suscribirse a cambios en tiempo real - DESHABILITADO (sin Supabase)
   useEffect(() => {
-    if (!projectId) return;
-
-    const unsubscribe = collaborationService.subscribeToProject(projectId, {
-      onComment: (comment) => {
-        setComments(prev => {
-          if (prev.find(c => c.id === comment.id)) return prev;
-          return [...prev, comment];
-        });
-      },
-      onTask: (task) => {
-        setTasks(prev => {
-          if (prev.find(t => t.id === task.id)) return prev;
-          return [...prev, task];
-        });
-      },
-      onCursor: (cursor) => {
-        setCursors(prev => {
-          const filtered = prev.filter(c => c.id !== cursor.id);
-          return [...filtered, cursor];
-        });
-      }
-    });
-
-    return () => {
-      unsubscribe?.();
-    };
+    // Sin Supabase - no suscribirse a cambios en tiempo real
+    // if (!projectId) return;
+    // const unsubscribe = collaborationService.subscribeToProject(projectId, {...});
+    // return () => { unsubscribe?.(); };
   }, [projectId]);
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales - DESHABILITADO (sin Supabase)
   useEffect(() => {
-    if (projectId) {
-      loadComments();
-      loadTasks();
-    }
+    // Sin Supabase - no cargar datos automáticamente
+    // if (projectId) {
+    //   loadComments();
+    //   loadTasks();
+    // }
   }, [projectId, loadComments, loadTasks]);
 
   return {

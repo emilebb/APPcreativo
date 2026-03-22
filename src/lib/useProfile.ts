@@ -15,76 +15,47 @@ type UseProfileReturn = {
 };
 
 export function useProfile(): UseProfileReturn {
-  const { session, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = async () => {
-    const supabase = getSupabaseClient();
-    console.log("🔍 fetchProfile called:", { 
-      supabase: !!supabase, 
-      session: !!session,
-      userId: session?.user?.id 
-    });
+    console.log("🔍 fetchProfile called - usando localStorage");
     
-    if (!supabase) {
-      console.log("❌ No supabase client available");
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
-    
-    if (!session?.user?.id) {
-      console.log("❌ No user session available - user not logged in");
+    if (!user?.id) {
+      console.log("❌ No user available");
       setProfile(null);
       setLoading(false);
       return;
     }
 
     try {
-      setError(null);
-      console.log("🔍 Fetching profile for user:", session.user.id);
+      // Cargar perfil desde localStorage
+      const storedProfile = localStorage.getItem(`profile-${user.id}`);
       
-      const { data, error: fetchError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      if (fetchError) {
-        console.error("❌ Profile fetch error:", fetchError);
-        // If profile doesn't exist, create a default one
-        if (fetchError.code === 'PGRST116') {
-          console.log("📝 Profile not found, creating default profile");
-          const defaultProfile = {
-            id: session.user.id,
-            username: session.user.email?.split('@')[0] || 'user',
-            full_name: session.user.user_metadata?.full_name || '',
-            avatar_url: session.user.user_metadata?.avatar_url || '',
-            creative_mode: 'balanced' as CreativeMode,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          
-          const { data: newProfile, error: insertError } = await supabase
-            .from("profiles")
-            .insert(defaultProfile)
-            .select()
-            .single();
-            
-          if (insertError) {
-            throw insertError;
-          }
-          
-          console.log("✅ Default profile created:", newProfile);
-          setProfile(newProfile);
-        } else {
-          throw fetchError;
-        }
+      if (storedProfile) {
+        const parsedProfile = JSON.parse(storedProfile);
+        console.log("✅ Profile loaded from localStorage:", parsedProfile);
+        setProfile(parsedProfile);
       } else {
-        console.log("✅ Profile loaded:", data);
-        setProfile(data);
+        // Crear perfil por defecto
+        console.log("📝 Creating default profile");
+        const defaultProfile: Profile = {
+          id: user.id,
+          username: user.email?.split('@')[0] || 'usuario',
+          full_name: user.user_metadata?.name || 'Usuario Creativo',
+          avatar_url: '',
+          avatar_color: '#8b5cf6',
+          email: user.email || 'usuario@creationx.app',
+          creative_mode: 'calm' as CreativeMode,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        localStorage.setItem(`profile-${user.id}`, JSON.stringify(defaultProfile));
+        console.log("✅ Default profile created:", defaultProfile);
+        setProfile(defaultProfile);
       }
     } catch (err) {
       console.error("❌ Error in fetchProfile:", err);
@@ -96,21 +67,27 @@ export function useProfile(): UseProfileReturn {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    const supabase = getSupabaseClient();
-    if (!supabase || !session?.user?.id) {
-      throw new Error("No hay sesión activa");
+    if (!user?.id) {
+      throw new Error("No hay usuario activo");
     }
 
     try {
-      const { data, error: updateError } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", session.user.id)
-        .select()
-        .single();
+      const storedProfile = localStorage.getItem(`profile-${user.id}`);
+      const currentProfile = storedProfile ? JSON.parse(storedProfile) : null;
+      
+      if (!currentProfile) {
+        throw new Error("Perfil no encontrado");
+      }
 
-      if (updateError) throw updateError;
-      setProfile(data);
+      const updatedProfile = {
+        ...currentProfile,
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
+      localStorage.setItem(`profile-${user.id}`, JSON.stringify(updatedProfile));
+      setProfile(updatedProfile);
+      console.log("✅ Profile updated in localStorage:", updatedProfile);
     } catch (err) {
       console.error("Error updating profile:", err);
       throw err;
@@ -120,28 +97,25 @@ export function useProfile(): UseProfileReturn {
   useEffect(() => {
     console.log("🔄 useProfile useEffect triggered:", { 
       authLoading: authLoading,
-      session: !!session, 
-      userId: session?.user?.id 
+      user: !!user, 
+      userId: user?.id 
     });
     
-    // ✅ CRÍTICO: No hacer nada mientras auth esté cargando
     if (authLoading) {
       console.log("🔄 Auth still loading, waiting...");
       return;
     }
     
-    // ✅ Solo ejecutar fetchProfile si hay sesión válida
-    if (session?.user?.id) {
-      console.log("🔄 Session available, fetching profile");
+    if (user?.id) {
+      console.log("🔄 User available, fetching profile");
       fetchProfile();
     } else {
-      // ✅ Si no hay sesión y auth ya cargó, limpiar estado
-      console.log("🔄 No session found and auth loaded, clearing profile state");
+      console.log("🔄 No user found, clearing profile state");
       setProfile(null);
       setLoading(false);
       setError(null);
     }
-  }, [authLoading, session?.user?.id]); // ← Depende de authLoading Y userId
+  }, [authLoading, user?.id]);
 
   return {
     profile,

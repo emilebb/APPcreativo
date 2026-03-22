@@ -78,6 +78,54 @@ export default function Canvas() {
     redrawCanvas();
   }, [elements]);
 
+  // Atajos de teclado
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Z = Deshacer
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      // Ctrl/Cmd + Shift + Z = Rehacer
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+        e.preventDefault();
+        redo();
+      }
+      // Ctrl/Cmd + S = Guardar
+      else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCanvas();
+      }
+      // P = Lápiz
+      else if (e.key === 'p' || e.key === 'P') {
+        setCurrentTool('pencil');
+      }
+      // E = Borrador
+      else if (e.key === 'e' || e.key === 'E') {
+        setCurrentTool('eraser');
+      }
+      // R = Rectángulo
+      else if (e.key === 'r' || e.key === 'R') {
+        setCurrentTool('rectangle');
+      }
+      // C = Círculo
+      else if (e.key === 'c' || e.key === 'C') {
+        setCurrentTool('circle');
+      }
+      // T = Texto
+      else if (e.key === 't' || e.key === 'T') {
+        setCurrentTool('text');
+      }
+      // M = Mover
+      else if (e.key === 'm' || e.key === 'M') {
+        setCurrentTool('move');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [historyStep, history]);
+
   const redrawCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -192,6 +240,25 @@ export default function Canvas() {
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
       }
+    } else if (currentTool === 'rectangle' || currentTool === 'circle') {
+      // Preview en tiempo real
+      redrawCanvas();
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = strokeWidth;
+      ctx.setLineDash([5, 5]); // Línea punteada para preview
+
+      if (currentTool === 'rectangle' && currentPath.length > 0) {
+        const width = pos.x - currentPath[0].x;
+        const height = pos.y - currentPath[0].y;
+        ctx.strokeRect(currentPath[0].x, currentPath[0].y, width, height);
+      } else if (currentTool === 'circle' && currentPath.length > 0) {
+        const radius = Math.sqrt(Math.pow(pos.x - currentPath[0].x, 2) + Math.pow(pos.y - currentPath[0].y, 2));
+        ctx.beginPath();
+        ctx.arc(currentPath[0].x, currentPath[0].y, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+
+      ctx.setLineDash([]); // Resetear línea punteada
     }
   };
 
@@ -208,16 +275,30 @@ export default function Canvas() {
         style: { color: currentColor, strokeWidth }
       };
       addElement(newElement);
-    } else if (currentTool === 'rectangle') {
+    } else if (currentTool === 'eraser' && currentPath.length > 0) {
+      // Eliminar elementos que intersectan con el path del borrador
+      const eraserPath = [...currentPath, pos];
+      const remainingElements = elements.filter(element => {
+        return !isElementIntersectingPath(element, eraserPath);
+      });
+      
+      if (remainingElements.length !== elements.length) {
+        setElements(remainingElements);
+        const newHistory = history.slice(0, historyStep + 1);
+        newHistory.push(remainingElements);
+        setHistory(newHistory);
+        setHistoryStep(newHistory.length - 1);
+      }
+    } else if (currentTool === 'rectangle' && currentPath.length > 0) {
       const newElement: DrawingElement = {
         id: Date.now().toString(),
         type: 'rectangle',
-        data: { start: currentPath[0] || pos, end: pos },
+        data: { start: currentPath[0], end: pos },
         style: { color: currentColor, strokeWidth, fill: false }
       };
       addElement(newElement);
-    } else if (currentTool === 'circle') {
-      const start = currentPath[0] || pos;
+    } else if (currentTool === 'circle' && currentPath.length > 0) {
+      const start = currentPath[0];
       const radius = Math.sqrt(Math.pow(pos.x - start.x, 2) + Math.pow(pos.y - start.y, 2));
       const newElement: DrawingElement = {
         id: Date.now().toString(),
@@ -230,6 +311,40 @@ export default function Canvas() {
 
     setIsDrawing(false);
     setCurrentPath([]);
+  };
+
+  // Función auxiliar para detectar si un elemento intersecta con el path del borrador
+  const isElementIntersectingPath = (element: DrawingElement, eraserPath: {x: number, y: number}[]) => {
+    const eraserRadius = strokeWidth * 3;
+    
+    for (const point of eraserPath) {
+      if (element.type === 'path') {
+        for (const pathPoint of element.data) {
+          const distance = Math.sqrt(Math.pow(point.x - pathPoint.x, 2) + Math.pow(point.y - pathPoint.y, 2));
+          if (distance < eraserRadius) return true;
+        }
+      } else if (element.type === 'rectangle') {
+        const { start, end } = element.data;
+        if (point.x >= Math.min(start.x, end.x) - eraserRadius &&
+            point.x <= Math.max(start.x, end.x) + eraserRadius &&
+            point.y >= Math.min(start.y, end.y) - eraserRadius &&
+            point.y <= Math.max(start.y, end.y) + eraserRadius) {
+          return true;
+        }
+      } else if (element.type === 'circle') {
+        const distance = Math.sqrt(
+          Math.pow(point.x - element.data.center.x, 2) + 
+          Math.pow(point.y - element.data.center.y, 2)
+        );
+        if (Math.abs(distance - element.data.radius) < eraserRadius) return true;
+      } else if (element.type === 'text') {
+        const { position } = element.data;
+        const distance = Math.sqrt(Math.pow(point.x - position.x, 2) + Math.pow(point.y - position.y, 2));
+        if (distance < eraserRadius + 20) return true;
+      }
+    }
+    
+    return false;
   };
 
   const addElement = (element: DrawingElement) => {
@@ -273,14 +388,39 @@ export default function Canvas() {
     link.click();
   };
 
-  const saveCanvas = () => {
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('idle');
+
+  // Auto-guardar cada 30 segundos
+  useEffect(() => {
+    const autoSave = setInterval(() => {
+      if (elements.length > 0) {
+        saveCanvas(true);
+      }
+    }, 30000);
+
+    return () => clearInterval(autoSave);
+  }, [elements]);
+
+  // Cargar canvas al montar
+  useEffect(() => {
+    loadCanvas();
+  }, []);
+
+  const saveCanvas = (isAutoSave = false) => {
     if (typeof window !== 'undefined') {
+      setSaveStatus('saving');
       const canvasData = {
         elements,
         timestamp: new Date().toISOString()
       };
       localStorage.setItem('canvas-drawing', JSON.stringify(canvasData));
-      alert('Canvas guardado exitosamente');
+      
+      setTimeout(() => {
+        setSaveStatus('saved');
+        if (!isAutoSave) {
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        }
+      }, 300);
     }
   };
 
@@ -288,10 +428,14 @@ export default function Canvas() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('canvas-drawing');
       if (saved) {
-        const canvasData = JSON.parse(saved);
-        setElements(canvasData.elements);
-        setHistory([canvasData.elements]);
-        setHistoryStep(0);
+        try {
+          const canvasData = JSON.parse(saved);
+          setElements(canvasData.elements || []);
+          setHistory([canvasData.elements || []]);
+          setHistoryStep(0);
+        } catch (error) {
+          console.error('Error loading canvas:', error);
+        }
       }
     }
   };
@@ -304,9 +448,23 @@ export default function Canvas() {
       {/* Header */}
       <header className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
-            Pizarra Libre
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
+              Pizarra Libre
+            </h2>
+            {saveStatus === 'saving' && (
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                Guardando...
+              </span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+                Guardado
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={saveCanvas}
@@ -449,11 +607,41 @@ export default function Canvas() {
           <div className="flex-1 bg-white dark:bg-neutral-800 m-2 sm:m-4 rounded-lg shadow-lg overflow-hidden">
             <canvas
               ref={canvasRef}
-              className="w-full h-full cursor-crosshair"
+              className="w-full h-full"
+              style={{ 
+                cursor: tools.find(t => t.id === currentTool)?.cursor || 'crosshair',
+                touchAction: 'none'
+              }}
               onMouseDown={startDrawing}
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                  clientX: touch.clientX,
+                  clientY: touch.clientY
+                });
+                startDrawing(mouseEvent as any);
+              }}
+              onTouchMove={(e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                  clientX: touch.clientX,
+                  clientY: touch.clientY
+                });
+                draw(mouseEvent as any);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                const mouseEvent = new MouseEvent('mouseup', {
+                  clientX: 0,
+                  clientY: 0
+                });
+                stopDrawing(mouseEvent as any);
+              }}
             />
           </div>
         </div>

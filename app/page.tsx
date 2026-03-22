@@ -72,11 +72,16 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
-                href="/signup"
-                className="group px-8 py-4 min-h-[48px] text-base sm:text-lg bg-white text-violet-600 rounded-xl hover:bg-gray-100 transition-all duration-200 font-semibold shadow-xl hover:shadow-2xl hover:scale-[1.02] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-600"
+                href="/auth/register"
+                className="px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl hover:from-violet-700 hover:to-blue-700 transition-all font-semibold shadow-lg shadow-violet-500/30"
               >
-                <Sparkles className="w-5 h-5 mr-2 opacity-80" aria-hidden />
-                Empieza sin bloqueo
+                Comenzar Gratis
+              </Link>
+              <Link
+                href="/auth/login"
+                className="px-8 py-4 border-2 border-neutral-800 dark:border-white text-neutral-800 dark:text-white rounded-xl hover:bg-neutral-800 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all font-semibold"
+              >
+                Iniciar Sesión
               </Link>
               <Link
                 href="#demo-video"
@@ -240,8 +245,8 @@ export default function HomePage() {
             {[
               {
                 step: 1,
-                title: "Crea tu cuenta gratis",
-                desc: "Regístrate en segundos y accede a todas las herramientas creativas sin costo inicial.",
+                title: "Accede directamente",
+                desc: "Entra sin registro y accede a todas las herramientas creativas de inmediato.",
               },
               {
                 step: 2,
@@ -333,7 +338,7 @@ export default function HomePage() {
             Únete a CreationX y lleva tus proyectos creativos al siguiente nivel
           </p>
           <Link
-            href="/signup"
+            href="/explore"
             className="inline-flex items-center px-10 py-5 bg-white text-violet-600 rounded-xl hover:bg-gray-100 transition-all duration-200 font-bold text-lg shadow-2xl hover:shadow-xl hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-600"
           >
             Comenzar Ahora Gratis

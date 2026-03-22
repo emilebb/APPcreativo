@@ -9,15 +9,36 @@ import { projectService } from "@/lib/projectService";
 import { Search, Palette, Trash2 } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
+import { useProfile } from "@/lib/useProfile";
 
 export default function ExplorePage() {
   const { user, loading: authLoading } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
-
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [hasRedirected, setHasRedirected] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<any | null>(null);
+
+  // Redirigir a la herramienta de inicio preferida
+  useEffect(() => {
+    if (!profile?.start_tool || hasRedirected) return;
+    if (profile.start_tool === 'explore') return; // Ya estamos aquí
+
+    const routes = {
+      moodboard: '/moodboard',
+      mindmap: '/mindmap',
+      canvas: '/canvas',
+      explore: '/explore'
+    };
+
+    const targetRoute = routes[profile.start_tool];
+    if (targetRoute) {
+      setHasRedirected(true);
+      router.push(targetRoute);
+    }
+  }, [profile?.start_tool, router, hasRedirected]);
 
   useEffect(() => {
     if (!user) {
@@ -105,9 +126,36 @@ export default function ExplorePage() {
               <p className="text-neutral-600 dark:text-neutral-400 mb-6">
                 Crea tu primer proyecto para comenzar
               </p>
-              <Link href="/" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button 
+                onClick={async () => {
+                  if (!user) return;
+                  try {
+                    const project = await projectService.createProject(user.id, 'moodboard');
+                    
+                    // Guardar moodboard inicial en localStorage
+                    const initialMoodboardData = {
+                      id: project.id,
+                      title: project.title,
+                      description: "",
+                      layout: "freeform",
+                      images: [],
+                      tags: [],
+                      colorPalette: [],
+                      createdAt: project.created_at,
+                      updatedAt: project.updated_at
+                    };
+                    
+                    localStorage.setItem(`moodboard-${project.id}`, JSON.stringify(initialMoodboardData));
+                    
+                    router.push(`/moodboard/${project.id}/edit`);
+                  } catch (error) {
+                    console.error('Error creating project:', error);
+                  }
+                }}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
                 Crear Primer Proyecto
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

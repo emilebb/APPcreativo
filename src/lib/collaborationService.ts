@@ -245,21 +245,8 @@ export const collaborationService = {
    * Obtener comentarios de un proyecto
    */
   async getComments(projectId: string): Promise<ProjectComment[]> {
-    const supabase = getSupabaseClient();
-    if (!supabase) return [];
-
-    const { data, error } = await supabase
-      .from('project_comments')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error loading comments:', error);
-      return [];
-    }
-
-    return data || [];
+    // Sin Supabase - retornar array vacío
+    return [];
   },
 
   /**
@@ -310,21 +297,8 @@ export const collaborationService = {
    * Obtener tareas de un proyecto
    */
   async getTasks(projectId: string): Promise<ProjectTask[]> {
-    const supabase = getSupabaseClient();
-    if (!supabase) return [];
-
-    const { data, error } = await supabase
-      .from('project_tasks')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error loading tasks:', error);
-      return [];
-    }
-
-    return data || [];
+    // Sin Supabase - retornar array vacío
+    return [];
   },
 
   /**

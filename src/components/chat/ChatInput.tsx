@@ -24,7 +24,7 @@ export default function ChatInput({ onSend, placeholder }: ChatInputProps) {
         onKeyDown={(event) => {
           if (event.key === "Enter") handleSend();
         }}
-        className="flex-1 rounded-full border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-neutral-400"
+        className="flex-1 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2.5 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 outline-none focus:border-neutral-400 dark:focus:border-neutral-500"
         placeholder={placeholder}
       />
       <button

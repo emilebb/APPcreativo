@@ -44,8 +44,8 @@ export default function SupabaseChatContainer() {
   useEffect(() => {
     if (!isLoading && !error) {
       const welcomeMessage = isInProtocol 
-        ? `¡Hola de nuevo! 👋\n\nVeo que estás en el día ${currentProtocolDay} del protocolo "primeros_7_días".${activeProtocol?.project_title ? ` Trabajando en: "${activeProtocol.project_title}"` : ''}\n\n¿Continuamos con el ejercicio de hoy?`
-        : `¡Hola! Soy tu Creative Coach 🧠✨\n\nEstoy aquí para ayudarte a superar cualquier bloqueo creativo y desbloquear tu potencial.\n\n¿En qué puedo ayudarte hoy?`;
+        ? `Día ${currentProtocolDay} del protocolo.${activeProtocol?.project_title ? ` Proyecto: "${activeProtocol.project_title}"` : ''}\n\n¿Listo para continuar?`
+        : `Hola 👋 Soy tu Coach Creativo.\n\nDetecto bloqueos, te doy acciones claras.\n\n¿Qué necesitas hoy?`;
 
       setMessages([{
         role: "system",
@@ -173,15 +173,15 @@ export default function SupabaseChatContainer() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 py-10">
-      <div className="flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-900 px-4 py-10">
+      <div className="flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-700 px-6 py-4 bg-gradient-to-r from-violet-50 to-blue-50 dark:from-violet-900/20 dark:to-blue-900/20">
           <div className="space-y-2">
-            <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
+            <div className="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
               Creative Coach
             </div>
-            <div className="text-base font-semibold text-neutral-800">
+            <div className="text-base font-semibold text-neutral-900 dark:text-white">
               {isInProtocol 
                 ? `Protocolo: Día ${currentProtocolDay}/7` 
                 : "Vamos paso a paso."
@@ -190,9 +190,9 @@ export default function SupabaseChatContainer() {
             
             {/* Indicador de progreso del protocolo */}
             {isInProtocol && (
-              <div className="w-full bg-neutral-200 rounded-full h-2 mt-2">
+              <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2 mt-2">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-violet-600 to-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${protocolProgress}%` }}
                 ></div>
               </div>
@@ -201,18 +201,18 @@ export default function SupabaseChatContainer() {
           
           <div className="flex items-center gap-2">
             {profile?.creative_mode === 'direct' && (
-              <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+              <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-1 rounded-full">
                 Rápido
               </span>
             )}
-            <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs uppercase tracking-[0.15em] text-white">
+            <span className="rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-3 py-1 text-xs uppercase tracking-[0.15em] text-white">
               Beta
             </span>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6 bg-neutral-50 dark:bg-neutral-900/50">
           {messages.map((message, index) => (
             <ChatMessage
               key={`${message.role}-${index}`}
@@ -221,10 +221,10 @@ export default function SupabaseChatContainer() {
             />
           ))}
           {isThinking && (
-            <div className="flex items-center gap-2 text-neutral-400">
-              <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="flex items-center gap-2 text-neutral-400 dark:text-neutral-500">
+              <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               <span className="text-sm italic">Pensando...</span>
             </div>
           )}
@@ -232,7 +232,7 @@ export default function SupabaseChatContainer() {
         </div>
 
         {/* Input */}
-        <div className="border-t border-neutral-100 px-6 py-4">
+        <div className="border-t border-neutral-100 dark:border-neutral-700 px-6 py-4 bg-white dark:bg-neutral-800">
           {currentStep === 'welcome' && !isInProtocol && (
             <ChatOptions
               options={[

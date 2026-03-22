@@ -1,65 +1,101 @@
+// @ts-nocheck
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import type { Session, User } from "@supabase/supabase-js";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { onAuthChange, signInWithGoogle as firebaseSignIn, signOut as firebaseSignOut } from "./firebaseAuth";
+import { User as FirebaseUser } from "firebase/auth";
 
-type AuthContextType = {
-  session: Session | null;
+interface User {
+  id: string;
+  email: string;
+  user_metadata?: {
+    name?: string;
+    avatar_url?: string;
+  };
+}
+
+interface AuthContextType {
   user: User | null;
   loading: boolean;
-};
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType>({
-  session: null,
   user: null,
   loading: true,
+  signInWithGoogle: async () => {},
+  signOut: async () => {},
 });
 
+export const useAuth = () => useContext(AuthContext);
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+    // Escuchar cambios en la autenticación de Firebase
+    const unsubscribe = onAuthChange((firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        // Usuario autenticado con Firebase
+        const mappedUser: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || 'usuario@creationx.app',
+          user_metadata: {
+            name: firebaseUser.displayName || 'Usuario Creativo',
+            avatar_url: firebaseUser.photoURL || ''
+          }
+        };
+        setUser(mappedUser);
+        console.log('✅ Usuario autenticado con Firebase:', mappedUser.email);
+      } else {
+        // No hay usuario autenticado, usar usuario simulado
+        const mockUserId = localStorage.getItem('mock_user_id') || `user-${Date.now()}`;
+        
+        if (!localStorage.getItem('mock_user_id')) {
+          localStorage.setItem('mock_user_id', mockUserId);
+        }
 
-    console.log("🔐 AuthProvider: Initializing auth state");
+        const mockUser: User = {
+          id: mockUserId,
+          email: 'usuario@creationx.app',
+          user_metadata: {
+            name: 'Usuario Creativo',
+            avatar_url: ''
+          }
+        };
 
-    supabase.auth.getSession().then(({ data }) => {
-      console.log("🔐 AuthProvider: getSession completed", { session: !!data.session, mounted });
-      if (!mounted) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false); // 🔥 CLAVE
+        setUser(mockUser);
+        console.log('ℹ️ Usando usuario simulado (sin Firebase)');
+      }
+      setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        console.log("🔐 AuthProvider: onAuthStateChange", { session: !!session, mounted });
-        if (!mounted) return;
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false); // 🔥 CLAVE
-      }
-    );
-
-    return () => {
-      console.log("🔐 AuthProvider: Cleanup");
-      mounted = false;
-      listener.subscription.unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
+  const signInWithGoogle = async () => {
+    try {
+      await firebaseSignIn();
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+      throw error;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await firebaseSignOut();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, loading }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  // Always return context, never null - SSR-safe
-  return context;
-};

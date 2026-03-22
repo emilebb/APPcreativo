@@ -51,44 +51,31 @@ export default function MoodboardDetailPage() {
     try {
       setLoading(true);
       
-      // Simulación de carga - en producción vendría de una API
-      const mockMoodboard: Moodboard = {
-        id: moodboardId,
-        title: "Verano 2024",
-        description: "Una colección vibrante de colores y energía solar para proyectos de verano. Inspirada en atardeceres, playas y la calidez del mediodía estival.",
-        category: "verano",
-        images: [
-          {
-            id: "1",
-            url: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop",
-            title: "Atardecer tropical",
-            description: "Colores cálidos del atardecer en la playa"
-          },
-          {
-            id: "2",
-            url: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop",
-            title: "Olas del mar",
-            description: "El movimiento y energía del océano"
-          },
-          {
-            id: "3",
-            url: "https://images.unsplash.com/photo-1496715976403-7e36dc43f17b?w=800&h=600&fit=crop",
-            title: "Palmeras al sol",
-            description: "Siluetas tropicales contra el cielo azul"
-          }
-        ],
-        tags: ["verano", "vibrante", "energía", "sol", "tropical", "playa"],
-        created_at: "2024-01-15T10:30:00Z",
-        updated_at: "2024-01-20T15:45:00Z",
-        color_palette: ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8", "#F7DC6F"],
-        is_public: true,
-        likes: 42,
-        is_liked: false
-      };
-
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setMoodboard(mockMoodboard);
+      const { default: moodboardService } = await import("@/lib/moodboardService");
+      const data = await moodboardService.getMoodboard(moodboardId);
+      
+      if (data) {
+        const loadedMoodboard: Moodboard = {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          category: data.layout || "general",
+          images: data.images.map(img => ({
+            id: img.id,
+            url: img.url,
+            title: "",
+            description: ""
+          })),
+          tags: data.tags || [],
+          created_at: data.createdAt,
+          updated_at: data.updatedAt,
+          color_palette: data.colorPalette || [],
+          is_public: false,
+          likes: 0,
+          is_liked: false
+        };
+        setMoodboard(loadedMoodboard);
+      }
     } catch (error) {
       console.error("Error loading moodboard:", error);
     } finally {

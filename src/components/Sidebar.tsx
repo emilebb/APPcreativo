@@ -59,7 +59,6 @@ export default function Sidebar() {
     creatingRef.current = true;
     
     if (!user) {
-      alert('Por favor inicia sesión para crear proyectos')
       creatingRef.current = false;
       return
     }

@@ -5,7 +5,6 @@ import { Settings, Palette, Sparkles, Bell, Shield } from "lucide-react";
 
 export const SETTINGS_CATEGORIES = [
   { id: "general", name: "General", icon: Settings },
-  { id: "appearance", name: "Apariencia", icon: Palette },
   { id: "experience", name: "Experiencia Creativa", icon: Sparkles },
   { id: "notifications", name: "Notificaciones", icon: Bell },
   { id: "security", name: "Seguridad", icon: Shield },
