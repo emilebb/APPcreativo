@@ -66,7 +66,7 @@ export default function MoodboardDetailPage() {
             title: "",
             description: ""
           })),
-          tags: data.tags || [],
+          // tags: data.tags || [],
           created_at: data.createdAt,
           updated_at: data.updatedAt,
           color_palette: data.colorPalette || [],
