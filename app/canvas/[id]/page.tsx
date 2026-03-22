@@ -7,11 +7,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
 import { projectService } from "@/lib/projectService";
 import ProjectTitleEditor from "@/components/ProjectTitleEditor";
-import { useStyleLearning } from "@/hooks/useStyleLearning";
-import { useCollaboration } from "@/hooks/useCollaboration";
-import InspirationPanel from "@/components/InspirationPanel";
-import CommentsPanel from "@/components/CommentsPanel";
-import ShareProjectModal from "@/components/ShareProjectModal";
+// import { useStyleLearning } from "@/hooks/useStyleLearning";
+// import { useCollaboration } from "@/hooks/useCollaboration";
+// import InspirationPanel from "@/components/InspirationPanel";
+// import CommentsPanel from "@/components/CommentsPanel";
+// import ShareProjectModal from "@/components/ShareProjectModal";
 import { 
   Pencil, Trash2, Undo, Redo, Palette, Move, 
   Download, Save, Share2, Sparkles, MessageSquare 
@@ -52,10 +52,10 @@ export default function CanvasPage() {
   const [saving, setSaving] = useState(false);
 
   // Hook de aprendizaje de estilo
-  const { analyzeProject, analyzing } = useStyleLearning(canvasId);
+  // const { analyzeProject, analyzing } = useStyleLearning(canvasId);
   
   // Hook de colaboración
-  const { comments, addComment } = useCollaboration(canvasId);
+  // const { comments, addComment } = useCollaboration(canvasId);
 
   const tools = [
     { id: 'pencil', name: 'Lápiz', icon: <Pencil className="w-4 h-4" />, cursor: 'crosshair' },
@@ -118,14 +118,14 @@ export default function CanvasPage() {
 
       // 🎨 ANÁLISIS AUTOMÁTICO DE ESTILO
       // Analizar y guardar patrones de estilo del proyecto
-      if (user?.id && elements.length > 0) {
-        console.log('🎨 Analizando estilo del proyecto...');
-        await analyzeProject('canvas', {
-          elements: elements,
-          tags: project?.tags || []
-        });
-        console.log('✅ Análisis de estilo completado');
-      }
+      // if (user?.id && elements.length > 0) {
+      //   console.log('🎨 Analizando estilo del proyecto...');
+      //   await analyzeProject('canvas', {
+      //     elements: elements,
+      //     tags: project?.tags || []
+      //   });
+      //   console.log('✅ Análisis de estilo completado');
+      // }
     } catch (error) {
       console.error('Error saving canvas:', error);
     } finally {
@@ -270,12 +270,12 @@ export default function CanvasPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={saveCanvas}
-              disabled={saving || analyzing}
+              disabled={saving}
               className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               title="Guardar"
             >
               <Save className="w-4 h-4" />
-              {saving || analyzing ? 'Guardando...' : 'Guardar'}
+              {saving ? 'Guardando...' : 'Guardar'}
             </button>
             <button
               onClick={() => setShowShareModal(true)}
@@ -285,7 +285,7 @@ export default function CanvasPage() {
               <Share2 className="w-4 h-4" />
               Compartir
             </button>
-            <button
+            {/* <button
               onClick={() => setShowComments(!showComments)}
               className={`p-2 rounded-lg transition relative ${
                 showComments
@@ -300,8 +300,8 @@ export default function CanvasPage() {
                   {comments.length}
                 </span>
               )}
-            </button>
-            <button
+            </button> */}
+            {/* <button
               onClick={() => setShowInspiration(!showInspiration)}
               className={`p-2 rounded-lg transition ${
                 showInspiration
@@ -311,7 +311,7 @@ export default function CanvasPage() {
               title="Panel de Inspiración"
             >
               <Sparkles className="w-4 h-4" />
-            </button>
+            </button> */}
             <button
               onClick={downloadCanvas}
               className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
@@ -446,7 +446,7 @@ export default function CanvasPage() {
         </div>
 
         {/* Panel de Comentarios */}
-        {showComments && (
+        {/* {showComments && (
           <CommentsPanel
             projectId={canvasId}
             onPinClick={(position) => {
@@ -454,10 +454,10 @@ export default function CanvasPage() {
               console.log('📍 Ver comentario en:', position);
             }}
           />
-        )}
+        )} */}
 
         {/* Panel de Inspiración */}
-        {showInspiration && (
+        {/* {showInspiration && (
           <InspirationPanel
             projectId={canvasId}
             onApplySuggestion={(suggestion) => {
@@ -471,16 +471,16 @@ export default function CanvasPage() {
               }
             }}
           />
-        )}
+        )} */}
       </div>
 
       {/* Modal de Compartir Proyecto */}
-      <ShareProjectModal
+      {/* <ShareProjectModal
         projectId={canvasId}
         projectName={project?.name || `Canvas ${canvasId}`}
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
-      />
+      /> */}
     </main>
   );
 }
