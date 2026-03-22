@@ -24,7 +24,8 @@ export default function NotificationsSettings() {
   }, []);
 
   // Actualizar preferencia de notificaciones
-  const updateNotificationPref = async (updates: Partial<typeof profile.notifications>) => {
+  const updateNotificationPref = async (updates: Partial<NotificationPreferences>) => {
+    if (!profile) return;
     setSaving(true);
     try {
       await updateProfile({
