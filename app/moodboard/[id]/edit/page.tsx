@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/authProvider";
 import { 
   Upload, X, Plus, Save, ArrowLeft, Grid3X3, 
   Columns, Layout, Sparkles, Image as ImageIcon,
-  Move, Trash2, ZoomIn, ZoomOut, RotateCw, BookmarkPlus
+  Move, Trash2, ZoomIn, ZoomOut, RotateCw, BookmarkPlus, Menu
 } from "lucide-react";
 import Link from "next/link";
 
@@ -98,6 +98,7 @@ export default function EditMoodboardPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isSaving, setIsSaving] = useState(false);
   const [zoom, setZoom] = useState(100);
+  const [showLayoutPanel, setShowLayoutPanel] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState("");
@@ -449,7 +450,16 @@ export default function EditMoodboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+            {/* Botón para abrir panel en móvil */}
+            <button
+              onClick={() => setShowLayoutPanel(true)}
+              className="lg:hidden p-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+              title="Estilos de Layout"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
               <button
                 onClick={() => setZoom(Math.max(50, zoom - 10))}
                 className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded"
@@ -467,15 +477,15 @@ export default function EditMoodboardPage() {
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
             >
               <Upload className="w-4 h-4" />
-              Añadir Imágenes
+              <span className="hidden sm:inline">Añadir Imágenes</span>
             </button>
 
             <button
               onClick={() => setShowSaveTemplateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
             >
               <BookmarkPlus className="w-4 h-4" />
               Guardar como Plantilla
@@ -484,7 +494,7 @@ export default function EditMoodboardPage() {
             <button
               onClick={handleSave}
               disabled={isSaving || !title.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {isSaving ? (
                 <>
@@ -494,7 +504,7 @@ export default function EditMoodboardPage() {
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  Guardar
+                  <span className="hidden sm:inline">Guardar</span>
                 </>
               )}
             </button>
@@ -503,8 +513,8 @@ export default function EditMoodboardPage() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Panel lateral - Estilos */}
-        <div className="w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-4 overflow-y-auto">
+        {/* Panel lateral - Estilos (Desktop) */}
+        <div className="hidden lg:block w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-4 overflow-y-auto">
           <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
             Estilos de Layout
           </h3>
@@ -608,8 +618,151 @@ export default function EditMoodboardPage() {
           )}
         </div>
 
+        {/* Panel lateral - Estilos (Mobile Drawer) */}
+        {showLayoutPanel && (
+          <div className="lg:hidden fixed inset-0 z-50 flex">
+            {/* Overlay */}
+            <div 
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setShowLayoutPanel(false)}
+            />
+            
+            {/* Drawer */}
+            <div className="relative w-80 max-w-[85vw] bg-white dark:bg-neutral-800 p-4 overflow-y-auto animate-in slide-in-from-left duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+                  Estilos de Layout
+                </h3>
+                <button
+                  onClick={() => setShowLayoutPanel(false)}
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {LAYOUT_TEMPLATES.map((template) => {
+                  const Icon = template.icon;
+                  return (
+                    <button
+                      key={template.id}
+                      onClick={() => {
+                        applyLayout(template.id);
+                        setShowLayoutPanel(false);
+                      }}
+                      className={`w-full text-left p-3 rounded-lg border transition ${
+                        selectedLayout === template.id
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Icon className="w-4 h-4" />
+                        <span className="font-medium text-sm">{template.name}</span>
+                      </div>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                        {template.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {customTemplates.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                  <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
+                    Mis Plantillas
+                  </h3>
+                  <div className="space-y-2">
+                    {customTemplates.map((template) => (
+                      <div
+                        key={template.id}
+                        className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 transition"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <button
+                            onClick={() => {
+                              applyCustomTemplate(template);
+                              setShowLayoutPanel(false);
+                            }}
+                            className="flex-1 text-left"
+                          >
+                            <span className="font-medium text-sm text-neutral-900 dark:text-white block">
+                              {template.name}
+                            </span>
+                            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                              {template.description}
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => deleteCustomTemplate(template.id)}
+                            className="p-1 text-neutral-400 hover:text-red-500 transition"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedImageId && (
+                <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                  <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
+                    Imagen Seleccionada
+                  </h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        rotateImage(selectedImageId);
+                        setShowLayoutPanel(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+                    >
+                      <RotateCw className="w-4 h-4" />
+                      Rotar 90°
+                    </button>
+                    <button
+                      onClick={() => {
+                        resizeImage(selectedImageId, 20);
+                        setShowLayoutPanel(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+                    >
+                      <ZoomIn className="w-4 h-4" />
+                      Agrandar
+                    </button>
+                    <button
+                      onClick={() => {
+                        resizeImage(selectedImageId, -20);
+                        setShowLayoutPanel(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+                    >
+                      <ZoomOut className="w-4 h-4" />
+                      Reducir
+                    </button>
+                    <button
+                      onClick={() => {
+                        removeImage(selectedImageId);
+                        setShowLayoutPanel(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Canvas principal */}
-        <div className="flex-1 overflow-auto p-8">
+        <div className="flex-1 overflow-auto p-4 sm:p-8">
           <div
             ref={canvasRef}
             onDragOver={handleDragOver}
