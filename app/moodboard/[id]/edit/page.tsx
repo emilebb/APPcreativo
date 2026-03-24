@@ -33,9 +33,11 @@ export default function EditMoodboardPage() {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
+  // Selector reactivo para selectedId (se actualiza en cada re-render)
+  const selectedId = useMoodboardStore((s) => s.selectedId);
+  
   const {
     images,
-    selectedId,
     isDirty,
     stageScale,
     setStageScale,
@@ -72,21 +74,28 @@ export default function EditMoodboardPage() {
     loadMoodboardData();
   }, [moodboardId, loadMoodboard]);
 
-  // Save moodboard - captura valores frescos del store y estado local
+  // Save moodboard - usa refs para capturar valores frescos
   const handleSave = useCallback(async () => {
-    // Obtener valores frescos para evitar closures stale
-    const currentTitle = useMoodboardStore.getState().isDirty 
-      ? title 
-      : title;
-    const { images: currentImages } = getStoreState();
-    
-    if (!currentTitle.trim()) {
-      alert("Por favor, añade un título");
-      return;
-    }
-
     setSaving(true);
     try {
+      // Leer valores directamente del DOM/estado actual
+      const titleInput = document.querySelector('input[placeholder="Título del moodboard"]') as HTMLInputElement;
+      const currentTitle = titleInput?.value || title;
+      
+      if (!currentTitle.trim()) {
+        alert("Por favor, añade un título");
+        return;
+      }
+
+      // Obtener imágenes frescas del store
+      const { images: currentImages } = getStoreState();
+      
+      console.log("Guardando moodboard:", {
+        id: moodboardId,
+        title: currentTitle,
+        imagesCount: currentImages.length
+      });
+
       const moodboardData = {
         id: moodboardId,
         title: currentTitle,
@@ -97,7 +106,7 @@ export default function EditMoodboardPage() {
       localStorage.setItem(`moodboard-${moodboardId}`, JSON.stringify(moodboardData));
       
       // Marcar como guardado
-      useMoodboardStore.getState().markClean();
+      getStoreState().markClean();
 
       setSaveMessage("¡Guardado!");
       setTimeout(() => setSaveMessage(null), 2000);
