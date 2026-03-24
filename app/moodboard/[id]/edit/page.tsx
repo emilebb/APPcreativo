@@ -17,6 +17,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { useMoodboardStore } from "@/store/useMoodboardStore";
+
+// Helper para obtener estado fresco del store (evita stale closures)
+const getStoreState = () => useMoodboardStore.getState();
 import MoodboardCanvas from "@/components/MoodboardCanvas";
 import MoodboardUploader from "@/components/MoodboardUploader";
 
@@ -38,7 +41,6 @@ export default function EditMoodboardPage() {
     setStageScale,
     loadMoodboard,
     updateImage,
-    deleteSelected,
     clearSelection,
   } = useMoodboardStore();
 
@@ -70,9 +72,15 @@ export default function EditMoodboardPage() {
     loadMoodboardData();
   }, [moodboardId, loadMoodboard]);
 
-  // Save moodboard
+  // Save moodboard - captura valores frescos del store y estado local
   const handleSave = useCallback(async () => {
-    if (!title.trim()) {
+    // Obtener valores frescos para evitar closures stale
+    const currentTitle = useMoodboardStore.getState().isDirty 
+      ? title 
+      : title;
+    const { images: currentImages } = getStoreState();
+    
+    if (!currentTitle.trim()) {
       alert("Por favor, añade un título");
       return;
     }
@@ -81,12 +89,15 @@ export default function EditMoodboardPage() {
     try {
       const moodboardData = {
         id: moodboardId,
-        title,
-        images,
+        title: currentTitle,
+        images: currentImages,
         updatedAt: new Date().toISOString(),
       };
 
       localStorage.setItem(`moodboard-${moodboardId}`, JSON.stringify(moodboardData));
+      
+      // Marcar como guardado
+      useMoodboardStore.getState().markClean();
 
       setSaveMessage("¡Guardado!");
       setTimeout(() => setSaveMessage(null), 2000);
@@ -96,7 +107,7 @@ export default function EditMoodboardPage() {
     } finally {
       setSaving(false);
     }
-  }, [moodboardId, title, images]);
+  }, [moodboardId, title]); // title como dependencia para actualizar la closure
 
   // Auto-save on changes (debounced)
   useEffect(() => {
@@ -133,11 +144,12 @@ export default function EditMoodboardPage() {
     }
   };
 
-  // Delete selected image
+  // Delete selected image - usa estado fresco del store
   const handleDeleteSelected = () => {
-    if (!selectedId) return;
+    const { selectedId: currentSelectedId, deleteImage } = getStoreState();
+    if (!currentSelectedId) return;
     if (confirm("¿Eliminar la imagen seleccionada?")) {
-      deleteSelected();
+      deleteImage(currentSelectedId);
     }
   };
 

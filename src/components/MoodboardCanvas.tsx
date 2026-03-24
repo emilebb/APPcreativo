@@ -34,14 +34,36 @@ function KonvaImageNode({
   const imageRef = useRef<Konva.Image>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  // Load image
+  // Load image with proper error handling
   useEffect(() => {
+    setIsLoading(true);
+    setHasError(false);
+    setImageElement(null);
+
     const img = new window.Image();
     img.crossOrigin = "anonymous";
-    img.src = image.src;
+    
     img.onload = () => {
       setImageElement(img);
+      setIsLoading(false);
+      setHasError(false);
+    };
+    
+    img.onerror = () => {
+      console.error("Failed to load image:", image.src);
+      setIsLoading(false);
+      setHasError(true);
+    };
+
+    img.src = image.src;
+
+    // Cleanup
+    return () => {
+      img.onload = null;
+      img.onerror = null;
     };
   }, [image.src]);
 
@@ -53,7 +75,28 @@ function KonvaImageNode({
     }
   }, [isSelected]);
 
-  if (!imageElement) return null;
+  // Don't render if loading or error
+  if (isLoading || hasError || !imageElement) {
+    // Show placeholder rectangle while loading or on error
+    return (
+      <Rect
+        x={image.x}
+        y={image.y}
+        width={image.width}
+        height={image.height}
+        fill={hasError ? "#fee2e2" : "#e5e7eb"}
+        stroke={isSelected ? "#3b82f6" : "#d1d5db"}
+        strokeWidth={isSelected ? 2 : 1}
+        cornerRadius={4}
+        draggable
+        onClick={onSelect}
+        onTap={onSelect}
+        onDragEnd={(e) => {
+          onDragEnd(e.target.x(), e.target.y());
+        }}
+      />
+    );
+  }
 
   return (
     <>
@@ -140,7 +183,6 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
     setSelected,
     clearSelection,
     updateImage,
-    deleteSelected,
     stageScale,
     setStageScale,
   } = useMoodboardStore();
@@ -161,25 +203,30 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // Handle keyboard delete
+  // Handle keyboard delete - usa estado fresco del store
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
-        // Don't delete if user is typing in an input
-        if (
-          document.activeElement?.tagName === "INPUT" ||
-          document.activeElement?.tagName === "TEXTAREA"
-        ) {
-          return;
-        }
+      // Don't delete if user is typing in an input
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+
+      if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
-        deleteSelected();
+        // Obtener estado fresco para evitar closures stale
+        const { selectedId: currentSelectedId, deleteImage } = useMoodboardStore.getState();
+        if (currentSelectedId) {
+          deleteImage(currentSelectedId);
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedId, deleteSelected]);
+  }, []); // Sin dependencias - usa getState() directamente
 
   // Handle wheel zoom
   const handleWheel = useCallback(
