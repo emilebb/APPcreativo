@@ -20,13 +20,19 @@ interface Tool {
 
 interface DrawingElement {
   id: string;
-  type: 'path' | 'rectangle' | 'circle' | 'text';
+  type: 'path' | 'rectangle' | 'circle' | 'text' | 'eraser';
   data: any;
   style: {
     color: string;
     strokeWidth: number;
     fill?: boolean;
   };
+}
+
+// Sistema de historial para undo/redo
+interface HistoryState {
+  elements: DrawingElement[];
+  timestamp: number;
 }
 
 export default function Canvas() {
@@ -37,8 +43,9 @@ export default function Canvas() {
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [elements, setElements] = useState<DrawingElement[]>([]);
   const [currentPath, setCurrentPath] = useState<{x: number, y: number}[]>([]);
-  const [history, setHistory] = useState<DrawingElement[][]>([]);
+  const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyStep, setHistoryStep] = useState(0);
+  const [fillEnabled, setFillEnabled] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showFocusMode, setShowFocusMode] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
@@ -312,22 +319,20 @@ export default function Canvas() {
       // Eliminar elementos que intersectan con el path del borrador
       const eraserPath = [...currentPath, pos];
       const remainingElements = elements.filter(element => {
+        // No borrar otros paths de borrador
+        if (element.type === 'eraser') return true;
         return !isElementIntersectingPath(element, eraserPath);
       });
       
       if (remainingElements.length !== elements.length) {
-        setElements(remainingElements);
-        const newHistory = history.slice(0, historyStep + 1);
-        newHistory.push(remainingElements);
-        setHistory(newHistory);
-        setHistoryStep(newHistory.length - 1);
+        saveToHistory(remainingElements);
       }
     } else if (currentTool === 'rectangle' && currentPath.length > 0) {
       const newElement: DrawingElement = {
         id: Date.now().toString(),
         type: 'rectangle',
         data: { start: currentPath[0], end: pos },
-        style: { color: currentColor, strokeWidth, fill: false }
+        style: { color: currentColor, strokeWidth, fill: fillEnabled }
       };
       addElement(newElement);
     } else if (currentTool === 'circle' && currentPath.length > 0) {
@@ -337,7 +342,7 @@ export default function Canvas() {
         id: Date.now().toString(),
         type: 'circle',
         data: { center: start, radius },
-        style: { color: currentColor, strokeWidth, fill: false }
+        style: { color: currentColor, strokeWidth, fill: fillEnabled }
       };
       addElement(newElement);
     }
@@ -380,35 +385,42 @@ export default function Canvas() {
     return false;
   };
 
-  const addElement = (element: DrawingElement) => {
-    const newElements = [...elements, element];
-    setElements(newElements);
-    
-    // Update history
+  // Guardar estado en historial
+  const saveToHistory = (newElements: DrawingElement[]) => {
     const newHistory = history.slice(0, historyStep + 1);
-    newHistory.push(newElements);
+    newHistory.push({ elements: newElements, timestamp: Date.now() });
+    // Limitar historial a 50 estados
+    if (newHistory.length > 50) {
+      newHistory.shift();
+    }
     setHistory(newHistory);
     setHistoryStep(newHistory.length - 1);
+    setElements(newElements);
+  };
+
+  const addElement = (element: DrawingElement) => {
+    const newElements = [...elements, element];
+    saveToHistory(newElements);
   };
 
   const undo = () => {
     if (historyStep > 0) {
-      setHistoryStep(historyStep - 1);
-      setElements(history[historyStep - 1] || []);
+      const newStep = historyStep - 1;
+      setHistoryStep(newStep);
+      setElements(history[newStep].elements);
     }
   };
 
   const redo = () => {
     if (historyStep < history.length - 1) {
-      setHistoryStep(historyStep + 1);
-      setElements(history[historyStep + 1]);
+      const newStep = historyStep + 1;
+      setHistoryStep(newStep);
+      setElements(history[newStep].elements);
     }
   };
 
   const clearCanvas = () => {
-    setElements([]);
-    setHistory([[]]);
-    setHistoryStep(0);
+    saveToHistory([]);
   };
 
   const downloadCanvas = () => {
@@ -463,8 +475,10 @@ export default function Canvas() {
       if (saved) {
         try {
           const canvasData = JSON.parse(saved);
-          setElements(canvasData.elements || []);
-          setHistory([canvasData.elements || []]);
+          const loadedElements = canvasData.elements || [];
+          setElements(loadedElements);
+          // Cargar historial con el estado actual
+          setHistory([{ elements: loadedElements, timestamp: Date.now() }]);
           setHistoryStep(0);
         } catch (error) {
           console.error('Error loading canvas:', error);
@@ -705,6 +719,21 @@ export default function Canvas() {
                 <span className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 w-6 sm:w-8">
                   {strokeWidth}
                 </span>
+              </div>
+
+              {/* Fill Toggle */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setFillEnabled(!fillEnabled)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+                    fillEnabled
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500'
+                      : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                  }`}
+                  title="Alternar relleno para formas"
+                >
+                  Relleno
+                </button>
               </div>
             </div>
           </div>

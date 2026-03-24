@@ -205,11 +205,20 @@ export default function EditMoodboardPage() {
     const image = images.find((img) => img.id === imageId);
     if (!image) return;
 
+    // Traer la imagen al frente (actualizar zIndex)
+    const maxZ = Math.max(...images.map(img => img.zIndex), 0);
+    
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId ? { ...img, zIndex: maxZ + 1 } : img
+      )
+    );
+    
     setDraggedImageId(imageId);
     setSelectedImageId(imageId);
     setDragOffset({
-      x: e.clientX - image.x,
-      y: e.clientY - image.y,
+      x: e.clientX - image.x * (zoom / 100),
+      y: e.clientY - image.y * (zoom / 100),
     });
   };
 
@@ -220,8 +229,9 @@ export default function EditMoodboardPage() {
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - dragOffset.x;
-    const y = e.clientY - rect.top - dragOffset.y;
+    const scale = zoom / 100;
+    const x = (e.clientX - rect.left - dragOffset.x) / scale;
+    const y = (e.clientY - rect.top - dragOffset.y) / scale;
 
     setImages((prev) =>
       prev.map((img) =>
@@ -304,6 +314,7 @@ export default function EditMoodboardPage() {
       
       const moodboardData = {
         id: moodboardId,
+        user_id: user?.id || 'anonymous',
         title,
         description,
         layout: selectedLayout,
@@ -323,8 +334,17 @@ export default function EditMoodboardPage() {
 
       await moodboardService.saveMoodboard(moodboardData);
       
-      alert("¡Moodboard guardado exitosamente!");
-      router.push(`/moodboard/${moodboardId}`);
+      // Mostrar mensaje de éxito breve
+      const saveIndicator = document.getElementById('save-indicator');
+      if (saveIndicator) {
+        saveIndicator.textContent = '¡Guardado!';
+        saveIndicator.classList.remove('opacity-0');
+        saveIndicator.classList.add('opacity-100');
+        setTimeout(() => {
+          saveIndicator.classList.remove('opacity-100');
+          saveIndicator.classList.add('opacity-0');
+        }, 2000);
+      }
     } catch (error) {
       console.error("Error saving moodboard:", error);
       alert("Error al guardar. Intenta de nuevo.");
@@ -800,11 +820,20 @@ export default function EditMoodboardPage() {
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedImageId(image.id);
+                    // Traer al frente
+                    const maxZ = Math.max(...images.map(img => img.zIndex), 0);
+                    if (image.zIndex < maxZ) {
+                      setImages(prev => prev.map(img => 
+                        img.id === image.id ? { ...img, zIndex: maxZ + 1 } : img
+                      ));
+                    }
                   }}
-                  className={`absolute cursor-move transition-shadow ${
-                    selectedImageId === image.id
-                      ? "ring-2 ring-blue-500 shadow-xl"
-                      : "hover:shadow-lg"
+                  className={`absolute transition-shadow duration-150 ${
+                    draggedImageId === image.id 
+                      ? 'cursor-grabbing opacity-90 scale-105 shadow-2xl ring-2 ring-blue-400' 
+                      : selectedImageId === image.id
+                        ? 'ring-2 ring-blue-500 shadow-xl cursor-grab'
+                        : 'hover:shadow-lg cursor-grab'
                   }`}
                   style={{
                     left: `${image.x * (zoom / 100)}px`,
@@ -820,7 +849,21 @@ export default function EditMoodboardPage() {
                     alt=""
                     className="w-full h-full object-cover rounded-lg pointer-events-none"
                     draggable={false}
+                    style={{ 
+                      borderRadius: '8px',
+                    }}
                   />
+                  
+                  {/* Indicador de selección con controles */}
+                  {selectedImageId === image.id && (
+                    <>
+                      {/* Controles de esquina para resize */}
+                      <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize opacity-80 hover:opacity-100" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-ne-resize opacity-80 hover:opacity-100" />
+                      <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-sw-resize opacity-80 hover:opacity-100" />
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize opacity-80 hover:opacity-100" />
+                    </>
+                  )}
                 </div>
               ))
             )}

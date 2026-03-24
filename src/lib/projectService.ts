@@ -131,12 +131,16 @@ export const projectService = {
   },
 
   async updateProjectTitle(projectId: string, title: string): Promise<Project> {
+    return this.updateProject(projectId, { title });
+  },
+
+  async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
     // Intentar usar Firebase primero
     if (isFirebaseAvailable()) {
       try {
         const projectRef = doc(db!, 'projects', projectId);
         await updateDoc(projectRef, {
-          title,
+          ...updates,
           updated_at: new Date().toISOString()
         });
         
@@ -154,8 +158,11 @@ export const projectService = {
       throw new Error('Project not found');
     }
 
-    allProjects[projectIndex].title = title;
-    allProjects[projectIndex].updated_at = new Date().toISOString();
+    allProjects[projectIndex] = {
+      ...allProjects[projectIndex],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
     
     saveAllProjects(allProjects);
     

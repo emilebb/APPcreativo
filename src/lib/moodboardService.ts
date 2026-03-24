@@ -1,3 +1,6 @@
+import { db } from './firebase';
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
+
 interface MoodboardImage {
   id: string;
   url: string;
@@ -13,16 +16,41 @@ interface Moodboard {
   id: string;
   title: string;
   description?: string;
+  user_id: string;
   layout: string;
   images: MoodboardImage[];
   createdAt: string;
   updatedAt: string;
 }
 
+// Verificar si Firebase está disponible
+function isFirebaseAvailable(): boolean {
+  return typeof window !== 'undefined' && db !== undefined;
+}
+
+// Clave de localStorage para moodboards
+const MOODBOARDS_KEY = 'creationx_moodboards';
+
 const moodboardService = {
   async getMoodboard(id: string): Promise<Moodboard | null> {
     if (typeof window === 'undefined') return null;
     
+    // Intentar Firebase primero
+    if (isFirebaseAvailable()) {
+      try {
+        const moodboardRef = doc(db!, 'moodboards', id);
+        const docSnap = await getDoc(moodboardRef);
+        
+        if (docSnap.exists()) {
+          console.log('✅ Moodboard cargado desde Firebase:', id);
+          return { id: docSnap.id, ...docSnap.data() } as Moodboard;
+        }
+      } catch (error) {
+        console.warn('⚠️ Error cargando desde Firebase:', error);
+      }
+    }
+    
+    // Fallback a localStorage
     try {
       const stored = localStorage.getItem(`moodboard-${id}`);
       if (stored) {
@@ -38,8 +66,37 @@ const moodboardService = {
   async saveMoodboard(moodboard: Moodboard): Promise<boolean> {
     if (typeof window === 'undefined') return false;
     
+    // Sincronizar a Firebase
+    if (isFirebaseAvailable()) {
+      try {
+        const moodboardRef = doc(db!, 'moodboards', moodboard.id);
+        await setDoc(moodboardRef, {
+          ...moodboard,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        console.log('✅ Moodboard guardado en Firebase:', moodboard.id);
+      } catch (error) {
+        console.warn('⚠️ Error guardando en Firebase:', error);
+      }
+    }
+    
+    // Siempre guardar en localStorage como backup
     try {
-      localStorage.setItem(`moodboard-${moodboard.id}`, JSON.stringify(moodboard));
+      localStorage.setItem(`moodboard-${moodboard.id}`, JSON.stringify({
+        ...moodboard,
+        updatedAt: new Date().toISOString()
+      }));
+      
+      // Actualizar lista de moodboards en localStorage
+      const allMoodboards = this.getAllMoodboardsFromStorage();
+      const existingIndex = allMoodboards.findIndex(m => m.id === moodboard.id);
+      if (existingIndex >= 0) {
+        allMoodboards[existingIndex] = { ...moodboard, updatedAt: new Date().toISOString() };
+      } else {
+        allMoodboards.push({ ...moodboard, updatedAt: new Date().toISOString() });
+      }
+      localStorage.setItem(MOODBOARDS_KEY, JSON.stringify(allMoodboards));
+      
       return true;
     } catch (error) {
       console.error("Error saving moodboard to localStorage:", error);
@@ -47,36 +104,93 @@ const moodboardService = {
     }
   },
 
+  async getMoodboardsByUser(userId: string): Promise<Moodboard[]> {
+    if (typeof window === 'undefined') return [];
+    
+    // Intentar Firebase primero
+    if (isFirebaseAvailable()) {
+      try {
+        const moodboardsRef = collection(db!, 'moodboards');
+        const q = query(moodboardsRef, where('user_id', '==', userId));
+        const querySnapshot = await getDocs(q);
+        
+        const moodboards: Moodboard[] = [];
+        querySnapshot.forEach((doc) => {
+          moodboards.push({ id: doc.id, ...doc.data() } as Moodboard);
+        });
+        
+        console.log('✅ Moodboards cargados desde Firebase:', moodboards.length);
+        return moodboards.sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      } catch (error) {
+        console.warn('⚠️ Error cargando moodboards desde Firebase:', error);
+      }
+    }
+    
+    // Fallback a localStorage
+    return this.getAllMoodboardsFromStorage()
+      .filter(m => m.user_id === userId)
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  },
+
+  getAllMoodboardsFromStorage(): Moodboard[] {
+    try {
+      const stored = localStorage.getItem(MOODBOARDS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  },
+
   async getAllMoodboards(): Promise<Moodboard[]> {
     if (typeof window === 'undefined') return [];
     
-    const moodboards: Moodboard[] = [];
-
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith("moodboard-")) {
-          const stored = localStorage.getItem(key);
-          if (stored) {
-            moodboards.push(JSON.parse(stored));
-          }
-        }
+    // Intentar Firebase primero
+    if (isFirebaseAvailable()) {
+      try {
+        const moodboardsRef = collection(db!, 'moodboards');
+        const querySnapshot = await getDocs(moodboardsRef);
+        
+        const moodboards: Moodboard[] = [];
+        querySnapshot.forEach((doc) => {
+          moodboards.push({ id: doc.id, ...doc.data() } as Moodboard);
+        });
+        
+        return moodboards.sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      } catch (error) {
+        console.warn('⚠️ Error cargando todos los moodboards:', error);
       }
-    } catch (error) {
-      console.error("Error loading moodboards from localStorage:", error);
     }
-
-    return moodboards.sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
+    
+    return this.getAllMoodboardsFromStorage()
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   },
 
   async deleteMoodboard(id: string): Promise<boolean> {
     if (typeof window === 'undefined') return false;
     
+    // Eliminar de Firebase
+    if (isFirebaseAvailable()) {
+      try {
+        await deleteDoc(doc(db!, 'moodboards', id));
+        console.log('✅ Moodboard eliminado de Firebase:', id);
+      } catch (error) {
+        console.warn('⚠️ Error eliminando de Firebase:', error);
+      }
+    }
+    
+    // Eliminar de localStorage
     try {
       localStorage.removeItem(`moodboard-${id}`);
+      
+      // Actualizar lista en localStorage
+      const allMoodboards = this.getAllMoodboardsFromStorage()
+        .filter(m => m.id !== id);
+      localStorage.setItem(MOODBOARDS_KEY, JSON.stringify(allMoodboards));
+      
       return true;
     } catch (error) {
       console.error("Error deleting moodboard from localStorage:", error);
