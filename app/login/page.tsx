@@ -30,25 +30,38 @@ function LoginContent() {
     setLoading(true)
     setError('')
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      if (error.message.includes('Email not confirmed')) {
-        setError("Tu email aún no está confirmado. Puedes usar la app, pero te recomendamos confirmar tu email pronto.")
-        // Redirigir después de un momento
-        setTimeout(() => {
-          router.push('/explore')
-        }, 2000)
-      } else if (error.message.includes('Invalid login credentials')) {
-        setError("Email o contraseña incorrectos")
-      } else {
-        setError(error.message)
+    try {
+      if (!supabase) {
+        setError("Servicio de autenticación no disponible")
+        setLoading(false)
+        return
       }
-    } else {
-      // Login exitoso - la redirección se maneja en el useEffect
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        console.error("Login error:", error);
+        if (error.message.includes('Email not confirmed')) {
+          setError("Tu email aún no está confirmado. Puedes usar la app, pero te recomendamos confirmar tu email pronto.")
+          // Redirigir después de un momento
+          setTimeout(() => {
+            router.push('/explore')
+          }, 2000)
+        } else if (error.message.includes('Invalid login credentials')) {
+          setError("Email o contraseña incorrectos. ¿No tienes cuenta? ")
+        } else {
+          setError(error.message)
+        }
+      } else {
+        // Login exitoso - la redirección se maneja en el useEffect
+        console.log("Login exitoso, usuario:", user);
+      }
+    } catch (err) {
+      console.error("Unexpected login error:", err);
+      setError("Error inesperado. Por favor, intenta de nuevo.")
     }
     setLoading(false)
   }

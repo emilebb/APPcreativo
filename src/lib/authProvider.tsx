@@ -1,11 +1,12 @@
 /**
- * authProvider stub - Auth local usando localStorage
- * Reemplaza el authProvider de Firebase
+ * authProvider - Autenticación con Supabase
+ * Reemplaza el stub de localStorage por Supabase Auth
  */
 
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { supabase } from "./supabase";
 
 // ============================================================================
 // TYPES
@@ -34,6 +35,7 @@ interface AuthContextType {
   signInWithEmail: (email: string, password: string) => Promise<User>;
   signUpWithEmail: (data: { email: string; password: string; displayName?: string }) => Promise<User>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -53,99 +55,85 @@ const AuthContext = createContext<AuthContextType>({
   signInWithEmail: async () => { throw new Error("Not initialized"); },
   signUpWithEmail: async () => { throw new Error("Not initialized"); },
   signOut: async () => { throw new Error("Not initialized"); },
+  resetPassword: async () => { throw new Error("Not initialized"); },
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 // ============================================================================
-// AUTH FUNCTIONS (stubs)
+// HELPER FUNCTIONS
 // ============================================================================
 
-const USER_STORAGE_KEY = "auth_user";
-
-const getStoredUser = (): User | null => {
-  if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem(USER_STORAGE_KEY);
-  if (!stored) return null;
-  try {
-    return JSON.parse(stored);
-  } catch {
-    return null;
-  }
+const mapSupabaseUser = (supabaseUser: any): User => {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || "",
+    displayName: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split("@")[0] || null,
+    photoURL: supabaseUser.user_metadata?.avatar_url || null,
+    emailVerified: supabaseUser.email_confirmed_at ? true : false,
+    createdAt: supabaseUser.created_at,
+    user_metadata: supabaseUser.user_metadata,
+  };
 };
 
-const setStoredUser = (user: User | null) => {
-  if (typeof window === "undefined") return;
-  if (user) {
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(USER_STORAGE_KEY);
-  }
-};
+// ============================================================================
+// AUTH FUNCTIONS
+// ============================================================================
 
 export const signInWithEmail = async (email: string, password: string): Promise<User> => {
-  // Stub: crea un usuario local
-  const user: User = {
-    id: `local-${Date.now()}`,
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
-    displayName: email.split("@")[0],
-    photoURL: null,
-    emailVerified: true,
-    createdAt: new Date().toISOString(),
-  };
-  setStoredUser(user);
-  return user;
+    password,
+  });
+  if (error) throw error;
+  if (!data.user) throw new Error("No user returned");
+  return mapSupabaseUser(data.user);
 };
 
-export const signUpWithEmail = async (data: {
-  email: string;
-  password: string;
-  displayName?: string;
-}): Promise<User> => {
-  const user: User = {
-    id: `local-${Date.now()}`,
+export const signUpWithEmail = async (data: { email: string; password: string; displayName?: string }): Promise<User> => {
+  const { data: authData, error } = await supabase.auth.signUp({
     email: data.email,
-    displayName: data.displayName || data.email.split("@")[0],
-    photoURL: null,
-    emailVerified: false,
-    createdAt: new Date().toISOString(),
-  };
-  setStoredUser(user);
-  return user;
+    password: data.password,
+    options: {
+      data: {
+        full_name: data.displayName,
+      },
+    },
+  });
+  if (error) throw error;
+  if (!authData.user) throw new Error("No user returned");
+  return mapSupabaseUser(authData.user);
 };
 
 export const signInWithGoogle = async (): Promise<User> => {
-  // Stub: crea un usuario de Google local
-  const user: User = {
-    id: `google-local-${Date.now()}`,
-    email: "demo@gmail.com",
-    displayName: "Usuario Demo",
-    photoURL: null,
-    emailVerified: true,
-    createdAt: new Date().toISOString(),
-  };
-  setStoredUser(user);
-  return user;
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+  });
+  if (error) throw error;
+  // Nota: OAuth redirige, por lo que este código no se ejecutará inmediatamente
+  // El usuario será redirigido de vuelta a la app
+  throw new Error("OAuth redirect in progress");
 };
 
 export const signOut = async (): Promise<void> => {
-  setStoredUser(null);
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
 };
 
 export const resetPassword = async (email: string): Promise<void> => {
-  // Stub: no hace nada
-  console.log(`[Stub] Password reset email sent to: ${email}`);
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  if (error) throw error;
 };
 
 export const onAuthChange = (callback: (user: User | null) => void): (() => void) => {
-  // Stub: escucha cambios en localStorage
-  const handler = () => {
-    callback(getStoredUser());
-  };
-  window.addEventListener("storage", handler);
-  // Llama inmediatamente con el usuario actual
-  callback(getStoredUser());
-  return () => window.removeEventListener("storage", handler);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (session?.user) {
+      callback(mapSupabaseUser(session.user));
+    } else {
+      callback(null);
+    }
+  });
+  return () => subscription.unsubscribe();
 };
 
 export const isFirebaseAvailable = (): boolean => false;
@@ -163,18 +151,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Carga el usuario del localStorage
-    const storedUser = getStoredUser();
-    setUser(storedUser);
-    setIsLoading(false);
-
-    // Escucha cambios en localStorage
-    const handleStorage = () => {
-      setUser(getStoredUser());
+    // Obtener sesión actual
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(mapSupabaseUser(session.user));
+        }
+      } catch (error) {
+        console.error("Error getting session:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    window.addEventListener("storage", handleStorage);
 
-    return () => window.removeEventListener("storage", handleStorage);
+    getInitialSession();
+
+    // Escuchar cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(mapSupabaseUser(session.user));
+      } else {
+        setUser(null);
+      }
+      // Asegurar que isLoading sea false después del primer evento
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const value: AuthContextType = {
@@ -186,6 +190,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signInWithEmail,
     signUpWithEmail,
     signOut,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
