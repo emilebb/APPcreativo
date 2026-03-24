@@ -1,561 +1,176 @@
-"use client";
+'use client';
 
-export const dynamic = "force-dynamic";
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import CanvasBoard from '@/components/canvas/CanvasBoard';
+import { useCanvasStore } from '@/stores/canvasStore';
+import projectService from '@/lib/projectServiceNew';
+import { ArrowLeft, Save, FolderOpen } from 'lucide-react';
+import Link from 'next/link';
 
-import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authProvider";
-import { projectService } from "@/lib/projectService";
-import ProjectTitleEditor from "@/components/ProjectTitleEditor";
-// import { useStyleLearning } from "@/hooks/useStyleLearning";
-// import { useCollaboration } from "@/hooks/useCollaboration";
-// import InspirationPanel from "@/components/InspirationPanel";
-// import CommentsPanel from "@/components/CommentsPanel";
-// import ShareProjectModal from "@/components/ShareProjectModal";
-import { 
-  Pencil, Trash2, Undo, Redo, Palette, Move, 
-  Download, Save, Share2, Sparkles, MessageSquare 
-} from "lucide-react";
-import Link from "next/link";
-import AIAssistantPanel from "@/components/AIAssistantPanel";
-
-interface DrawingElement {
-  id: string;
-  type: 'path' | 'rectangle' | 'circle' | 'text';
-  data: any;
-  style: {
-    color: string;
-    strokeWidth: number;
-    fill?: boolean;
-  };
+interface PageProps {
+  params: Promise<{ id: string }>;
 }
 
-export default function CanvasPage() {
-  const { user } = useAuth();
+export default function CanvasPage({ params }: PageProps) {
   const router = useRouter();
-  const params = useParams();
-  const canvasId = params.id as string;
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [currentTool, setCurrentTool] = useState('pencil');
-  const [currentColor, setCurrentColor] = useState('#000000');
-  const [strokeWidth, setStrokeWidth] = useState(2);
-  const [elements, setElements] = useState<DrawingElement[]>([]);
-  const [currentPath, setCurrentPath] = useState<{x: number, y: number}[]>([]);
-  const [history, setHistory] = useState<DrawingElement[][]>([]);
-  const [historyStep, setHistoryStep] = useState(0);
-  const [selectedImage, setSelectedImage] = useState<DrawingElement | null>(null);
-  const [project, setProject] = useState<any>(null);
-  const [showInspiration, setShowInspiration] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [showAIPanel, setShowAIPanel] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [title, setTitle] = useState('Sin título');
 
-  // Hook de aprendizaje de estilo
-  // const { analyzeProject, analyzing } = useStyleLearning(canvasId);
-  
-  // Hook de colaboración
-  // const { comments, addComment } = useCollaboration(canvasId);
+  const {
+    elements,
+    isDirty,
+    setProject,
+    setProjectId: setStoreProjectId,
+    markSaved,
+    markDirty,
+  } = useCanvasStore();
 
-  const tools = [
-    { id: 'pencil', name: 'Lápiz', icon: <Pencil className="w-4 h-4" />, cursor: 'crosshair' },
-    { id: 'eraser', name: 'Borrador', icon: <Trash2 className="w-4 h-4" />, cursor: 'grab' },
-    { id: 'rectangle', name: 'Rectángulo', icon: <div className="w-4 h-4">□</div>, cursor: 'crosshair' },
-    { id: 'circle', name: 'Círculo', icon: <div className="w-4 h-4">○</div>, cursor: 'crosshair' },
-    { id: 'text', name: 'Texto', icon: <span className="text-xs font-bold">T</span>, cursor: 'text' },
-    { id: 'move', name: 'Mover', icon: <Move className="w-4 h-4" />, cursor: 'move' },
-  ];
-
-  const colors = [
-    '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', 
-    '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#FFC0CB', '#000080'
-  ];
-
+  // Cargar parámetros
   useEffect(() => {
-    if (canvasId) {
-      loadCanvas();
-      if (user) loadProject();
-    }
-  }, [user, canvasId]);
+    params.then((p) => {
+      setProjectId(p.id);
+      if (p.id !== 'new') {
+        loadProject(p.id);
+      } else {
+        setLoading(false);
+      }
+    });
+  }, [params]);
 
-  const loadProject = async () => {
+  // Cargar proyecto
+  const loadProject = async (id: string) => {
     try {
-      console.log('Loading project for ID:', canvasId);
-      if (!user) return;
-      const projects = await projectService.getProjects(user.id);
-      const currentProject = projects.find(p => p.id === canvasId);
-      if (currentProject) {
-        setProject(currentProject);
+      const project = await projectService.getProject(id);
+      if (project) {
+        setProject(project);
+        setTitle(project.title);
+        setStoreProjectId(project.id);
       }
     } catch (error) {
-      console.error('Error loading project:', error);
-    }
-  };
-
-  const loadCanvas = async () => {
-    try {
-      console.log('Loading canvas for ID:', canvasId);
-      if (typeof window !== 'undefined') {
-        const canvasData = localStorage.getItem(`canvas-${canvasId}`);
-        if (canvasData) {
-          setElements(JSON.parse(canvasData));
-        }
-      }
-    } catch (error) {
-      console.error('Error loading canvas:', error);
-    }
-  };
-
-  const saveCanvas = async () => {
-    try {
-      setSaving(true);
-      
-      // Guardar canvas en localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`canvas-${canvasId}`, JSON.stringify(elements));
-        console.log('Canvas saved for ID:', canvasId);
-      }
-
-      // 🎨 ANÁLISIS AUTOMÁTICO DE ESTILO
-      // Analizar y guardar patrones de estilo del proyecto
-      // if (user?.id && elements.length > 0) {
-      //   console.log('🎨 Analizando estilo del proyecto...');
-      //   await analyzeProject('canvas', {
-      //     elements: elements,
-      //     tags: project?.tags || []
-      //   });
-      //   console.log('✅ Análisis de estilo completado');
-      // }
-    } catch (error) {
-      console.error('Error saving canvas:', error);
+      console.error('Error cargando proyecto:', error);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-  };
-
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const pos = getMousePos(e);
-    setIsDrawing(true);
-
-    if (currentTool === 'pencil' || currentTool === 'eraser') {
-      setCurrentPath([pos]);
-    }
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-
-    const pos = getMousePos(e);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    if (currentTool === 'pencil' || currentTool === 'eraser') {
-      setCurrentPath(prev => [...prev, pos]);
-
-      ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
-      ctx.strokeStyle = currentColor;
-      ctx.lineWidth = currentTool === 'eraser' ? strokeWidth * 3 : strokeWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      if (currentPath.length > 0) {
-        ctx.beginPath();
-        ctx.moveTo(currentPath[currentPath.length - 1].x, currentPath[currentPath.length - 1].y);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
+  // Guardar proyecto
+  const handleSave = useCallback(async () => {
+    if (!projectId || projectId === 'new') {
+      // Crear nuevo proyecto
+      setSaving(true);
+      try {
+        const userId = 'anonymous';
+        const newProject = await projectService.createProject(userId, 'canvas', title);
+        await projectService.updateProjectElements(newProject.id, elements);
+        markSaved();
+        setStoreProjectId(newProject.id);
+        router.replace(`/canvas/${newProject.id}`);
+      } catch (error) {
+        console.error('Error creando proyecto:', error);
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      setSaving(true);
+      try {
+        await projectService.updateProjectElements(projectId, elements);
+        await projectService.updateProjectTitle(projectId, title);
+        markSaved();
+      } catch (error) {
+        console.error('Error guardando proyecto:', error);
+      } finally {
+        setSaving(false);
       }
     }
-  };
+  }, [projectId, elements, title, router, setStoreProjectId, markSaved]);
 
-  const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-
-    const pos = getMousePos(e);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    if (currentTool === 'pencil' || currentTool === 'eraser') {
-      const newElement: DrawingElement = {
-        id: Date.now().toString(),
-        type: 'path',
-        data: [...currentPath, pos],
-        style: { color: currentColor, strokeWidth }
-      };
-
-      const newElements = [...elements, newElement];
-      setElements(newElements);
-      
-      // Update history
-      const newHistory = history.slice(0, historyStep + 1);
-      setHistory(newHistory);
-      setHistoryStep(newHistory.length);
+  // Auto-guardado
+  useEffect(() => {
+    if (isDirty && projectId && projectId !== 'new') {
+      const timeout = setTimeout(handleSave, 2000);
+      return () => clearTimeout(timeout);
     }
-  };
+  }, [isDirty, projectId, elements]);
 
-  const undo = () => {
-    if (historyStep > 0) {
-      const newStep = historyStep - 1;
-      setHistoryStep(newStep);
-      setElements(history[newStep] || []);
-    }
-  };
-
-  const redo = () => {
-    if (historyStep < history.length - 1) {
-      const newStep = historyStep + 1;
-      setHistoryStep(newStep);
-      setElements(history[newStep]);
-    }
-  };
-
-  const clearCanvas = () => {
-    setElements([]);
-    setHistory([[]]);
-    setHistoryStep(0);
-  };
-
-  const downloadCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const link = document.createElement('a');
-    link.download = `canvas-${canvasId}.png`;
-    link.href = canvas.toDataURL();
-    link.click();
-  };
-
-  // Funciones para el panel de IA
-  const handleApplyIdea = (idea: string) => {
-    // Agregar la idea como texto en el canvas
-    const newElement: DrawingElement = {
-      id: Date.now().toString(),
-      type: 'text',
-      data: { 
-        text: idea, 
-        position: { x: 100, y: 100 } 
-      },
-      style: { 
-        color: currentColor, 
-        strokeWidth: strokeWidth 
+  // Atajo Ctrl+S
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
       }
     };
-    const newElements = [...elements, newElement];
-    setElements(newElements);
-    
-    // Actualizar historial
-    const newHistory = history.slice(0, historyStep + 1);
-    newHistory.push(newElements);
-    setHistory(newHistory);
-    setHistoryStep(newHistory.length - 1);
-  };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave]);
 
-  const handleApplyPalette = (colors: string[]) => {
-    // Actualizar la paleta de colores disponibles
-    if (colors.length > 0) {
-      setCurrentColor(colors[0]);
-    }
-  };
-
-  const handleImageUpload = (imageData: string, file: File) => {
-    // Crear un elemento de imagen en el canvas
-    const img = new Image();
-    img.onload = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // Calcular tamaño proporcional
-      const maxWidth = 400;
-      const maxHeight = 400;
-      let width = img.width;
-      let height = img.height;
-
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-      if (height > maxHeight) {
-        width = (width * maxHeight) / height;
-        height = maxHeight;
-      }
-
-      // Dibujar imagen en el canvas
-      ctx.drawImage(img, 50, 50, width, height);
-    };
-    img.src = imageData;
-  };
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-neutral-600 dark:text-neutral-400">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <main className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+    <div className="h-screen flex flex-col bg-neutral-100 dark:bg-neutral-900">
       {/* Header */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4">
+      <header className="flex-shrink-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
-              href="/canvas"
-              className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+              href="/dashboard"
+              className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition"
             >
-              <Pencil className="w-5 h-5" />
-              <span className="text-lg font-semibold">Canvas</span>
+              <ArrowLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
             </Link>
-            <div>
-              {project ? (
-                <ProjectTitleEditor 
-                  project={project} 
-                  onUpdate={(updatedProject) => setProject(updatedProject)}
-                />
-              ) : (
-                <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-                  Canvas {canvasId}
-                </h1>
-              )}
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Pizarra creativa
-              </p>
-            </div>
+            
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                markDirty();
+              }}
+              className="text-lg font-semibold bg-transparent border-none outline-none text-neutral-900 dark:text-white placeholder-neutral-400"
+              placeholder="Nombre del proyecto"
+            />
+
+            {saving && <span className="text-sm text-blue-500">Guardando...</span>}
+            {isDirty && !saving && <span className="text-sm text-amber-500">Sin guardar</span>}
           </div>
+
           <div className="flex items-center gap-2">
+            <Link
+              href="/canvas/new"
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+            >
+              <FolderOpen className="w-4 h-4" />
+              Nuevo
+            </Link>
+            
             <button
-              onClick={saveCanvas}
+              onClick={handleSave}
               disabled={saving}
-              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              title="Guardar"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
             >
               <Save className="w-4 h-4" />
               {saving ? 'Guardando...' : 'Guardar'}
             </button>
-            <button
-              onClick={() => setShowShareModal(true)}
-              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2"
-              title="Compartir para Revisión"
-            >
-              <Share2 className="w-4 h-4" />
-              Compartir
-            </button>
-            {/* <button
-              onClick={() => setShowComments(!showComments)}
-              className={`p-2 rounded-lg transition relative ${
-                showComments
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-              title="Comentarios"
-            >
-              <MessageSquare className="w-4 h-4" />
-              {comments.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {comments.length}
-                </span>
-              )}
-            </button> */}
-            <button
-              onClick={() => setShowAIPanel(!showAIPanel)}
-              className={`p-2 rounded-lg transition ${
-                showAIPanel
-                  ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-              title="Asistente IA"
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-            <button
-              onClick={downloadCanvas}
-              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
-              title="Descargar"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <button
-              onClick={clearCanvas}
-              className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition"
-              title="Limpiar"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
           </div>
         </div>
+      </header>
+
+      {/* Canvas */}
+      <div className="flex-1 overflow-hidden">
+        <CanvasBoard onSave={handleSave} />
       </div>
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Toolbar */}
-        <div className="w-16 sm:w-20 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-2 sm:p-4 space-y-2 sm:space-y-4">
-          {/* Tools */}
-          <div className="space-y-2">
-            {tools.map(tool => (
-              <button
-                key={tool.id}
-                onClick={() => setCurrentTool(tool.id)}
-                className={`w-full p-3 rounded-lg transition ${
-                  currentTool === tool.id
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                    : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title={tool.name}
-              >
-                {tool.icon}
-              </button>
-            ))}
-          </div>
-
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-2 sm:pt-4">
-            {/* History */}
-            <button
-              onClick={undo}
-              disabled={historyStep <= 0}
-              className="w-full p-3 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Deshacer"
-            >
-              <Undo className="w-4 h-4" />
-            </button>
-            <button
-              onClick={redo}
-              disabled={historyStep >= history.length - 1}
-              className="w-full p-3 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Rehacer"
-            >
-              <Redo className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Canvas Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Color and Stroke Controls */}
-          <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-2 sm:p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Colors */}
-              <div className="flex items-center gap-2">
-                <Palette className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
-                <div className="flex gap-1">
-                  {colors.slice(0, 6).map(color => (
-                    <button
-                      key={color}
-                      onClick={() => setCurrentColor(color)}
-                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded border-2 transition ${
-                        currentColor === color
-                          ? 'border-neutral-900 dark:border-white'
-                          : 'border-neutral-300 dark:border-neutral-600'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      title={color}
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2">
-                <label htmlFor="color-picker" className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Color:
-                </label>
-                <input
-                  id="color-picker"
-                  type="color"
-                  value={currentColor}
-                  onChange={(e) => setCurrentColor(e.target.value)}
-                  className="w-6 h-6 sm:w-8 sm:h-8 border border-neutral-300 dark:border-neutral-600 rounded cursor-pointer"
-                  title="Seleccionar color de dibujo"
-                />
-              </div>
-              </div>
-
-              {/* Stroke Width */}
-              <div className="flex items-center gap-2">
-                <label htmlFor="stroke-width" className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Grosor:
-                </label>
-                <input
-                  id="stroke-width"
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={strokeWidth}
-                  onChange={(e) => setStrokeWidth(Number(e.target.value))}
-                  className="w-20 sm:w-24"
-                  title="Ajustar grosor del trazo"
-                />
-                <span className="text-sm text-neutral-600 dark:text-neutral-400 w-6 sm:w-8">
-                  {strokeWidth}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Canvas */}
-          <div className="flex-1 bg-white dark:bg-neutral-800 m-2 sm:m-4 rounded-lg shadow-lg overflow-hidden">
-            <canvas
-              ref={canvasRef}
-              className="w-full h-full cursor-crosshair"
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-            />
-          </div>
-        </div>
-
-        {/* Panel de Comentarios */}
-        {/* {showComments && (
-          <CommentsPanel
-            projectId={canvasId}
-            onPinClick={(position) => {
-              // Hacer zoom o scroll a la ubicación del pin
-              console.log('📍 Ver comentario en:', position);
-            }}
-          />
-        )} */}
-
-        {/* Panel de Inspiración */}
-        {/* {showInspiration && (
-          <InspirationPanel
-            projectId={canvasId}
-            onApplySuggestion={(suggestion) => {
-              // Aplicar sugerencia al canvas
-              if (suggestion.context_type === 'color_palette') {
-                const colors = suggestion.suggestion_data.palette;
-                if (colors && colors.length > 0) {
-                  setCurrentColor(colors[0]);
-                  console.log('🎨 Color aplicado:', colors[0]);
-                }
-              }
-            }}
-          />
-        )} */}
-
-        {/* Panel de Asistente IA */}
-        {showAIPanel && (
-          <AIAssistantPanel
-            projectType="canvas"
-            onApplyIdea={handleApplyIdea}
-            onApplyPalette={handleApplyPalette}
-            onImageUpload={handleImageUpload}
-          />
-        )}
-      </div>
-
-      {/* Modal de Compartir Proyecto */}
-      {/* <ShareProjectModal
-        projectId={canvasId}
-        projectName={project?.name || `Canvas ${canvasId}`}
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-      /> */}
-    </main>
+    </div>
   );
 }
