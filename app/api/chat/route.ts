@@ -1,555 +1,649 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // ============================================================================
-// CREATIVE COACH PRO - Motor de Respuestas Creativas
-// Sistema 100% autónomo sin APIs externas
+// CREATIVE COACH AI - Motor de Detección de Intención
 // ============================================================================
 
-interface ResponseTemplate {
+// ============================================================================
+// SISTEMA DE MAPEO DE RESPUESTAS
+// ============================================================================
+
+interface IntentCategory {
   keywords: string[];
-  response: string;
+  responses: string[];
 }
 
-// ============================================================================
-// BASE DE CONOCIMIENTO CREATIVE COACH
-// ============================================================================
+const INTENT_CATEGORIES: Record<string, IntentCategory> = {
+  // SALUDOS E IDENTIDAD
+  saludos: {
+    keywords: ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'quién eres', 'quien eres', 'qué eres', 'que eres', 'ayuda', 'hello', 'hi', 'hey', 'presenta', 'introduce', 'quién eres tú', 'como funciona', 'que haces'],
+    responses: [
+      `¡Hola! 👋 Soy **CreativoX AI**, tu Coach Creativo Inteligente.
 
-const BLOCKAGE_RESPONSES: ResponseTemplate[] = [
-  {
-    keywords: ['bloqueo', 'bloqueada', 'estancado', 'estancada', 'atascado', 'atascada', 'no avanzo', 'no puedo crear'],
-    response: `## 🔍 Análisis del Bloqueo Creativo
+Estoy aquí para ser tu compañero creativo las 24 horas del día. Puedo ayudarte con:
 
-Detecto que estás experimentando un momento de resistencia creativa. Esto es **completamente normal** e incluso saludable - tu cerebro te está diciendo que necesita un enfoque diferente.
+🎨 **Diseño y Estética** - Paletas, composición, tipografía
+💡 **Generación de Ideas** - Brainstorming, conceptos, naming
+🚀 **Estructura de Proyectos** - Planes, organización, ejecución
+🔍 **Feedback Constructivo** - Análisis honesto, mejoras concretas
+🧠 **Superar Bloqueos** - Técnicas, inspiración, momentum
 
-## 🎯 Diagnóstico Rápido
+Mi misión es simple: **ayudarte a convertir tus ideas en realidad**.
 
-**Tipo de bloqueo detectado:** Resistencia al inicio
-**Causa probable:** Perfeccionismo inconsciente o fatiga de decisiones
+¿Por dónde quieres empezar? Puedes contarme sobre tu proyecto actual o simplemente preguntarme algo como "necesito ideas para un logo" o "tengo un bloqueo creativo". ¡Estoy listo para ayudarte!`,
 
-## ⚡ Acciones Inmediatas
+      `¡Hey! 🎉 Me alegra verte aquí. Soy **CreativoX AI**, diseñado para ser el coach creativo que siempre quisiste tener.
 
-1. **Técnica del "Primer Trazo Malo"** - Dibuja algo terrible a propósito. Al liberar la presión de ser perfecto, la creatividad fluye.
+**Lo que me hace diferente:**
+- No soy un simple chatbot - entiendo el proceso creativo
+- Mis respuestas están diseñadas para generar acción, no solo información
+- Combino estructura con inspiración
 
-2. **Cambio de Contexto** - Trabaja en un espacio diferente por 15 minutos. A veces el entorno físico bloquea la mente.
+**Puedo ayudarte con:**
+→ 💬 "Tengo un bloqueo creativo"
+→ 💡 "Necesito ideas para mi proyecto"
+→ 🎨 "¿Qué colores usar para...?"
+→ 📋 "Ayúdame a estructurar..."
+→ 🔬 "Dame feedback sobre..."
 
-3. **Restricción Creativa** - Limita tus herramientas: usa solo 2 colores, 1 fuente. Las restricciones liberan la creatividad.
+**Consejo inicial:** Sé específico conmigo. Cuanto más me cuentes sobre tu proyecto, mejor podré ayudarte.
 
-## ✨ Tu Movimiento Ahora
-
-Abre el Canvas y dibuja **3 círculos mal hechos**. No pienses, solo hazlo. Este acto simple romperá la inercia.`
+¿Qué tienes entre manos hoy?`
+    ]
   },
-  {
-    keywords: ['idea', 'ideas', 'inspiración', 'inspiracion', 'no se me ocurren', 'sin ideas'],
-    response: `## 💡 Generador de Ideas Creativas
 
-Perfecto, vamos a desbloquear tu mente. Las mejores ideas vienen de **conexiones inesperadas**.
+  // BLOQUEOS CREATIVOS
+  bloqueos: {
+    keywords: ['bloqueo', 'bloqueada', 'bloqueado', 'estancado', 'estancada', 'atascado', 'atascada', 'no avanzo', 'no puedo crear', 'no se me ocurre', 'no sé qué hacer', 'no se que hacer', 'perdido', 'perdida', 'confundido', 'confundida', 'sin inspiración', 'sin inspiracion', 'sin ideas', 'no encuentro', 'no encuentro idea', 'no flujo'],
+    responses: [
+      `Detecto que estás atravesando un momento de bloqueo creativo. **Esto es completamente normal** - de hecho, es señal de que tu cerebro está procesando y buscando nuevas conexiones.
 
-## 🧠 Técnica: Conexión Forzada
+**🔍 Tu tipo de bloqueo probable:**
 
-**Tu prompt:** "${'{user_context}'}"
+Basado en lo que describes, parece un bloqueo de **inercia creativa** - ese punto donde la mente se siente sobrecargada y no sabe por dónde empezar.
 
-**5 Ideas Instantáneas:**
+**⚡ 3 Acciones Inmediatas:**
 
-### 1. 🎨 Inversión Total
-Toma el concepto opuesto y mira qué surge. Si piensas en "minimalista", ¿qué pasa si vas maximalista?
+**1. La Regla de los 5 Minutos**
+Abre tu herramienta favorita y trabaja exactamente 5 minutos. No juzgues lo que produces, solo ejecuta. La inercia se rompe con movimiento, no con pensamiento.
 
-### 2. 🔀 Combinación Absurda
-Mezcla dos industrias no relacionadas. ¿Qué si tu proyecto fuera una app de dating para plantas? El absurdo genera breakthroughs.
+**2. Cambio Físico**
+Cambia tu entorno. Si estás en el escritorio, ve a otro cuarto. Si trabajas con música, silénciala. Si hay silencio, pon algo. El cambio de estímulos desbloquea patrones.
 
-### 3. 📐 Escala Extrema
-Imagina que es **enorme** (un mural) o **tiny** (un sello). ¿Cómo cambia el diseño?
+**3. Técnica del "Primer Trazo Malo"**
+Dibuja o diseña algo deliberadamente malo. Al liberar la presión de ser perfecto, la creatividad fluye naturalmente.
 
-### 4. 🕐 Viaje en el Tiempo
-¿Cómo se vería esto en 1990? ¿Y en 2050? La perspectiva temporal revela nuevas posibilidades.
+**✨ Tu Movimiento Ahora:**
 
-### 5. 👤 Cambio de Persona
-Si esto lo creara un niño de 8 años, ¿cómo sería? Si lo hiciera un arquitecto suizo minimalista, ¿qué cambiaría?
+Elige UNA de estas tres técnicas y aplícala inmediatamente. No pienses en cuál es "mejor" - todas funcionan. Solo actúa.
 
-## ✨ Próximo Paso
+¿Quieres que profundicemos en alguna de estas técnicas?`,
 
-Elige UNA de estas técnicas y aplícala durante 5 minutos. No juzgues las ideas, solo genera.`
+      `Entiendo perfectamente lo que sientes. El bloqueo creativo es como una niebla que nubla tu visión, pero **siempre hay un camino para salir**.
+
+**🧠 ¿Por qué ocurre esto?**
+
+Tu cerebro tiene dos modos: **convergente** (enfocar) y **divergente** (explorar). Cuando estás bloqueado, estás demasiado en modo convergente - buscando la respuesta "correcta" en lugar de explorar posibilidades.
+
+**🎯 Estrategia de Desbloqueo:**
+
+**Paso 1: Cambia la pregunta**
+En lugar de "¿qué debo crear?" pregunta "¿qué pasaría si...?"
+
+**Paso 2: Restringe para liberar**
+Date limitaciones arbitrarias: solo 2 colores, solo 1 fuente, solo 30 minutos. Las restricciones fuerzan la creatividad.
+
+**Paso 3: Conecta lo inconexo**
+Toma dos elementos sin relación de tu proyecto y fúndelos. La innovación nace de conexiones inesperadas.
+
+**📌 Ejercicio Rápido:**
+
+Escribe aquí 3 palabras al azar relacionadas con tu proyecto. Te mostraré cómo conectarlas en algo nuevo.
+
+¿Cuáles son esas 3 palabras?`
+    ]
   },
-  {
-    keywords: ['logo', 'logotipo', 'marca', 'branding', 'identidad'],
-    response: `## 🎨 Asesor de Identidad Visual
 
-El logo es el corazón de tu marca. Vamos a trabajar en **claridad y memorabilidad**.
+  // GENERACIÓN DE IDEAS
+  ideas: {
+    keywords: ['idea', 'ideas', 'inspiración', 'inspiracion', 'brainstorm', 'generar', 'necesito ideas', 'se me ocurran', 'qué puedo hacer', 'concepto', 'naming', 'nombre', 'sugerencia', 'propuesta'],
+    responses: [
+      `¡Perfecto! Vamos a generar algunas ideas creativas. El brainstorming efectivo tiene reglas:
 
-## 📐 Principios Fundamentales
+**🧩 Mi Proceso de Generación:**
 
-**Regla de los 3 segundos:** Si no entienden tu logo en 3 segundos, es complejo de más.
+1. **Inmersión** - Entiendo el contexto
+2. **Divergencia** - Genero múltiples direcciones
+3. **Convergencia** - Identifico las más prometedoras
+4. **Refinamiento** - Las desarrollo con detalle
 
-**Escalabilidad:** Debe verse bien en un favicon de 16px y en un billboard.
+**💡 Para darte las mejores ideas, necesito saber:**
 
-**Versatilidad:** Funciona en blanco y negro? ¿En diferentes fondos?
+• ¿Qué tipo de proyecto es? (app, marca, sitio web, campaña...)
+• ¿Cuál es el objetivo principal?
+• ¿Hay alguna restricción? (colores, estilo, audiencia)
+• ¿Qué te gusta y qué NO te gusta?
 
-## 🎯 5 Direcciones Creativas
+**⚡ Mientras tanto, aquí va un framework para generar ideas:**
 
-1. **Símbolo Abstracto** - Una forma geométrica única que represente tu esencia
-2. **Monograma Estilizado** - Las iniciales convertidas en arte
-3. **Icono Metafórico** - Un objeto que simbolice tu valor principal
-4. **Wordmark Único** - Typografía custom que sea la estrella
-5. **Combinación Inteligente** - Icono + wordmark equilibrados
+**Técnica SCAMPER:**
+- **S**ustituir: ¿Qué podrías reemplazar?
+- **C**ombinar: ¿Qué podrías fusionar?
+- **A**daptar: ¿Qué podrías adaptar de otro contexto?
+- **M**odificar: ¿Qué podrías cambiar de escala?
+- **P**oner en otro uso: ¿Qué otros usos tendría?
+- **E**liminar: ¿Qué podrías quitar?
+- **R**evertir: ¿Qué pasaría si lo hicieras al revés?
 
-## ⚡ Ejercicio Rápido
+**Cuéntame más sobre tu proyecto** y te genero ideas específicas y accionables.`,
 
-Dibuja **5 bocetos en 3 minutos** cada uno. No pienses, solo dibuja. Luego elige el que te haga sonreír.
+      `¡Excelente! Me encanta el brainstorming. Las mejores ideas nacen de **conexiones inesperadas**.
 
-## 💡 Tip Pro
+**🎨 Mi Método para Generar Ideas:**
 
-Los logos más memorables (Nike, Apple, Twitter) son **increíblemente simples**. Busca la esencia, no la complejidad.`
+**Nivel 1: Ideas Seguras** - Basadas en lo que funciona en tu industria
+**Nivel 2: Ideas Innovadoras** - Combinaciones novedosas
+**Nivel 3: Ideas Disruptivas** - Lo que nadie más ha hecho
+
+**📊 Para ser más específico, dame contexto:**
+
+**Ejemplo de buenas preguntas:**
+✗ "Dame ideas" (muy amplio)
+✓ "Necesito 5 ideas para el logo de una app de productividad"
+✓ "¿Qué concepto visual usar para una marca de café premium?"
+✓ "Ayúdame con nombres para un proyecto de diseño sostenible"
+
+**🔥 Técnica Rápida - Conexión Forzada:**
+
+Si me das tu tema y un objeto aleatorio, puedo generar conexiones creativas:
+
+*Ejemplo: "App de finanzas" + "Jardín" = "Tu dinero crece como un jardín" - Concepto de nurturing y growth*
+
+**Ahora es tu turno:** ¿Cuál es tu tema? Y si quieres ser extra creativo, dame un objeto aleatorio para la conexión forzada.`
+    ]
   },
-  {
-    keywords: ['color', 'colores', 'paleta', 'paleta de colores', 'tonos', 'chromatic'],
-    response: `## 🎨 Psicología del Color Creativo
 
-Los colores no son decoración - son **comunicación emocional**. Vamos a crear una paleta que hable.
+  // FEEDBACK Y CRÍTICA
+  feedback: {
+    keywords: ['feedback', 'opinión', 'opinion', 'revisar', 'revisa', 'criticar', 'crítica', 'critica', 'qué piensas', 'que piensas', 'evaluar', 'evalúa', 'evalua', 'analizar', 'analiza', 'mejorar', 'improvement', 'comentario', 'valorar'],
+    responses: [
+      `Listo para darte un feedback honesto y constructivo. Este es el espacio donde el crecimiento real ocurre.
 
-## 🌈 Fundamentos de Color
+**🔬 Mi Protocolo de Análisis:**
 
-| Emoción | Colores | Uso Creativo |
-|---------|---------|--------------|
-| Energía | Rojo, Naranja | CTAs, Urgencia |
-| Confianza | Azul, Verde | Profesionalismo, Calma |
-| Lujo | Negro, Dorado | Premium, Exclusividad |
-| Frescura | Verde, Turquesa | Innovación, Naturaleza |
-| Creatividad | Violeta, Magenta | Fantasía, Originalidad |
+**1. Primera Impresión (3 segundos)**
+¿Qué veo primero? ¿Dónde va mi mirada? ¿La jerarquía visual funciona?
 
-## 🎯 Tu Paleta Inteligente
+**2. Claridad del Mensaje**
+¿Entiendo qué es? ¿Sé qué debo hacer? ¿El propósito es evidente?
 
-Para proyectos creativos, te recomiendo:
+**3. Ejecución Técnica**
+Espaciado, alineación, tipografía, color, contraste, consistencia.
 
-**Paleta Equilibrada:**
-- **Principal:** Un color que represente tu personalidad única
-- **Secundario:** Su complementario para contraste
-- **Neutro:** Un gris o beige para descanso visual
-- **Acento:** Un color vibrante para momentos clave
+**4. Impacto Emocional**
+¿Cómo me hace sentir? ¿Es memorable? ¿Quiero interactuar más?
 
-## ⚡ Regla 60-30-10
+**📋 Para darte el mejor feedback, comparte:**
 
+• Una descripción de tu diseño/proyecto
+• Tu objetivo principal
+• Tu audiencia objetivo
+• ¿Qué aspecto específico quieres que enfoque?
+
+**O si tienes una imagen:** Pégala o describe visualmente tu trabajo.
+
+**Mi promesa:** Seré honesto pero constructivo. No buscaré defectos, buscaré oportunidades de mejora.
+
+**¿Qué quieres que analice?`,
+
+      `Perfecto. El feedback es el acelerador más poderoso del crecimiento creativo.
+
+**🎯 Mi Filosofía de Feedback:**
+
+*"El mejor feedback no dice qué está mal - dice qué podría ser mejor y por qué."*
+
+**📊 Categorías que evalúo:**
+
+| Categoría | Lo que busco |
+|-----------|--------------|
+| **Claridad** | ¿El mensaje es inmediato? |
+| **Jerarquía** | ¿Sé dónde mirar primero? |
+| **Consistencia** | ¿Todo pertenece junto? |
+| **Emoción** | ¿Genera alguna sensación? |
+| **Funcionalidad** | ¿Funciona para el usuario? |
+
+**💡 Mi Feedback Inicial (sin ver tu trabajo):**
+
+El hecho de que estés pidiendo feedback demuestra **mentalidad de crecimiento**. La mayoría de creativos evitan la crítica. Tú la buscas. Eso ya te pone por delante.
+
+**🔑 Para un feedback más específico:**
+
+Cuéntame sobre tu proyecto:
+1. ¿Qué es? (1-2 frases)
+2. ¿Para quién es?
+3. ¿Cuál es tu mayor duda?
+4. ¿Qué parte te gusta más?
+
+Con esa info, puedo darte un análisis que realmente te ayude a avanzar.
+
+**¿Empezamos?**`
+    ]
+  },
+
+  // ESTRUCTURA Y PLANIFICACIÓN
+  estructura: {
+    keywords: ['estructura', 'estructurar', 'plan', 'planear', 'organizar', 'organiza', 'roadmap', 'paso a paso', 'guía', 'guia', 'framework', 'método', 'metodo', 'proceso', 'pasos', 'cronograma', 'proyecto', 'planificación'],
+    responses: [
+      `Excelente pregunta. La estructura es lo que separa las ideas de la realidad.
+
+**🏗️ Mi Framework de Estructura Creativa:**
+
+**FASE 1: Fundación**
+→ Definir el "QUÉ" y el "POR QUÉ"
+→ Identificar audiencia y objetivos
+→ Establecer criterios de éxito
+
+**FASE 2: Concepto**
+→ Desarrollar la idea central
+→ Crear moodboard/mood
+→ Definir estilo visual
+
+**FASE 3: Ejecución**
+→ Tareas específicas con deadlines
+→ Entregables por fase
+→ Checkpoints de revisión
+
+**FASE 4: Refinamiento**
+→ Feedback loops
+→ Iteraciones
+→ Pulido final
+
+**📊 Para estructurar TU proyecto necesito saber:**
+
+• ¿Qué tipo de proyecto es?
+• ¿Cuál es tu deadline realista?
+• ¿Qué recursos tienes?
+• ¿Cuál es tu nivel de experiencia?
+
+**🎯 Ejemplo de Estructura:**
+
+*Si es un sitio web de 5 páginas:*
+- Semana 1: Wireframes y contenido
+- Semana 2: Diseño visual
+- Semana 3: Desarrollo
+- Semana 4: Testing y ajustes
+
+**Cuéntame sobre tu proyecto** y te creo una estructura personalizada con pasos accionables.`,
+
+      `La estructura es el esqueleto de todo gran proyecto. Sin ella, incluso las mejores ideas se desmoronan.
+
+**📐 Mi Método de Planificación:**
+
+**1. Desglose Atómico**
+Todo proyecto grande = tareas pequeñas ejecutables en 30-60 minutos
+
+**2. Dependencias Primero**
+Identifico qué debe pasar ANTES de qué. Nada se bloquea.
+
+**3. Hitos Visibles**
+Puntos de control que generan momentum y motivación.
+
+**4. Flexibilidad Incorporada**
+Los planes perfectos no sobreviven al contacto con la realidad. Mi estructura se adapta.
+
+**🎯 Pregunta Clave:**
+
+¿Cuál es el **primer entregable concreto** que necesitas? 
+
+*Ejemplos de buenos entregables:*
+- "Wireframe de la homepage"
+- "Paleta de colores aprobada"
+- "Lista de features priorizada"
+- "Moodboard de estilo visual"
+
+**⚡ Tu Movimiento:**
+
+Escribe UN objetivo específico para esta semana. Solo uno. Luego te ayudo a desglosarlo en pasos.
+
+**Ejemplo:**
+❌ "Terminar mi proyecto" (demasiado amplio)
+✓ "Completar el diseño del hero section" (específico y alcanzable)
+
+**¿Cuál es tu objetivo de esta semana?**`
+    ]
+  },
+
+  // MOTIVACIÓN
+  motivacion: {
+    keywords: ['motivación', 'motivacion', 'motivar', 'animo', 'ánimo', 'desanimado', 'desanimada', 'frustrado', 'frustrada', 'cansado', 'cansada', 'rendir', 'rendirse', 'abandonar', 'difficult', 'difícil', 'hard', 'complicado'],
+    responses: [
+      `Escucho lo que dices, y quiero que sepas algo: **lo que sientes es parte del proceso**. Cada creador que admiras ha sentido exactamente lo mismo.
+
+**💪 La Verdad Sobre la Creatividad:**
+
+*"La creatividad no es lineal. Es una montaña rusa de euforia y duda, de flujo y bloqueo."*
+
+Los días difíciles no son señales de que debas parar. Son señales de que estás en el **límite de tu zona de confort**, justo donde ocurre el crecimiento real.
+
+**🧠 Perspectiva:**
+
+Los obstáculos que sientes hoy serán las habilidades que tendrás mañana. Cada "fracaso" es datos. Cada "bloqueo" es tu cerebro reorganizando patrones.
+
+**⚡ 3 Cosas para Recordar:**
+
+1. **Hecho es mejor que perfecto** - Lanza, comparte, avanza. La perfección es el enemigo del progreso.
+
+2. **Tu progreso es invisible** - Como crecer un centímetro cada día, no lo notas hasta que miras atrás y ves la diferencia.
+
+3. **La consistencia vence al talento** - Mostrarse cada día importa más que esperar la inspiración.
+
+**🌟 Tu Reto de Hoy:**
+
+Haz UNA cosa. Solo una. Algo pequeño que te acerque a tu meta. Puede ser:
+- Escribir 100 palabras
+- Dibujar un boceto en 5 minutos
+- Organizar tu espacio de trabajo
+- Leer algo inspirador durante 10 minutos
+
+**¿Qué pequeña acción puedes tomar AHORA?**
+
+Estoy aquí para apoyarte. Cuéntame qué sientes y trabajemos juntos.`,
+
+      `Entiendo la frustración. Es real, es válido, y **es temporal**.
+
+**🔥 Recordatorio Importante:**
+
+Cada maestro fue alguna vez un principiante frustrado. Cada proyecto exitoso nació de la duda. Cada obra maestica tuvo una versión terrible antes.
+
+**📊 La Matemática del Éxito Creativo:**
+
+Para tener 1 gran idea, necesitas:
+- 10 ideas buenas
+- 100 ideas regulares  
+- 1000 ideas que intentaste
+
+**La mayoría de las personas se rinden en el paso 3.** Tú no.
+
+**🎯 Estrategia Anti-Rendición:**
+
+**1. Reduce el alcance**
+No necesitas terminar todo. Solo necesitas avanzar un poco.
+
+**2. Celebra el micro-progreso**
+¿Completaste una tarea de 15 minutos? Eso cuenta. Celebralo.
+
+**3. Conéctate con tu "por qué"**
+¿Por qué empezaste esto? Escribe esa razón en un post-it y ponlo donde lo veas.
+
+**4. Busca comunidad**
+Comparte tu proceso con alguien. La vulnerabilidad genera conexión, y la conexión genera energía.
+
+**✨ Acción Inmediata:**
+
+Escribe aquí **una cosa** que lograste esta semana, por pequeña que sea. Reconocer el progreso es el primer paso para recuperar la motivación.
+
+**¿Qué lograste?**`
+    ]
+  },
+
+  // COLORES Y DISEÑO
+  diseno: {
+    keywords: ['color', 'colores', 'paleta', 'diseño', 'diseñar', 'tipografía', 'tipografia', 'fuente', 'fuentes', 'estilo', 'visual', 'composición', 'layout', 'interfaz', 'ui', 'ux', 'interface'],
+    responses: [
+      `El diseño es donde la estrategia se encuentra con la estética. Vamos a hacer que tu proyecto se vea tan bueno como sus ideas.
+
+**🎨 Mi Enfoque de Diseño:**
+
+**1. Psicología del Color**
+Los colores no son decoración - son comunicación emocional. Cada tono envía un mensaje subconscious.
+
+**2. Jerarquía Visual**
+El ojo debe saber exactamente dónde ir. Sin jerarquía, hay caos.
+
+**3. Espacio Negativo**
+Lo que NO está ahí es tan importante como lo que sí. El espacio da respiración y elegancia.
+
+**4. Consistencia Sistémica**
+No diseñamos páginas, diseñamos sistemas. Todo debe sentir que pertenece.
+
+**🎯 Para Darte Dirección Específica:**
+
+Cuéntame:
+• ¿Qué estás diseñando? (web, app, marca, poster...)
+• ¿Cuál es el mood/emoción que quieres transmitir?
+• ¿Quién es tu audiencia?
+• ¿Hay referencias que te gusten?
+
+**⚡ Consejo Inmediato:**
+
+**La Regla 60-30-10:**
 - 60% color neutro/dominante
 - 30% color secundario
 - 10% color de acento
 
-## ✨ Tu Movimiento
+Esta proporción crea equilibrio visual automáticamente.
 
-Elige **3 colores** ahora mismo: Uno que te haga feliz, uno que inspire confianza, y uno que sorprenda. Esa es tu base.`
+**¿Qué específicamente necesitas ayuda? ¿Paleta de colores, tipografía, composición, o todo junto?**`,
+
+      `El diseño es el lenguaje silencioso de tu marca. Cada decisión visual comunica algo.
+
+**🧩 Mi Framework de Diseño:**
+
+**FUNDAMENTOS → ESTILO → DETALLES**
+
+**1. Fundamentos (la base)**
+- ¿Qué necesita lograr visualmente?
+- ¿Cuáles son las restricciones técnicas?
+- ¿Cómo lo consumirá el usuario?
+
+**2. Estilo (la personalidad)**
+- 3 palabras que describan el mood
+- Referencias visuales clave
+- Paleta emocional
+
+**3. Detalles (la ejecución)**
+- Tipografía con personalidad
+- Iconografía coherente
+- Espaciado consistente
+
+**🎯 Para Avanzar Rápido:**
+
+Dame estas 3 cosas y te doy dirección concreta:
+
+1. **El proyecto en una frase**
+2. **Dos marcas que admires** (no necesariamente de tu industria)
+3. **Un adjetivo que no quieres que describa tu diseño**
+
+*Ejemplo: "App de productividad, me gusta Stripe y Linear, no quiero que se vea aburrido"*
+
+Con eso puedo darte una dirección visual clara.
+
+**¿Me das esos 3 puntos?**`
+    ]
   },
-  {
-    keywords: ['proyecto', 'estructurar', 'plan', 'planificar', 'organizar', 'roadmap'],
-    response: `## 📊 Arquitecto de Proyectos Creativos
 
-Un proyecto sin estructura es como un viaje sin mapa. Vamos a crear tu hoja de ruta.
+  // MARCA Y LOGO
+  marca: {
+    keywords: ['marca', 'logo', 'logotipo', 'branding', 'identidad', 'logotipo', 'icono', 'símbolo', 'symbol', 'wordmark', 'brand'],
+    responses: [
+      `La marca es mucho más que un logo. Es la **promesa visual** que haces a tu audiencia.
 
-## 🏗️ Framework: Los 5 Pilares
+**🏗️ Mi Proceso de Construcción de Marca:**
 
-### 1. 🎯 VISIÓN (El Norte)
-**Pregunta:** ¿Cómo se siente el usuario al ver tu proyecto?
-**Ejemplo:** "Empoderado, inspirado, motivado a actuar"
+**FASE 1: Estrategia** (antes de diseñar)
+→ ¿Cuál es la personalidad de la marca?
+→ ¿Qué emociones debe evocar?
+→ ¿Quién es el competidor y cómo diferenciarnos?
 
-### 2. 📐 ESTRUCTURA (El Esqueleto)
-- Hero / Entrada principal
-- Núcleo / Contenido central
-- CTA / Acción deseada
-- Cierre / Memoria
+**FASE 2: Concepto**
+→ 3 direcciones creativas diferentes
+→ Moodboards de referencia
+→ Paleta emocional
 
-### 3. 🎨 ESTILO (La Personalidad)
-Define en 3 palabras: __________, __________, __________
+**FASE 3: Ejecución**
+→ Logo que funcione en todos los tamaños
+→ Sistema de identidad coherente
+→ Guías de uso claras
 
-### 4. 📅 HITOS (El Tiempo)
-- **Semana 1:** Concepto y bocetos
-- **Semana 2:** Diseño principal
-- **Semana 3:** Refinamiento
-- **Semana 4:** Finalización
+**📐 Reglas de un Buen Logo:**
 
-### 5. ✅ CRITERIO DE ÉXITO (La Meta)
-**"Está terminado cuando..."**
-- [ ] Funciona en móvil
-- [ ] Carga en menos de 3 segundos
-- [ ] Un extraño lo entiende en 10 segundos
+1. **Simplicidad** - Si un niño de 8 años no puede dibujarlo de memoria, es complejo
+2. **Memorabilidad** - ¿Lo recordarían en 5 minutos?
+3. **Versatilidad** - ¿Funciona en favicon Y billboard?
+4. **Atemporalidad** - ¿Envejecerá bien?
+5. **Relevancia** - ¿Comunica el mensaje correcto?
 
-## ✨ Tu Siguiente Movimiento
+**🎯 Para Empezar:**
 
-Escribe tu **VISIÓN** en una frase. Empieza por ahí, todo lo demás se deriva.`
+Describe tu marca como si fuera una persona:
+• ¿Cómo habla? (formal, casual, divertida...)
+• ¿Qué valora? (innovación, tradición, lujo...)
+• ¿Cómo hace sentir a la gente?
+
+**💡 Técnica Rápida:**
+
+Piensa en 3 competidores. **¿Qué quieren que pienses sobre ellos?** Ahora, ¿qué quieres que piensen sobre ti que SEA DIFERENTE?
+
+**¿Qué tipo de marca estás construyendo?**`,
+
+      `El logo es el punto de entrada visual a tu marca. Debe ser magnético, memorable y significativo.
+
+**🎯 Mi Filosofía de Logo:**
+
+*"El mejor logo es el que puedes reconocer en 0.5 segundos y recordar para siempre."*
+
+**Los 5 Tipos de Logos:**
+
+**1. Símbolo Iconico** (Apple, Nike)
+- Requiere construir reconocimiento
+- Máxima flexibilidad una vez establecido
+
+**2. Wordmark** (Google, Coca-Cola)
+- La tipografía ES el logo
+- Perfecto para nombres cortos y distintivos
+
+**3. Monograma** (LV, HBO, IBM)
+- Iniciales estilizadas
+- Ideal para marcas con nombres largos
+
+**4. Combination Mark** (Adidas, Burger King)
+- Icono + texto
+- Más fácil de reconocer para nuevas marcas
+
+**5. Emblema** (Starbucks, Harley Davidson)
+- Logo dentro de un contenedor
+- Sensación de tradición y autoridad
+
+**⚡ Tu Siguiente Paso:**
+
+Determina qué tipo necesita tu marca:
+- ¿Tu nombre es corto y memorable? → Wordmark
+- ¿Tu nombre es largo o genérico? → Símbolo
+- ¿Eres nuevo y necesitas claridad? → Combination Mark
+
+**¿Cuál es el nombre de tu marca y qué tipo de producto/servicio ofreces?**
+
+Con eso puedo darte una dirección específica.`
+    ]
   },
-  {
-    keywords: ['feedback', 'opinión', 'opinion', 'revisar', 'criticar', 'crítica', 'critica'],
-    response: `## 🔬 Análisis Constructivo Profundo
 
-Listo para un feedback honesto y accionable. Este es el espacio donde el crecimiento ocurre.
+  // RESPUESTA GENÉRICA INTELIGENTE
+  generica: {
+    keywords: [],
+    responses: [
+      `Interesante perspectiva. Como tu Coach Creativo, me gustaría entender mejor tu contexto para darte un feedback más preciso.
 
-## 📋 Mi Protocolo de Feedback
+**Para ayudarte mejor, ¿podrías profundizar un poco más en:**
 
-### Nivel 1: 👁️ Primera Impresión (3 segundos)
-¿Qué veo primero? ¿Dónde va mi mirada? ¿La jerarquía visual funciona?
+• ¿Qué tipo de proyecto o idea tienes en mente?
+• ¿Cuál es el objetivo principal que buscas?
+• ¿Hay algún desafío específico que enfrentas?
 
-### Nivel 2: 🧠 Comprensión (10 segundos)
-¿Entiendo qué es? ¿Sé qué debo hacer? ¿El mensaje es claro?
+💡 **Tip:** Cuanto más específico seas conmigo, más útil y accionable será mi respuesta.
 
-### Nivel 3: 💜 Conexión Emocional
-¿Cómo me hace sentir? ¿Quiero interactuar más? ¿Es memorable?
+Mientras tanto, ¿te gustaría que exploremos alguna de estas áreas?
+→ 🎨 Diseño y estética
+→ 💡 Generación de ideas
+→ 📊 Estructura de proyecto
+→ 🔍 Feedback constructivo
+→ 🧠 Superar bloqueos creativos`,
 
-### Nivel 4: ⚙️ Ejecución Técnica
-Espaciado, alineación, tipografía, color, contraste.
+      `Me gusta que estés pensando en esto. Para darte el mejor consejo como tu Coach Creativo, necesito conectar los puntos.
 
-## 🎯 Puntos de Mejora (Ejemplo)
+**Cuéntame más sobre:**
 
-**✅ Lo que funciona:**
-- Paleta de colores coherente
-- Clear visual hierarchy
-- Acciones claras
+1. **El contexto** - ¿Qué estás creando o mejorando?
+2. **La audiencia** - ¿Para quién es esto?
+3. **El desafío** - ¿Cuál es tu mayor duda o preocupación?
 
-**🔧 Mejoras sugeridas:**
-1. **Contraste** - El texto secundario necesita +20% opacidad
-2. **Espaciado** - Aumenta padding en tarjetas (+16px mínimo)
-3. **Foco** - Reduce elementos competiendo por atención
+**O si prefieres, elige un camino:**
 
-## 💡 Mi Veredicto
+| Si quieres... | Pregúntame... |
+|---------------|---------------|
+| Ideas frescas | "Necesito ideas para..." |
+| Feedback honesto | "Dame tu opinión sobre..." |
+| Estructura clara | "Ayúdame a planificar..." |
+| Inspiración | "Tengo un bloqueo con..." |
 
-**Potencial:** ████████░░ 80%
-**Claridad:** ███████░░░ 70%
-**Ejecución:** █████████░ 90%
-
-**Consejo final:** Muestra esto a 3 personas diferentes y observa QUÉ HACEN sin preguntarles. Su comportamiento es el mejor feedback.`
-  },
-  {
-    keywords: ['típ', 'tip', 'consejo', 'ayuda', 'sugerencia', 'guía'],
-    response: `## 💎 Consejo del Día - Creative Pro
-
-Voy a compartir contigo un insight que cambia juegos.
-
-## 🧠 Regla del "One Thing"
-
-**La regla:** Cada elemento en tu diseño debe tener UNA sola razón de existir. Si no puedes explicar su propósito en 3 palabras, elimínalo.
-
-## ⚡ Aplicación Inmediata
-
-Mira tu proyecto ahora mismo. Para cada elemento, pregúntate:
-
-> **"¿Qué pasaría si elimino esto?"**
-
-Si la respuesta es "nada cambia significativamente" → **ELIMÍNALO.**
-
-## 🎯 Ejercicio de 5 minutos
-
-1. Abre tu proyecto
-2. Selecciona un elemento al azar
-3. Pregunta: "¿Aporta valor real?"
-4. Si no → elimínalo
-5. Repite con el siguiente
-
-## 📊 El Resultado
-
-Menos elementos = Más impacto = Mejor comunicación = Proyecto memorable
-
-**Menos es más, pero cada "menos" debe ser perfecto.**
-
-## ✨ Tu Movimiento
-
-Elige UNO de tus proyectos y elimina 3 elementos hoy. Observa cómo mejora.`
-  },
-  {
-    keywords: ['color', 'paleta', 'hex', '#', 'rgb', 'hsl'],
-    response: `## 🎨 Experto en Colorimetría Creativa
-
-El color es lenguaje. Vamos a que el tuyo hable con claridad y emoción.
-
-## 🌈 Tu Herramienta: Teoría de Color Práctica
-
-### Círculo Cromático Simplificado
-
-**Colores Primarios:** 🔴 Rojo | 🔵 Azul | 🟡 Amarillo
-**Colores Secundarios:** 🟣 Violeta | 🟠 Naranja | 🟢 Verde
-
-### Armonías que Funcionan
-
-| Armonía | Efecto | Ejemplo Hex |
-|---------|--------|-------------|
-| **Complementario** | Alto contraste, vibrante | #4F46E5 + #F59E0B |
-| **Análogo** | Suave, armonioso | #4F46E5 + #7C3AED + #6366F1 |
-| **Triádico** | Energético, diverso | #EF4444 + #F59E0B + #3B82F6 |
-| **Monocromático** | Elegante, cohesivo | Tonalidades de un color |
-
-## 🎯 Tu Paleta Express
-
-**Paso 1:** Elige 1 color que ames
-**Paso 2:** Usa su complementario para contraste
-**Paso 3:** Añade neutros (gris claro, beige)
-**Paso 4:** Un acento vibrante para CTA
-
-## ✨ Reto Creativo
-
-Elige **3 proyectos que admires** y extrae sus colores. Ahí está tu tendencia natural. Úsala como base y luego innova.`
+**¿Por dónde quieres empezar?**`
+    ]
   }
-];
+};
 
 // ============================================================================
-// RESPUESTAS ALEATORIAS DE ALTO NIVEL
+// FUNCIÓN DE DETECCIÓN DE INTENCIÓN
 // ============================================================================
 
-const GENERAL_TIPS: string[] = [
-  `## 💎 Insight Creativo del Día
-
-**La creatividad no es tener ideas originales, es hacer conexiones originales.**
-
-Henry Rollins dijo: "La creatividad es inteligencia divirtiéndose." Y tenía razón.
-
-### Tu Dosificación Diaria de Creatividad:
-
-1. **Morning Brain Dump** - 5 minutos escribiendo TODO lo que piensas al despertar
-2. **Inspiration Walk** - 15 minutos caminando sin teléfono, observando
-3. **Cross-Pollination** - Lee algo de una industria totalmente diferente a la tuya
-
-### Pregunta para Hoy:
-> "Si mi proyecto fuera una persona, ¿qué defecto lo haría más interesante?"
-
-**Esa imperfección es tu ventaja competitiva.** Embrázala.`,
-
-  `## 🧠 Framework: 4-7-8 Creative Breathing
-
-Cuando sientas bloqueo, usa esta técnica:
-
-**4 segundos** - Inhala y piensa en el problema
-**7 segundos** - Sostén y deja que tu subconsciente trabaje
-**8 segundos** - Exhala y escribe la PRIMER IDEA que venga
-
-No juzgues. Solo ejecuta.
-
-### La Verdad Incómoda:
-
-Las ideas "malas" de hoy son los breakthroughs de mañana. **Todo boceto cuenta.** Cada línea dibujada alimenta tu instinto creativo.
-
-### Tu Movimiento:
-
-Abraza un papel. Dibuja 10 círculos mal hechos. En cada uno, escribe una palabra aleatoria. Ahí hay un proyecto esperando.`,
-
-  `## ⚡ Principio: "Show, Don't Tell"
-
-**La regla de oro del diseño:**
-
-| En lugar de esto... | Haz esto... |
-|---------------------|-------------|
-| Decir "somos creativos" | Mostrar creatividad en la ejecución |
-| Decir "somos confiables" | Diseñar para generar confianza |
-| Decir "somos innovadores" | Innovar en la experiencia |
-
-### Aplicación Hoy:
-
-Mira tu proyecto actual. ¿Estás **diciendo** o **mostrando**?
-
-**Ejemplo concreto:**
-- ❌ Texto: "Carga rápida"
-- ✅ Diseño: Animaciones de 0.1 segundos
-
-**La mejor comunicación es la que no necesita explicación.**`,
-
-  `## 🎯 Mentalidad: El "Hecho es Mejor que Perfecto"
-
-### La Paradoja Creativa:
-
-Los creativos más exitosos no son los perfeccionistas. Son los que **terminan**.
-
-**10 proyectos al 100%** > **1 proyecto al 10% perfecto**
-
-### Tu Checklist de Finalización:
-
-- [ ] ¿El usuario entiende en 3 segundos?
-- [ ] ¿Funciona en móvil?
-- [ ] ¿Es 80% bueno? (¡ENTONCES TERMINA!)
-- [ ] ¿Puedes aprender más lanzando que perfeccionando?
-
-### Regla de los 30 Minutos:
-
-Si llevas más de 30 minutos en un detalle que nadie notará → **TERMINA y avanza.**
-
-**El arte está en saber cuándo parar.**`,
-
-  `## 🌊 Principio: Flow State Activation
-
-Para entrar en estado de flujo creativo, necesitas 3 cosas:
-
-### 1. 🎯 Objetivo Clara
-"Voy a diseñar el hero section" ✓
-"Voy a trabajar en el proyecto" ✗
-
-### 2. ⚡ Feedback Inmediato
-Cada trazo debe verse. Cada cambio debe mostrarse.
-Trabaja en modo preview constante.
-
-### 3. 🚫 Eliminación de Interrupciones
-- Modo avión
-- Solo tú y la pantalla
-- 25 minutos sin mirar el teléfono
-
-### Tu Ritual de Inicio:
-
-1. ☕ Una bebida
-2. 🎵 Tu playlist de enfoque
-3. 🎯 Una tarea específica
-4. ⏱️ Timer de 25 minutos
-5. 🚀 GO
-
-**El flow no se encuentra, se construye.**`,
-
-  `## 🔥 Principio: "Constraints Breed Creativity"
-
-### La verdad contra-intuitiva:
-
-**Más opciones = Parálisis**
-**Menos opciones = Creatividad**
-
-### Aplicación Práctica:
-
-**Reto de Restricción:**
-Elige UNO para tu próximo proyecto:
-
-- 🎨 Solo 2 colores
-- 📝 Solo 1 fuente
-- ⬜ Solo formas geométricas
-- 📱 Solo para móvil primero
-- ⏱️ Solo 2 horas de trabajo
-
-### Resultado Esperado:
-
-Cuando eliminas opciones, tu cerebro busca caminos creativos que antes no veía.
-
-**Las mejores soluciones nacen de las restricciones más duras.**
-
-### Tu Movimiento:
-
-Elige una restricción. Trabaja 30 minutos con ella. Observa qué surge.`,
-
-  `## 💡 Insight: "Find Your Creative Rhythm"
-
-### No todos son iguales:
-
-| Perfil | Hora Pico | Actividad Ideal |
-|--------|-----------|-----------------|
-| 🌅 Early Bird | 6-10 AM | Trabajo conceptual, decisiones |
-| 🌞 Midday | 12-3 PM | Ejecución, diseño |
-| 🌙 Night Owl | 8 PM-12 AM | Creatividad libre, experimentación |
-
-### Descubre Tu Ritmo:
-
-**Semana de Tracking:**
-- Nota cuándo tienes más energía creativa
-- Identifica tus "golden hours"
-- Bloquea esas horas para trabajo creativo
-
-### La Regla de los 90 Minutos:
-
-Tu cerebro trabaja en ciclos de ~90 minutos:
-- 90 min: Foco intenso
-- 20 min: Descanso
-- Repetir
-
-**No luches contra tu biología. Úsala.**`,
-
-  `## 🎨 Framework: "STEAL Like an Artist"
-
-Austin Kleon tiene razón: todos somos comedores creativos.
-
-### Tu Kit de Robo Creativo:
-
-1. **Crea un "Swipe File"** - Captura todo lo que te inspire
-2. **Estudia a los maestros** - No copies, analiza POR QUÉ funciona
-3. **Combina lo incompatible** - Tu mezcla única = Tu voz creativa
-4. **Remix, no copies** - Toma la esencia, transforma la ejecución
-
-### Tu Tarea de Hoy:
-
-1. Abre 3 proyectos que admires
-2. Anota 1 cosa que te encante de cada uno
-3. Pregunta: "¿Cómo la haría MÍA?"
-4. Boceta tu versión en 10 minutos
-
-**La originalidad es 10% invención y 90% remix inteligente.**`,
-
-  `## ⚡ Técnica: "Two-Minute Brainstorm"
-
-### Reglas del juego:
-
-1. ⏱️ 2 minutos exactos
-2. ✍️ Máximo 15 ideas
-3. 🚫 CERO juicio
-4. 💡 Lo absurdo es bienvenido
-
-### Por qué funciona:
-
-La presión de tiempo silencia al crítico interno. Tu mente racional se detiene y el creativo habla.
-
-### Formato:
-
-**Tema:** [Tu tema aquí]
-1. _______
-2. _______
-3. _______
-...hasta 15
-
-### Después:
-
-Circula las 3 más interesantes.
-**Ahí está tu material creativo.**
-
-### Reto:
-
-Hazlo ahora. 2 minutos. 15 ideas. Ve qué surge.
-
-**Las mejores ideas suelen venir del número 12, 13, 14.**`,
-
-  `## 🧩 Principio: "Creative Problem Reframing"
-
-### El problema nunca es el problema:
-
-Cuando estás atorado, no es por falta de creatividad. Es por cómo formulaste el problema.
-
-### Técnica de Reformulación:
-
-**Original:** "¿Cómo hago un mejor logo?"
-
-**Reformulado:**
-- "¿Cómo hago algo que nadie olvide?"
-- "¿Cómo lo reconozcan en 0.5 segundos?"
-- "¿Cómo se ve igual en negro y blanco?"
-- "¿Cómo lo tatuaría alguien?"
-
-### Tu Turno:
-
-Escribe tu problema actual. Luego reformúlalo 5 veces, cada vez más específico y diferente.
-
-**El insight está en la pregunta correcta, no en la respuesta perfecta.**`
-];
-
-// ============================================================================
-// FUNCIÓN PARA DETECTAR PALABRAS CLAVE
-// ============================================================================
-
-function findBestResponse(message: string): string {
+function detectIntent(message: string): string {
   const lowerMessage = message.toLowerCase();
   
-  // Buscar la respuesta más relevante
-  let bestMatch: { response: string; score: number } = { response: '', score: 0 };
+  let bestMatch = 'generica';
+  let highestScore = 0;
   
-  for (const template of BLOCKAGE_RESPONSES) {
+  for (const [category, data] of Object.entries(INTENT_CATEGORIES)) {
+    if (category === 'generica') continue;
+    
     let score = 0;
-    for (const keyword of template.keywords) {
+    for (const keyword of data.keywords) {
       if (lowerMessage.includes(keyword.toLowerCase())) {
-        score += keyword.length; // Palabras más largas tienen más peso
+        // Palabras más largas tienen más peso
+        score += keyword.length * 2;
+        // Bonus por coincidencia exacta de frase
+        if (lowerMessage.includes(keyword.toLowerCase())) {
+          score += 5;
+        }
       }
     }
-    if (score > bestMatch.score) {
-      bestMatch = { response: template.response, score };
+    
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = category;
     }
   }
   
-  // Si encontró una coincidencia significativa
-  if (bestMatch.score > 0) {
-    return bestMatch.response;
-  }
+  return bestMatch;
+}
+
+function getResponse(intent: string, message: string): string {
+  const category = INTENT_CATEGORIES[intent] || INTENT_CATEGORIES.generica;
+  const responses = category.responses;
   
-  // Respuesta aleatoria de alto nivel
-  const randomIndex = Math.floor(Math.random() * GENERAL_TIPS.length);
-  return GENERAL_TIPS[randomIndex];
+  // Seleccionar respuesta basada en hash simple del mensaje para variedad
+  const hash = message.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const index = hash % responses.length;
+  
+  return responses[index];
+}
+
+// ============================================================================
+// SIMULACIÓN DE STREAMING
+// ============================================================================
+
+function simulateStreamingDelay(text: string): number {
+  // Delay proporcional a la longitud del texto, entre 1-3 segundos
+  const baseDelay = 800;
+  const charDelay = text.length * 2;
+  return Math.min(baseDelay + charDelay, 3000);
 }
 
 // ============================================================================
@@ -573,13 +667,22 @@ export async function POST(request: NextRequest) {
       .filter((m: any) => m.role === 'user')
       .pop()?.content || '';
 
-    // Simular delay de procesamiento para UX realista
-    await new Promise(resolve => setTimeout(resolve, 800));
-
+    // Detectar intención
+    const intent = detectIntent(lastUserMessage);
+    
     // Generar respuesta
-    const response = findBestResponse(lastUserMessage);
+    const response = getResponse(intent, lastUserMessage);
+    
+    // Calcular delay simulado
+    const delay = simulateStreamingDelay(response);
+    
+    // Simular procesamiento
+    await new Promise(resolve => setTimeout(resolve, delay));
 
-    return NextResponse.json({ message: response });
+    return NextResponse.json({ 
+      message: response,
+      intent // Debug: para ver qué intención detectó
+    });
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(
