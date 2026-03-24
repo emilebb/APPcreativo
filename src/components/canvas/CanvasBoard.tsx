@@ -9,6 +9,14 @@ import {
 } from 'lucide-react';
 
 // ============================================================================
+// PROPS
+// ============================================================================
+
+interface CanvasBoardProps {
+  onSave?: () => void;
+}
+
+// ============================================================================
 // HERRAMIENTAS DISPONIBLES
 // ============================================================================
 
@@ -26,7 +34,7 @@ const COLORS = ['#000000', '#ef4444', '#22c55e', '#3b82f6', '#f97316', '#8b5cf6'
 // COMPONENTE PRINCIPAL
 // ============================================================================
 
-export default function CanvasBoard() {
+export default function CanvasBoard({ onSave }: CanvasBoardProps) {
   // ---------------------------------------------------------------------------
   // REFS
   // ---------------------------------------------------------------------------
@@ -467,6 +475,16 @@ export default function CanvasBoard() {
           >
             <Trash2 size={18} />
           </button>
+          {onSave && (
+            <button
+              onClick={onSave}
+              className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              title="Guardar (Ctrl+S)"
+            >
+              <Save size={16} />
+              <span className="text-sm">Guardar</span>
+            </button>
+          )}
         </div>
       </div>
 
