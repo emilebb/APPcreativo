@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -10,62 +10,60 @@ import {
   RotateCw,
   ZoomIn,
   ZoomOut,
-  RotateCcw,
   Maximize,
   Upload,
   X,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { useMoodboardStore } from "@/store/useMoodboardStore";
-
-// Helper para obtener estado fresco del store (evita stale closures)
-const getStoreState = () => useMoodboardStore.getState();
 import MoodboardCanvas from "@/components/MoodboardCanvas";
-import MoodboardUploader from "@/components/MoodboardUploader";
 
 export default function EditMoodboardPage() {
   const params = useParams();
-  const router = useRouter();
   const moodboardId = params.id as string;
 
-  const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Selector reactivo para selectedId (se actualiza en cada re-render)
-  const selectedId = useMoodboardStore((s) => s.selectedId);
-  
+  // Estado del store
   const {
     images,
+    selectedId,
+    title,
     isDirty,
     stageScale,
-    setStageScale,
+    setTitle,
     loadMoodboard,
+    addImage,
     updateImage,
+    deleteSelected,
     clearSelection,
+    clearBoard,
+    setStageScale,
+    markClean,
   } = useMoodboardStore();
 
-  // Load moodboard data
+  // ============================================================================
+  // CARGAR DATOS DEL MOODBOARD
+  // ============================================================================
+  
   useEffect(() => {
     const loadMoodboardData = async () => {
       try {
         setLoading(true);
-
-        // Try to load from localStorage first
         const stored = localStorage.getItem(`moodboard-${moodboardId}`);
         if (stored) {
           const data = JSON.parse(stored);
-          setTitle(data.title || "Sin título");
-          loadMoodboard({ images: data.images || [] });
-        } else {
-          setTitle("Sin título");
-          loadMoodboard({ images: [] });
+          loadMoodboard({
+            title: data.title,
+            images: data.images || [],
+          });
         }
       } catch (error) {
         console.error("Error loading moodboard:", error);
-        setTitle("Sin título");
-        loadMoodboard({ images: [] });
       } finally {
         setLoading(false);
       }
@@ -74,28 +72,20 @@ export default function EditMoodboardPage() {
     loadMoodboardData();
   }, [moodboardId, loadMoodboard]);
 
-  // Save moodboard - usa refs para capturar valores frescos
+  // ============================================================================
+  // GUARDAR MOODBOARD
+  // ============================================================================
+  
   const handleSave = useCallback(async () => {
+    if (!title.trim()) {
+      alert("Por favor, añade un título");
+      return;
+    }
+
     setSaving(true);
     try {
-      // Leer valores directamente del DOM/estado actual
-      const titleInput = document.querySelector('input[placeholder="Título del moodboard"]') as HTMLInputElement;
-      const currentTitle = titleInput?.value || title;
+      const { title: currentTitle, images: currentImages } = useMoodboardStore.getState();
       
-      if (!currentTitle.trim()) {
-        alert("Por favor, añade un título");
-        return;
-      }
-
-      // Obtener imágenes frescas del store
-      const { images: currentImages } = getStoreState();
-      
-      console.log("Guardando moodboard:", {
-        id: moodboardId,
-        title: currentTitle,
-        imagesCount: currentImages.length
-      });
-
       const moodboardData = {
         id: moodboardId,
         title: currentTitle,
@@ -104,9 +94,7 @@ export default function EditMoodboardPage() {
       };
 
       localStorage.setItem(`moodboard-${moodboardId}`, JSON.stringify(moodboardData));
-      
-      // Marcar como guardado
-      getStoreState().markClean();
+      markClean();
 
       setSaveMessage("¡Guardado!");
       setTimeout(() => setSaveMessage(null), 2000);
@@ -116,9 +104,12 @@ export default function EditMoodboardPage() {
     } finally {
       setSaving(false);
     }
-  }, [moodboardId, title]); // title como dependencia para actualizar la closure
+  }, [moodboardId, title, markClean]);
 
-  // Auto-save on changes (debounced)
+  // ============================================================================
+  // AUTO-SAVE
+  // ============================================================================
+  
   useEffect(() => {
     if (!isDirty || saving) return;
 
@@ -129,7 +120,10 @@ export default function EditMoodboardPage() {
     return () => clearTimeout(timeoutId);
   }, [isDirty, saving, handleSave]);
 
-  // Zoom controls
+  // ============================================================================
+  // ZOOM CONTROLS
+  // ============================================================================
+  
   const handleZoomIn = () => {
     const newScale = Math.min(3, stageScale + 0.1);
     setStageScale(newScale);
@@ -144,7 +138,10 @@ export default function EditMoodboardPage() {
     setStageScale(1);
   };
 
-  // Rotate selected image
+  // ============================================================================
+  // ROTAR IMAGEN SELECCIONADA
+  // ============================================================================
+  
   const handleRotateSelected = () => {
     if (!selectedId) return;
     const image = images.find((img) => img.id === selectedId);
@@ -153,20 +150,90 @@ export default function EditMoodboardPage() {
     }
   };
 
-  // Delete selected image - usa estado fresco del store
+  // ============================================================================
+  // ELIMINAR IMAGEN SELECCIONADA
+  // ============================================================================
+  
   const handleDeleteSelected = () => {
-    const { selectedId: currentSelectedId, deleteImage } = getStoreState();
-    if (!currentSelectedId) return;
-    if (confirm("¿Eliminar la imagen seleccionada?")) {
-      deleteImage(currentSelectedId);
+    if (!selectedId) return;
+    deleteSelected();
+  };
+
+  // ============================================================================
+  // LIMPIAR TABLERO
+  // ============================================================================
+  
+  const handleClearBoard = () => {
+    if (images.length === 0) return;
+    if (confirm("¿Eliminar todas las imágenes del moodboard?")) {
+      clearBoard();
     }
   };
 
-  // Clear selection
-  const handleClearSelection = () => {
-    clearSelection();
-  };
+  // ============================================================================
+  // SUBIR IMÁGENES
+  // ============================================================================
+  
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files) return;
 
+      Array.from(files).forEach((file, index) => {
+        if (!file.type.startsWith("image/")) return;
+
+        const url = URL.createObjectURL(file);
+
+        // Crear imagen para obtener dimensiones
+        const img = new window.Image();
+        img.onload = () => {
+          // Calcular tamaño inicial (max 250px manteniendo aspecto)
+          const maxSize = 250;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxSize) {
+              height = (height * maxSize) / width;
+              width = maxSize;
+            }
+          } else {
+            if (height > maxSize) {
+              width = (width * maxSize) / height;
+              height = maxSize;
+            }
+          }
+
+          // Posición inicial con offset
+          const baseX = 100 + (images.length % 5) * 30;
+          const baseY = 100 + (images.length % 5) * 30;
+
+          addImage({
+            src: url,
+            x: baseX + index * 20,
+            y: baseY + index * 20,
+            width,
+            height,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+          });
+        };
+        img.src = url;
+      });
+
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    [addImage, images.length]
+  );
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+  
   if (loading) {
     return (
       <main className="flex items-center justify-center min-h-screen">
@@ -179,11 +246,13 @@ export default function EditMoodboardPage() {
   }
 
   return (
-    <main className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-      {/* Header Toolbar */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-4 py-3">
+    <main className="h-screen flex flex-col bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
+      {/* ================================================================ */}
+      {/* TOOLBAR */}
+      {/* ================================================================ */}
+      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          {/* Left side */}
+          {/* Izquierda */}
           <div className="flex items-center gap-4">
             <Link
               href={`/moodboard/${moodboardId}`}
@@ -208,9 +277,9 @@ export default function EditMoodboardPage() {
             )}
           </div>
 
-          {/* Right side */}
+          {/* Derecha */}
           <div className="flex items-center gap-2">
-            {/* Zoom controls */}
+            {/* Zoom */}
             <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
               <button
                 onClick={handleZoomOut}
@@ -238,7 +307,7 @@ export default function EditMoodboardPage() {
               </button>
             </div>
 
-            {/* Image controls */}
+            {/* Acciones de imagen */}
             <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
               <button
                 onClick={handleRotateSelected}
@@ -256,12 +325,34 @@ export default function EditMoodboardPage() {
               >
                 <Trash2 className="w-4 h-4" />
               </button>
+              <button
+                onClick={handleClearBoard}
+                disabled={images.length === 0}
+                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Limpiar tablero"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Uploader */}
-            <MoodboardUploader />
+            {/* Subir imágenes */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition font-medium"
+            >
+              <Upload className="w-4 h-4" />
+              Añadir Imágenes
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
 
-            {/* Save button */}
+            {/* Guardar */}
             <button
               onClick={handleSave}
               disabled={saving || !title.trim()}
@@ -283,63 +374,63 @@ export default function EditMoodboardPage() {
         </div>
       </div>
 
-      {/* Save message toast */}
+      {/* ================================================================ */}
+      {/* TOAST DE GUARDADO */}
+      {/* ================================================================ */}
       {saveMessage && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg animate-pulse">
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg">
           {saveMessage}
         </div>
       )}
 
-      {/* Canvas area */}
+      {/* ================================================================ */}
+      {/* CANVAS */}
+      {/* ================================================================ */}
       <div className="flex-1 relative">
         <MoodboardCanvas />
 
-        {/* Empty state */}
+        {/* Estado vacío */}
         {images.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center p-8 bg-white/80 dark:bg-neutral-800/80 rounded-xl shadow-lg backdrop-blur-sm">
+            <div className="text-center p-8 bg-white/90 dark:bg-neutral-800/90 rounded-xl shadow-lg backdrop-blur-sm">
               <Upload className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
                 Comienza tu moodboard
               </h3>
               <p className="text-neutral-600 dark:text-neutral-400 mb-4 max-w-sm">
-                Añade imágenes para crear tu tablero de inspiración. Arrastra, redimensiona y rota las imágenes libremente.
+                Añade imágenes para crear tu tablero de inspiración.
               </p>
-              <div className="flex items-center justify-center gap-2 text-sm text-neutral-500">
-                <span>Haz clic en</span>
-                <span className="font-medium text-blue-600 dark:text-blue-400">Añadir Imágenes</span>
-                <span>o arrastra archivos aquí</span>
-              </div>
+              <p className="text-sm text-neutral-500">
+                Haz clic en <strong>Añadir Imágenes</strong> o arrastra archivos aquí
+              </p>
             </div>
           </div>
         )}
 
-        {/* Selection info */}
+        {/* Info de selección */}
         {selectedId && (
-          <div className="absolute bottom-4 left-4 px-3 py-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
-            <div className="flex items-center gap-4 text-sm">
-              <span className="text-neutral-600 dark:text-neutral-400">
-                {images.find((img) => img.id === selectedId)?.width.toFixed(0)} x{" "}
-                {images.find((img) => img.id === selectedId)?.height.toFixed(0)} px
-              </span>
-              <button
-                onClick={handleClearSelection}
-                className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="absolute bottom-4 left-4 px-3 py-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 flex items-center gap-3">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">
+              {images.find((img) => img.id === selectedId)?.width.toFixed(0)} x{" "}
+              {images.find((img) => img.id === selectedId)?.height.toFixed(0)} px
+            </span>
+            <button
+              onClick={clearSelection}
+              className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 
-        {/* Instructions */}
+        {/* Instrucciones */}
         <div className="absolute bottom-4 right-4 px-3 py-2 bg-white/80 dark:bg-neutral-800/80 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
           <div className="text-xs text-neutral-500 space-y-1">
             <p>🖱️ Arrastra para mover</p>
             <p>📐 Arrastra esquinas para redimensionar</p>
-            <p>🔄 Usa el controlador de rotación</p>
+            <p>🔄 Controlador para rotar</p>
             <p>⌨️ Supr para eliminar</p>
-            <p>🖱️ Rueda del ratón para zoom</p>
+            <p>🖱️ Rueda para zoom</p>
           </div>
         </div>
       </div>

@@ -15,13 +15,16 @@ export interface MoodboardImage {
 }
 
 interface MoodboardState {
+  // Estado
   images: MoodboardImage[];
   selectedId: string | null;
+  title: string;
   isDirty: boolean;
   stageScale: number;
   stagePosition: { x: number; y: number };
 
-  // Actions
+  // Acciones
+  setTitle: (title: string) => void;
   setImages: (images: MoodboardImage[]) => void;
   addImage: (image: Omit<MoodboardImage, "id">) => string;
   updateImage: (id: string, updates: Partial<MoodboardImage>) => void;
@@ -29,21 +32,26 @@ interface MoodboardState {
   deleteSelected: () => void;
   setSelected: (id: string | null) => void;
   clearSelection: () => void;
+  clearBoard: () => void;
   setStageScale: (scale: number) => void;
   setStagePosition: (position: { x: number; y: number }) => void;
-  bringToFront: (id: string) => void;
   markClean: () => void;
-  loadMoodboard: (data: { images: MoodboardImage[] }) => void;
+  loadMoodboard: (data: { title?: string; images: MoodboardImage[] }) => void;
 }
 
 const generateId = () => `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 export const useMoodboardStore = create<MoodboardState>((set, get) => ({
+  // Estado inicial
   images: [],
   selectedId: null,
+  title: "Sin título",
   isDirty: false,
   stageScale: 1,
   stagePosition: { x: 0, y: 0 },
+
+  // Acciones
+  setTitle: (title) => set({ title, isDirty: true }),
 
   setImages: (images) => set({ images, isDirty: true }),
 
@@ -75,9 +83,9 @@ export const useMoodboardStore = create<MoodboardState>((set, get) => ({
   },
 
   deleteSelected: () => {
-    const { selectedId } = get();
+    const { selectedId, deleteImage } = get();
     if (selectedId) {
-      get().deleteImage(selectedId);
+      deleteImage(selectedId);
     }
   },
 
@@ -85,26 +93,23 @@ export const useMoodboardStore = create<MoodboardState>((set, get) => ({
 
   clearSelection: () => set({ selectedId: null }),
 
+  clearBoard: () => {
+    set({
+      images: [],
+      selectedId: null,
+      isDirty: true,
+    });
+  },
+
   setStageScale: (scale) => set({ stageScale: scale }),
 
   setStagePosition: (position) => set({ stagePosition: position }),
-
-  bringToFront: (id) => {
-    set((state) => {
-      const maxZIndex = state.images.length;
-      return {
-        images: state.images.map((img) =>
-          img.id === id ? { ...img, scaleX: img.scaleX || 1, scaleY: img.scaleY || 1 } : img
-        ),
-        isDirty: true,
-      };
-    });
-  },
 
   markClean: () => set({ isDirty: false }),
 
   loadMoodboard: (data) => {
     set({
+      title: data.title || "Sin título",
       images: data.images || [],
       selectedId: null,
       isDirty: false,
@@ -112,10 +117,11 @@ export const useMoodboardStore = create<MoodboardState>((set, get) => ({
   },
 }));
 
-// Selector para serializar estado (para guardar)
+// Selector para serializar (para guardar en localStorage/Firebase)
 export const useSerializeMoodboard = () => {
-  const images = useMoodboardStore((s) => s.images);
+  const { title, images } = useMoodboardStore.getState();
   return {
+    title,
     images: images.map((img) => ({
       id: img.id,
       src: img.src,

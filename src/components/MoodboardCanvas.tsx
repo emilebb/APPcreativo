@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useEffect, useCallback, useState } from "react";
-import { Stage, Layer, Image as KonvaImage, Transformer, Rect } from "react-konva";
+import { Stage, Layer, Transformer, Rect } from "react-konva";
 import { useMoodboardStore, MoodboardImage } from "@/store/useMoodboardStore";
+import URLImage from "./URLImage";
 import Konva from "konva";
 
 interface MoodboardCanvasProps {
@@ -10,170 +11,9 @@ interface MoodboardCanvasProps {
   height?: number;
 }
 
-function KonvaImageNode({
-  image,
-  isSelected,
-  onSelect,
-  onDragEnd,
-  onTransformEnd,
-}: {
-  image: MoodboardImage;
-  isSelected: boolean;
-  onSelect: () => void;
-  onDragEnd: (x: number, y: number) => void;
-  onTransformEnd: (attrs: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation: number;
-    scaleX: number;
-    scaleY: number;
-  }) => void;
-}) {
-  const imageRef = useRef<Konva.Image>(null);
-  const transformerRef = useRef<Konva.Transformer>(null);
-  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-
-  // Load image with proper error handling
-  useEffect(() => {
-    setIsLoading(true);
-    setHasError(false);
-    setImageElement(null);
-
-    const img = new window.Image();
-    img.crossOrigin = "anonymous";
-    
-    img.onload = () => {
-      setImageElement(img);
-      setIsLoading(false);
-      setHasError(false);
-    };
-    
-    img.onerror = () => {
-      console.error("Failed to load image:", image.src);
-      setIsLoading(false);
-      setHasError(true);
-    };
-
-    img.src = image.src;
-
-    // Cleanup
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, [image.src]);
-
-  // Attach transformer when selected
-  useEffect(() => {
-    if (isSelected && transformerRef.current && imageRef.current) {
-      transformerRef.current.nodes([imageRef.current]);
-      transformerRef.current.getLayer()?.batchDraw();
-    }
-  }, [isSelected]);
-
-  // Don't render if loading or error
-  if (isLoading || hasError || !imageElement) {
-    // Show placeholder rectangle while loading or on error
-    return (
-      <Rect
-        x={image.x}
-        y={image.y}
-        width={image.width}
-        height={image.height}
-        fill={hasError ? "#fee2e2" : "#e5e7eb"}
-        stroke={isSelected ? "#3b82f6" : "#d1d5db"}
-        strokeWidth={isSelected ? 2 : 1}
-        cornerRadius={4}
-        draggable
-        onClick={onSelect}
-        onTap={onSelect}
-        onDragEnd={(e) => {
-          onDragEnd(e.target.x(), e.target.y());
-        }}
-      />
-    );
-  }
-
-  return (
-    <>
-      <KonvaImage
-        ref={imageRef}
-        image={imageElement}
-        x={image.x}
-        y={image.y}
-        width={image.width}
-        height={image.height}
-        rotation={image.rotation}
-        scaleX={image.scaleX || 1}
-        scaleY={image.scaleY || 1}
-        draggable
-        onClick={onSelect}
-        onDragEnd={(e) => {
-          onDragEnd(e.target.x(), e.target.y());
-        }}
-        onTransformEnd={(e) => {
-          const node = imageRef.current;
-          if (!node) return;
-
-          const scaleX = node.scaleX();
-          const scaleY = node.scaleY();
-
-          // Reset scale to 1 and adjust width/height
-          node.scaleX(1);
-          node.scaleY(1);
-
-          onTransformEnd({
-            x: node.x(),
-            y: node.y(),
-            width: Math.max(50, node.width() * scaleX),
-            height: Math.max(50, node.height() * scaleY),
-            rotation: node.rotation(),
-            scaleX: 1,
-            scaleY: 1,
-          });
-        }}
-        shadowColor={isSelected ? "#3b82f6" : undefined}
-        shadowBlur={isSelected ? 10 : 0}
-        shadowOpacity={isSelected ? 0.6 : 0}
-      />
-      {isSelected && (
-        <Transformer
-          ref={transformerRef}
-          boundBoxFunc={(oldBox, newBox) => {
-            // Limit minimum size
-            if (newBox.width < 50 || newBox.height < 50) {
-              return oldBox;
-            }
-            return newBox;
-          }}
-          anchorSize={10}
-          anchorCornerRadius={2}
-          borderStroke="#3b82f6"
-          anchorStroke="#3b82f6"
-          anchorFill="#ffffff"
-          rotateAnchorOffset={25}
-          enabledAnchors={[
-            "top-left",
-            "top-right",
-            "bottom-left",
-            "bottom-right",
-            "middle-left",
-            "middle-right",
-            "top-center",
-            "bottom-center",
-          ]}
-        />
-      )}
-    </>
-  );
-}
-
 export default function MoodboardCanvas({ width = 1200, height = 800 }: MoodboardCanvasProps) {
   const stageRef = useRef<Konva.Stage>(null);
+  const transformerRef = useRef<Konva.Transformer>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width, height });
 
@@ -183,11 +23,15 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
     setSelected,
     clearSelection,
     updateImage,
+    deleteSelected,
     stageScale,
     setStageScale,
   } = useMoodboardStore();
 
-  // Handle container resize
+  // ============================================================================
+  // RESPONSIVE - Actualizar tamaño del contenedor
+  // ============================================================================
+  
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
@@ -203,10 +47,29 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // Handle keyboard delete - usa estado fresco del store
+  // ============================================================================
+  // TRANSFORMER - Acoplar a imagen seleccionada
+  // ============================================================================
+  
+  useEffect(() => {
+    if (!transformerRef.current || !stageRef.current) return;
+
+    const stage = stageRef.current;
+    const selectedNode = selectedId 
+      ? stage.findOne(`#${selectedId}`) 
+      : null;
+
+    transformerRef.current.nodes(selectedNode ? [selectedNode] : []);
+    transformerRef.current.getLayer()?.batchDraw();
+  }, [selectedId]);
+
+  // ============================================================================
+  // KEYBOARD - Manejar Delete/Backspace
+  // ============================================================================
+  
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't delete if user is typing in an input
+      // No eliminar si estamos en un input
       if (
         document.activeElement?.tagName === "INPUT" ||
         document.activeElement?.tagName === "TEXTAREA"
@@ -216,19 +79,23 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
 
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
-        // Obtener estado fresco para evitar closures stale
-        const { selectedId: currentSelectedId, deleteImage } = useMoodboardStore.getState();
-        if (currentSelectedId) {
-          deleteImage(currentSelectedId);
-        }
+        deleteSelected();
+      }
+
+      // Escape para deseleccionar
+      if (e.key === "Escape") {
+        clearSelection();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []); // Sin dependencias - usa getState() directamente
+  }, [deleteSelected, clearSelection]);
 
-  // Handle wheel zoom
+  // ============================================================================
+  // WHEEL - Zoom con rueda del ratón
+  // ============================================================================
+  
   const handleWheel = useCallback(
     (e: Konva.KonvaEventObject<WheelEvent>) => {
       e.evt.preventDefault();
@@ -262,9 +129,13 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
     [stageScale, setStageScale]
   );
 
+  // ============================================================================
+  // CLICK EN STAGE - Deseleccionar
+  // ============================================================================
+  
   const handleStageClick = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>) => {
-      // Only clear selection if clicking on the stage itself
+      // Solo deseleccionar si clic en el stage vacío
       if (e.target === e.target.getStage()) {
         clearSelection();
       }
@@ -272,6 +143,10 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
     [clearSelection]
   );
 
+  // ============================================================================
+  // DRAG END - Guardar posición
+  // ============================================================================
+  
   const handleDragEnd = useCallback(
     (id: string, x: number, y: number) => {
       updateImage(id, { x, y });
@@ -279,6 +154,10 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
     [updateImage]
   );
 
+  // ============================================================================
+  // TRANSFORM END - Guardar tamaño y rotación
+  // ============================================================================
+  
   const handleTransformEnd = useCallback(
     (id: string, attrs: {
       x: number;
@@ -302,10 +181,14 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
     [updateImage]
   );
 
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+  
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-neutral-50 dark:bg-neutral-900 overflow-hidden"
+      className="w-full h-full bg-neutral-100 dark:bg-neutral-900 overflow-hidden"
       style={{ cursor: "default" }}
     >
       <Stage
@@ -315,22 +198,22 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
         scaleX={stageScale}
         scaleY={stageScale}
         onWheel={handleWheel}
-      onClick={handleStageClick}
+        onClick={handleStageClick}
         draggable
       >
         <Layer>
-          {/* Background */}
+          {/* Fondo transparente */}
           <Rect
-            x={0}
-            y={0}
-            width={containerSize.width / stageScale}
-            height={containerSize.height / stageScale}
+            x={-1000}
+            y={-1000}
+            width={containerSize.width / stageScale + 2000}
+            height={containerSize.height / stageScale + 2000}
             fill="transparent"
           />
-          
-          {/* Images */}
+
+          {/* Imágenes */}
           {images.map((image) => (
-            <KonvaImageNode
+            <URLImage
               key={image.id}
               image={image}
               isSelected={selectedId === image.id}
@@ -339,6 +222,36 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
               onTransformEnd={(attrs) => handleTransformEnd(image.id, attrs)}
             />
           ))}
+
+          {/* Transformer - se acopla automáticamente a la imagen seleccionada */}
+          <Transformer
+            ref={transformerRef}
+            boundBoxFunc={(oldBox, newBox) => {
+              // Limitar tamaño mínimo
+              if (newBox.width < 50 || newBox.height < 50) {
+                return oldBox;
+              }
+              return newBox;
+            }}
+            anchorSize={10}
+            anchorCornerRadius={2}
+            borderStroke="#3b82f6"
+            anchorStroke="#3b82f6"
+            anchorFill="#ffffff"
+            rotateAnchorOffset={25}
+            enabledAnchors={[
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right",
+              "middle-left",
+              "middle-right",
+              "top-center",
+              "bottom-center",
+            ]}
+            rotateEnabled={true}
+            enabledRotate={true}
+          />
         </Layer>
       </Stage>
     </div>
