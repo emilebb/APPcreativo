@@ -37,14 +37,12 @@ export default function WelcomePage() {
   };
 
   const handleComplete = () => {
-    // Guardar preferencias en localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('onboarding_completed', 'true');
       localStorage.setItem('user_name', userName);
       localStorage.setItem('creative_goal', selectedGoal || '');
     }
     
-    // Redirigir según el objetivo
     switch (selectedGoal) {
       case 'design':
         router.push('/canvas');
@@ -64,42 +62,51 @@ export default function WelcomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full">
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="max-w-4xl w-full relative z-10">
         {/* Welcome Step */}
         {step === 'welcome' && (
-          <div className="text-center space-y-8 animate-in fade-in duration-500">
-            <div className="inline-flex items-center gap-3 bg-white dark:bg-neutral-800 rounded-2xl px-6 py-4 shadow-xl border border-neutral-200 dark:border-neutral-700">
-              <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center">
+          <div className="text-center space-y-10 animate-in fade-in duration-500">
+            {/* Logo */}
+            <div className="inline-flex items-center gap-4 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl px-6 py-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
                 <Sparkles className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
-                <div className="text-2xl font-bold text-neutral-900 dark:text-white">CreationX</div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">Tu Coach Creativo</div>
+                <div className="text-2xl font-black text-white tracking-tight">CreationX</div>
+                <div className="text-sm text-white/50">Tu Coach Creativo</div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-neutral-900 dark:text-white">
-                ¡Bienvenido! 👋
+            {/* Headline */}
+            <div className="space-y-5">
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight">
+                ¡Bienvenido! <span className="text-4xl sm:text-5xl lg:text-6xl">👋</span>
               </h1>
-              <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+              <p className="text-xl text-white/60 max-w-2xl mx-auto">
                 Estás a 30 segundos de superar tus bloqueos creativos y ejecutar tus ideas
               </p>
             </div>
 
-            <div className="max-w-md mx-auto space-y-4">
+            {/* Form */}
+            <div className="max-w-md mx-auto space-y-5">
               <input
                 type="text"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 placeholder="¿Cómo te llamas?"
-                className="w-full px-6 py-4 text-lg border-2 border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:border-violet-600 dark:focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition"
+                className="w-full px-6 py-4 text-lg backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all"
                 onKeyPress={(e) => e.key === 'Enter' && handleStart()}
               />
               <button
                 onClick={handleStart}
-                className="w-full px-8 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all font-semibold text-lg shadow-lg shadow-violet-500/30 flex items-center justify-center gap-2"
+                className="w-full px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02] transition-all flex items-center justify-center gap-3"
               >
                 Comenzar
                 <ArrowRight className="w-5 h-5" />
@@ -110,12 +117,12 @@ export default function WelcomePage() {
 
         {/* Goal Selection Step */}
         {step === 'goal' && (
-          <div className="space-y-8 animate-in fade-in duration-500">
+          <div className="space-y-10 animate-in fade-in duration-500">
             <div className="text-center space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white">
-                Hola {userName}, ¿qué quieres crear hoy?
+              <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
+                Hola {userName}, ¿qué quieres crear?
               </h2>
-              <p className="text-lg text-neutral-600 dark:text-neutral-400">
+              <p className="text-lg text-white/50">
                 Esto me ayuda a personalizar tu experiencia
               </p>
             </div>
@@ -125,13 +132,13 @@ export default function WelcomePage() {
                 <button
                   key={goal.id}
                   onClick={() => handleGoalSelect(goal.id)}
-                  className="group p-6 bg-white dark:bg-neutral-800 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 hover:border-violet-600 dark:hover:border-violet-500 transition-all text-left hover:shadow-xl hover:scale-105"
+                  className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-left hover:bg-white/10 hover:border-violet-500/30 transition-all hover:scale-[1.02]"
                 >
-                  <goal.icon className="w-10 h-10 text-violet-600 dark:text-violet-400 mb-4" />
-                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-2">
+                  <goal.icon className="w-10 h-10 text-violet-400 mb-4" />
+                  <h3 className="text-lg font-bold text-white mb-2">
                     {goal.title}
                   </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <p className="text-sm text-white/50">
                     {goal.desc}
                   </p>
                 </button>
@@ -142,39 +149,39 @@ export default function WelcomePage() {
 
         {/* Style Preference Step */}
         {step === 'style' && (
-          <div className="space-y-8 animate-in fade-in duration-500">
+          <div className="space-y-10 animate-in fade-in duration-500">
             <div className="text-center space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white">
+              <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
                 ¿Cómo prefieres trabajar?
               </h2>
-              <p className="text-lg text-neutral-600 dark:text-neutral-400">
+              <p className="text-lg text-white/50">
                 Configuraré el coach según tu estilo
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
               <button
                 onClick={() => setStep('ready')}
-                className="p-8 bg-white dark:bg-neutral-800 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 hover:border-violet-600 dark:hover:border-violet-500 transition-all text-left hover:shadow-xl"
+                className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-left hover:bg-white/10 hover:border-violet-500/30 transition-all"
               >
-                <div className="text-4xl mb-4">⚡</div>
-                <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
+                <div className="text-5xl mb-5">⚡</div>
+                <h3 className="text-2xl font-bold text-white mb-3">
                   Modo Directo
                 </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
+                <p className="text-white/50">
                   Dame el siguiente paso exacto. Sin rodeos.
                 </p>
               </button>
 
               <button
                 onClick={() => setStep('ready')}
-                className="p-8 bg-white dark:bg-neutral-800 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 hover:border-violet-600 dark:hover:border-violet-500 transition-all text-left hover:shadow-xl"
+                className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-left hover:bg-white/10 hover:border-violet-500/30 transition-all"
               >
-                <div className="text-4xl mb-4">🧘</div>
-                <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
+                <div className="text-5xl mb-5">🧘</div>
+                <h3 className="text-2xl font-bold text-white mb-3">
                   Modo Reflexivo
                 </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
+                <p className="text-white/50">
                   Ayúdame a explorar opciones y pensar profundo.
                 </p>
               </button>
@@ -184,25 +191,25 @@ export default function WelcomePage() {
 
         {/* Ready Step */}
         {step === 'ready' && (
-          <div className="text-center space-y-8 animate-in fade-in duration-500">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-12 h-12 text-white" />
+          <div className="text-center space-y-10 animate-in fade-in duration-500">
+            <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30">
+              <CheckCircle2 className="w-14 h-14 text-white" />
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white">
+              <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
                 ¡Todo listo, {userName}! 🎉
               </h2>
-              <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+              <p className="text-xl text-white/60 max-w-2xl mx-auto">
                 Tu coach creativo está configurado. Vamos a crear algo increíble.
               </p>
             </div>
 
-            <div className="max-w-md mx-auto bg-violet-50 dark:bg-violet-900/20 border-2 border-violet-200 dark:border-violet-800 rounded-2xl p-6">
-              <h3 className="font-semibold text-neutral-900 dark:text-white mb-3">
-                💡 Primer paso recomendado:
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 max-w-md mx-auto">
+              <h3 className="font-bold text-white mb-3 flex items-center gap-2">
+                <span>💡</span> Primer paso recomendado:
               </h3>
-              <p className="text-neutral-700 dark:text-neutral-300 mb-4">
+              <p className="text-white/70">
                 {selectedGoal === 'design' && 'Abre el Canvas y empieza a visualizar tu idea'}
                 {selectedGoal === 'art' && 'Usa el Canvas para bocetear tu concepto'}
                 {selectedGoal === 'content' && 'Crea un Moodboard con referencias visuales'}
@@ -213,7 +220,7 @@ export default function WelcomePage() {
 
             <button
               onClick={handleComplete}
-              className="px-12 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all font-semibold text-lg shadow-lg shadow-violet-500/30 inline-flex items-center gap-2"
+              className="px-12 py-5 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02] transition-all inline-flex items-center gap-3"
             >
               Empezar a Crear
               <ArrowRight className="w-5 h-5" />
@@ -222,14 +229,14 @@ export default function WelcomePage() {
         )}
 
         {/* Progress Indicator */}
-        <div className="flex justify-center gap-2 mt-12">
+        <div className="flex justify-center gap-2 mt-14">
           {['welcome', 'goal', 'style', 'ready'].map((s, i) => (
             <div
               key={s}
               className={`h-2 rounded-full transition-all ${
                 ['welcome', 'goal', 'style', 'ready'].indexOf(step) >= i
-                  ? 'w-12 bg-violet-600'
-                  : 'w-2 bg-neutral-300 dark:bg-neutral-700'
+                  ? 'w-14 bg-gradient-to-r from-violet-500 to-blue-500'
+                  : 'w-2 bg-white/10'
               }`}
             />
           ))}

@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/authProvider";
 import { 
   Home, 
   Search, 
-  MessageCircle,  // Icono de chat
+  MessageCircle,
   Plus, 
   Settings, 
   Palette, 
@@ -43,7 +43,7 @@ export default function Sidebar() {
         } catch (error) {
           console.error('Error loading projects:', error)
           if (mounted) {
-            setProjects([]) // Always set projects even on error
+            setProjects([])
           }
         }
       }
@@ -54,7 +54,6 @@ export default function Sidebar() {
   }, [user])
 
   const handleCreateProject = async (type: 'canvas' | 'moodboard' | 'mindmap') => {
-    // Guard against double creation
     if (creatingRef.current) return;
     creatingRef.current = true;
     
@@ -65,14 +64,10 @@ export default function Sidebar() {
 
     setLoading(true)
     try {
-      console.log('Creating project with type:', type, 'for userId:', user.id)
-      
       const project = await projectService.createProject(user.id, type)
       
-      console.log('Project created successfully:', project)
-      
       const routes = {
-        canvas: `/canvas`, // Canvas simple, sin ID específico
+        canvas: `/canvas`,
         moodboard: `/moodboard/${project.id}`,
         mindmap: `/mindmap/${project.id}`
       }
@@ -88,7 +83,7 @@ export default function Sidebar() {
   }
 
   const navigation = [
-    ...(user ? [] : [{ name: 'Inicio', href: '/', icon: Home }]), // Mostrar "Inicio" solo si no hay usuario
+    ...(user ? [] : [{ name: 'Inicio', href: '/', icon: Home }]),
     { name: 'Explorar', href: '/explore', icon: Search },
     { name: 'Canvas', href: '/canvas', icon: Palette },
     { name: 'Moodboard', href: '/moodboard', icon: Layers },
@@ -101,30 +96,33 @@ export default function Sidebar() {
     <>
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700"
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 backdrop-blur-xl bg-white/10 border border-white/10 rounded-xl shadow-lg"
       >
-        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {isMobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
       </button>
 
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-40 w-11/12 max-w-xs sm:w-72 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700
-        transform transition-transform duration-200 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-40 w-11/12 max-w-[280px]
+        backdrop-blur-xl bg-black/40 border-r border-white/10
+        transform transition-transform duration-300 ease-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
-          <div className="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-700">
+          {/* Logo */}
+          <div className="p-5 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-11 h-11 bg-gradient-to-br from-violet-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
-                <div className="text-lg font-bold text-neutral-900 dark:text-white">CreationX</div>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">Plataforma Creativa</p>
+                <div className="text-lg font-black text-white tracking-tight">CreationX</div>
+                <div className="text-xs text-white/40">Plataforma Creativa</div>
               </div>
             </div>
           </div>
 
-          <nav className="flex-1 p-2 sm:p-4 space-y-1">
+          {/* Navigation */}
+          <nav className="flex-1 p-3 space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -132,10 +130,10 @@ export default function Sidebar() {
                   key={item.name}
                   href={item.href}
                   className={`
-                    flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg text-base sm:text-sm font-medium transition-colors
+                    flex items-center gap-3 px-4 py-3.5 min-h-[48px] rounded-xl text-sm font-medium transition-all duration-200
                     ${isActive 
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300' 
-                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                      ? 'bg-gradient-to-r from-violet-500/20 to-blue-500/20 text-white border border-violet-500/30' 
+                      : 'text-white/50 hover:text-white hover:bg-white/5'
                     }
                   `}
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -147,25 +145,26 @@ export default function Sidebar() {
             })}
           </nav>
 
-          <div className="p-2 sm:p-4 border-t border-neutral-200 dark:border-neutral-700">
+          {/* Create Button */}
+          <div className="p-3 border-t border-white/10">
             <button
               onClick={() => handleCreateProject('canvas')}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl font-semibold text-sm shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               <Plus className="w-4 h-4" />
               Nuevo Proyecto
             </button>
           </div>
 
+          {/* Recent Projects */}
           {projects.length > 0 && (
-            <div className="p-2 sm:p-4 border-t border-neutral-200 dark:border-neutral-700">
-              <h3 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">
+            <div className="p-3 border-t border-white/10">
+              <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3 px-2">
                 Proyectos Recientes
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {projects.slice(0, 5).map((project) => {
-                  // Determinar la ruta según el tipo de proyecto
                   const projectRoutes = {
                     canvas: '/canvas',
                     moodboard: `/moodboard/${project.id}`,
@@ -177,7 +176,7 @@ export default function Sidebar() {
                     <Link
                       key={project.id}
                       href={href}
-                      className="flex items-center gap-2 p-2 rounded-lg text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                      className="flex items-center gap-2.5 p-2.5 rounded-lg text-sm text-white/50 hover:text-white hover:bg-white/5 transition-all"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <Folder className="w-4 h-4" />
@@ -191,9 +190,10 @@ export default function Sidebar() {
         </div>
       </aside>
 
+      {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-30 bg-black/50"
+          className="lg:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
