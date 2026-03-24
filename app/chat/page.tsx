@@ -52,22 +52,36 @@ export default function ChatPage() {
   // ============================================================================
   
   const handlePaste = useCallback(async (e: ClipboardEvent) => {
+    // Verificar si hay datos del portapapeles
     const items = e.clipboardData?.items;
-    if (!items) return;
+    if (!items) {
+      console.log('No clipboard data available');
+      return;
+    }
 
-    for (const item of items) {
+    for (const item of Array.from(items)) {
       if (item.type.startsWith('image/')) {
         e.preventDefault();
         
-        const file = item.getAsFile();
-        if (!file) continue;
+        try {
+          const file = item.getAsFile();
+          if (!file) {
+            console.log('Could not get file from clipboard');
+            continue;
+          }
 
-        // Convertir imagen a base64
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const imageData = event.target?.result as string;
+          // Convertir imagen a base64
+          const imageData = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error('Error reading image'));
+            reader.readAsDataURL(file);
+          });
           
-          if (!imageData) return;
+          if (!imageData) {
+            console.log('No image data from reader');
+            continue;
+          }
 
           // Mostrar imagen pegada en el chat
           const userMessage: Message = {
@@ -81,45 +95,44 @@ export default function ChatPage() {
           setMessages(prev => [...prev, userMessage]);
           setIsAnalyzing(true);
 
-          try {
-            // Enviar a la API de análisis (que SÍ soporta imágenes)
-            const response = await fetch('/api/analyze-image', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ image: imageData }),
-            });
+          // Enviar a la API de análisis (que SÍ soporta imágenes)
+          const response = await fetch('/api/analyze-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageData }),
+          });
 
-            if (!response.ok) {
-              throw new Error('Error al analizar imagen');
-            }
-
-            const analysis: AnalysisResult = await response.json();
-
-            // Mostrar resultado del análisis
-            const analysisContent = formatAnalysisResult(analysis);
-            const assistantMessage: Message = {
-              id: (Date.now() + 1).toString(),
-              role: 'assistant',
-              content: analysisContent,
-              timestamp: new Date(),
-              isAnalysis: true,
-            };
-
-            setMessages(prev => [...prev, assistantMessage]);
-          } catch (error) {
-            console.error('Error analyzing image:', error);
-            const errorMessage: Message = {
-              id: (Date.now() + 1).toString(),
-              role: 'assistant',
-              content: '❌ Lo siento, no pude analizar la imagen. Asegúrate de que sea una imagen válida e intenta de nuevo.',
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, errorMessage]);
-          } finally {
-            setIsAnalyzing(false);
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API error: ${response.status} - ${errorText}`);
           }
-        };
-        reader.readAsDataURL(file);
+
+          const analysis: AnalysisResult = await response.json();
+
+          // Mostrar resultado del análisis
+          const analysisContent = formatAnalysisResult(analysis);
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: analysisContent,
+            timestamp: new Date(),
+            isAnalysis: true,
+          };
+
+          setMessages(prev => [...prev, assistantMessage]);
+        } catch (error) {
+          console.error('Error analyzing image:', error);
+          const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: `❌ No pude analizar la imagen.\n\nPosibles razones:\n• La imagen es muy grande\n• El formato no es compatible\n• Error del servidor\n\nIntenta con otra imagen o usa el botón "Subir" en el panel lateral.`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        } finally {
+          setIsAnalyzing(false);
+        }
+        
         break;
       }
     }
