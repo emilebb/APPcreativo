@@ -1,438 +1,156 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authProvider";
-import { 
-  Upload, X, Plus, Save, ArrowLeft, Grid3X3, 
-  Columns, Layout, Sparkles, Image as ImageIcon,
-  Move, Trash2, ZoomIn, ZoomOut, RotateCw, BookmarkPlus, Menu
-} from "lucide-react";
 import Link from "next/link";
-
-interface MoodboardImage {
-  id: string;
-  url: string;
-  file?: File;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  zIndex: number;
-}
-
-type LayoutStyle = "freeform" | "grid" | "masonry" | "collage" | "magazine" | "minimal";
-
-interface LayoutTemplate {
-  id: LayoutStyle;
-  name: string;
-  description: string;
-  icon: any;
-  gridCols?: number;
-  gap?: number;
-}
-
-const LAYOUT_TEMPLATES: LayoutTemplate[] = [
-  {
-    id: "freeform",
-    name: "Libre",
-    description: "Posiciona imágenes donde quieras",
-    icon: Move,
-  },
-  {
-    id: "grid",
-    name: "Cuadrícula",
-    description: "Grid uniforme y ordenado",
-    icon: Grid3X3,
-    gridCols: 3,
-    gap: 16,
-  },
-  {
-    id: "masonry",
-    name: "Mosaico",
-    description: "Estilo Pinterest",
-    icon: Layout,
-    gridCols: 3,
-    gap: 12,
-  },
-  {
-    id: "collage",
-    name: "Collage",
-    description: "Superposición artística",
-    icon: Sparkles,
-  },
-  {
-    id: "magazine",
-    name: "Revista",
-    description: "Diseño editorial",
-    icon: Columns,
-    gridCols: 2,
-    gap: 24,
-  },
-  {
-    id: "minimal",
-    name: "Minimalista",
-    description: "Espacios amplios",
-    icon: ImageIcon,
-    gridCols: 2,
-    gap: 48,
-  },
-];
+import {
+  ArrowLeft,
+  Save,
+  Trash2,
+  RotateCw,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Maximize,
+  Upload,
+  X,
+  Loader2,
+} from "lucide-react";
+import { useMoodboardStore } from "@/store/useMoodboardStore";
+import MoodboardCanvas from "@/components/MoodboardCanvas";
+import MoodboardUploader from "@/components/MoodboardUploader";
 
 export default function EditMoodboardPage() {
-  const { user } = useAuth();
-  const router = useRouter();
   const params = useParams();
+  const router = useRouter();
   const moodboardId = params.id as string;
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [images, setImages] = useState<MoodboardImage[]>([]);
-  const [selectedLayout, setSelectedLayout] = useState<LayoutStyle>("freeform");
-  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [isSaving, setIsSaving] = useState(false);
-  const [zoom, setZoom] = useState(100);
-  const [showLayoutPanel, setShowLayoutPanel] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
-  const [templateName, setTemplateName] = useState("");
-  const [templateDescription, setTemplateDescription] = useState("");
-  const [customTemplates, setCustomTemplates] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
+  const {
+    images,
+    selectedId,
+    isDirty,
+    stageScale,
+    setStageScale,
+    loadMoodboard,
+    updateImage,
+    deleteSelected,
+    clearSelection,
+  } = useMoodboardStore();
+
+  // Load moodboard data
   useEffect(() => {
-    loadMoodboard();
-    loadCustomTemplates();
-  }, [moodboardId, user]);
+    const loadMoodboardData = async () => {
+      try {
+        setLoading(true);
 
-  const loadCustomTemplates = async () => {
-    if (!user) return;
-    
-    try {
-      const { default: templateService } = await import("@/lib/templateService");
-      const templates = templateService.getTemplates(user.id);
-      setCustomTemplates(templates);
-    } catch (error) {
-      console.error("Error loading custom templates:", error);
-    }
-  };
-
-  const loadMoodboard = async () => {
-    try {
-      setLoading(true);
-      
-      const { default: moodboardService } = await import("@/lib/moodboardService");
-      const data = await moodboardService.getMoodboard(moodboardId);
-      
-      if (data) {
-        setTitle(data.title);
-        setDescription(data.description || "");
-        setImages(data.images || []);
-        
-        // Validar que el layout sea válido
-        const validLayouts: LayoutStyle[] = ["freeform", "grid", "masonry", "collage", "magazine", "minimal"];
-        const loadedLayout = data.layout;
-        if (loadedLayout && validLayouts.includes(loadedLayout as LayoutStyle)) {
-          setSelectedLayout(loadedLayout as LayoutStyle);
+        // Try to load from localStorage first
+        const stored = localStorage.getItem(`moodboard-${moodboardId}`);
+        if (stored) {
+          const data = JSON.parse(stored);
+          setTitle(data.title || "Sin título");
+          loadMoodboard({ images: data.images || [] });
         } else {
-          setSelectedLayout("freeform");
+          setTitle("Sin título");
+          loadMoodboard({ images: [] });
         }
-      } else {
+      } catch (error) {
+        console.error("Error loading moodboard:", error);
         setTitle("Sin título");
-        setDescription("");
-        setImages([]);
+        loadMoodboard({ images: [] });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading moodboard:", error);
-      setTitle("Sin título");
-      setDescription("");
-      setImages([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const handleFileSelect = useCallback((files: FileList | null) => {
-    if (!files) return;
+    loadMoodboardData();
+  }, [moodboardId, loadMoodboard]);
 
-    Array.from(files).forEach((file, index) => {
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const newImage: MoodboardImage = {
-            id: Date.now().toString() + Math.random().toString(),
-            url: e.target?.result as string,
-            file: file,
-            x: 50 + index * 20,
-            y: 50 + index * 20,
-            width: 200,
-            height: 200,
-            rotation: 0,
-            zIndex: images.length + index,
-          };
-          setImages((prev) => [...prev, newImage]);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  }, [images.length]);
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    handleFileSelect(e.dataTransfer.files);
-  };
-
-  const handleImageMouseDown = (e: React.MouseEvent, imageId: string) => {
-    if (selectedLayout !== "freeform") return;
-    
-    e.stopPropagation();
-    const image = images.find((img) => img.id === imageId);
-    if (!image) return;
-
-    // Traer la imagen al frente (actualizar zIndex)
-    const maxZ = Math.max(...images.map(img => img.zIndex), 0);
-    
-    setImages((prev) =>
-      prev.map((img) =>
-        img.id === imageId ? { ...img, zIndex: maxZ + 1 } : img
-      )
-    );
-    
-    setDraggedImageId(imageId);
-    setSelectedImageId(imageId);
-    setDragOffset({
-      x: e.clientX - image.x * (zoom / 100),
-      y: e.clientY - image.y * (zoom / 100),
-    });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!draggedImageId || selectedLayout !== "freeform") return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const scale = zoom / 100;
-    const x = (e.clientX - rect.left - dragOffset.x) / scale;
-    const y = (e.clientY - rect.top - dragOffset.y) / scale;
-
-    setImages((prev) =>
-      prev.map((img) =>
-        img.id === draggedImageId
-          ? { ...img, x: Math.max(0, x), y: Math.max(0, y) }
-          : img
-      )
-    );
-  };
-
-  const handleMouseUp = () => {
-    setDraggedImageId(null);
-  };
-
-  const removeImage = (id: string) => {
-    setImages((prev) => prev.filter((img) => img.id !== id));
-    if (selectedImageId === id) setSelectedImageId(null);
-  };
-
-  const rotateImage = (id: string) => {
-    setImages((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, rotation: (img.rotation + 90) % 360 } : img
-      )
-    );
-  };
-
-  const resizeImage = (id: string, delta: number) => {
-    setImages((prev) =>
-      prev.map((img) =>
-        img.id === id
-          ? {
-              ...img,
-              width: Math.max(100, img.width + delta),
-              height: Math.max(100, img.height + delta),
-            }
-          : img
-      )
-    );
-  };
-
-  const applyLayout = (layout: LayoutStyle) => {
-    setSelectedLayout(layout);
-    
-    if (layout === "freeform") return;
-
-    const template = LAYOUT_TEMPLATES.find((t) => t.id === layout);
-    if (!template) return;
-
-    const cols = template.gridCols || 3;
-    const gap = template.gap || 16;
-    const baseSize = 200;
-
-    setImages((prev) =>
-      prev.map((img, index) => {
-        const col = index % cols;
-        const row = Math.floor(index / cols);
-
-        return {
-          ...img,
-          x: col * (baseSize + gap),
-          y: row * (baseSize + gap),
-          width: baseSize,
-          height: baseSize,
-          rotation: 0,
-        };
-      })
-    );
-  };
-
-  const handleSave = async () => {
+  // Save moodboard
+  const handleSave = useCallback(async () => {
     if (!title.trim()) {
       alert("Por favor, añade un título");
       return;
     }
 
-    setIsSaving(true);
+    setSaving(true);
     try {
-      const { default: moodboardService } = await import("@/lib/moodboardService");
-      
       const moodboardData = {
         id: moodboardId,
-        user_id: user?.id || 'anonymous',
         title,
-        description,
-        layout: selectedLayout,
-        images: images.map((img) => ({
-          id: img.id,
-          url: img.url,
-          x: img.x,
-          y: img.y,
-          width: img.width,
-          height: img.height,
-          rotation: img.rotation,
-          zIndex: img.zIndex,
-        })),
-        createdAt: new Date().toISOString(),
+        images,
         updatedAt: new Date().toISOString(),
       };
 
-      await moodboardService.saveMoodboard(moodboardData);
-      
-      // Mostrar mensaje de éxito breve
-      const saveIndicator = document.getElementById('save-indicator');
-      if (saveIndicator) {
-        saveIndicator.textContent = '¡Guardado!';
-        saveIndicator.classList.remove('opacity-0');
-        saveIndicator.classList.add('opacity-100');
-        setTimeout(() => {
-          saveIndicator.classList.remove('opacity-100');
-          saveIndicator.classList.add('opacity-0');
-        }, 2000);
-      }
+      localStorage.setItem(`moodboard-${moodboardId}`, JSON.stringify(moodboardData));
+
+      setSaveMessage("¡Guardado!");
+      setTimeout(() => setSaveMessage(null), 2000);
     } catch (error) {
       console.error("Error saving moodboard:", error);
       alert("Error al guardar. Intenta de nuevo.");
     } finally {
-      setIsSaving(false);
+      setSaving(false);
+    }
+  }, [moodboardId, title, images]);
+
+  // Auto-save on changes (debounced)
+  useEffect(() => {
+    if (!isDirty || saving) return;
+
+    const timeoutId = setTimeout(() => {
+      handleSave();
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [isDirty, saving, handleSave]);
+
+  // Zoom controls
+  const handleZoomIn = () => {
+    const newScale = Math.min(3, stageScale + 0.1);
+    setStageScale(newScale);
+  };
+
+  const handleZoomOut = () => {
+    const newScale = Math.max(0.1, stageScale - 0.1);
+    setStageScale(newScale);
+  };
+
+  const handleZoomReset = () => {
+    setStageScale(1);
+  };
+
+  // Rotate selected image
+  const handleRotateSelected = () => {
+    if (!selectedId) return;
+    const image = images.find((img) => img.id === selectedId);
+    if (image) {
+      updateImage(selectedId, { rotation: (image.rotation + 15) % 360 });
     }
   };
 
-  const handleSaveAsTemplate = async () => {
-    if (!user) {
-      alert("Debes iniciar sesión para guardar plantillas");
-      return;
-    }
-
-    if (!templateName.trim()) {
-      alert("Por favor, añade un nombre a la plantilla");
-      return;
-    }
-
-    try {
-      const { default: templateService } = await import("@/lib/templateService");
-      
-      const template = templateService.createTemplateFromMoodboard(
-        user.id,
-        templateName,
-        templateDescription,
-        selectedLayout,
-        images.map(img => ({
-          x: img.x,
-          y: img.y,
-          width: img.width,
-          height: img.height,
-          rotation: img.rotation,
-        }))
-      );
-
-      templateService.saveTemplate(template);
-      
-      setCustomTemplates(prev => [...prev, template]);
-      setShowSaveTemplateModal(false);
-      setTemplateName("");
-      setTemplateDescription("");
-      
-      alert("¡Plantilla guardada exitosamente!");
-    } catch (error) {
-      console.error("Error saving template:", error);
-      alert("Error al guardar la plantilla");
+  // Delete selected image
+  const handleDeleteSelected = () => {
+    if (!selectedId) return;
+    if (confirm("¿Eliminar la imagen seleccionada?")) {
+      deleteSelected();
     }
   };
 
-  const applyCustomTemplate = (template: any) => {
-    setSelectedLayout(template.layout);
-    
-    if (template.imagePositions && images.length > 0) {
-      setImages(prev => 
-        prev.map((img, index) => {
-          const position = template.imagePositions[index % template.imagePositions.length];
-          return position ? {
-            ...img,
-            x: position.x,
-            y: position.y,
-            width: position.width,
-            height: position.height,
-            rotation: position.rotation,
-          } : img;
-        })
-      );
-    }
-  };
-
-  const deleteCustomTemplate = async (templateId: string) => {
-    if (!user) return;
-    if (!confirm("¿Eliminar esta plantilla?")) return;
-
-    try {
-      const { default: templateService } = await import("@/lib/templateService");
-      templateService.deleteTemplate(user.id, templateId);
-      setCustomTemplates(prev => prev.filter(t => t.id !== templateId));
-    } catch (error) {
-      console.error("Error deleting template:", error);
-    }
+  // Clear selection
+  const handleClearSelection = () => {
+    clearSelection();
   };
 
   if (loading) {
     return (
       <main className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-neutral-600 dark:text-neutral-400">Cargando moodboard...</p>
         </div>
       </main>
@@ -440,91 +158,103 @@ export default function EditMoodboardPage() {
   }
 
   return (
-    <main className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      {/* Toolbar superior */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4">
+    <main className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
+      {/* Header Toolbar */}
+      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-4 py-3">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
+          {/* Left side */}
           <div className="flex items-center gap-4">
             <Link
               href={`/moodboard/${moodboardId}`}
-              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              title="Volver"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Título del moodboard"
-                className="text-lg font-semibold bg-transparent border-none outline-none text-neutral-900 dark:text-white placeholder-neutral-400"
-              />
-              <input
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descripción..."
-                className="text-sm bg-transparent border-none outline-none text-neutral-600 dark:text-neutral-400 placeholder-neutral-400 w-full"
-              />
-            </div>
+
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Título del moodboard"
+              className="text-lg font-semibold bg-transparent border-none outline-none text-neutral-900 dark:text-white placeholder-neutral-400 w-64"
+            />
+
+            {isDirty && (
+              <span className="text-xs text-amber-600 dark:text-amber-400">
+                Sin guardar
+              </span>
+            )}
           </div>
 
+          {/* Right side */}
           <div className="flex items-center gap-2">
-            {/* Botón para abrir panel en móvil */}
-            <button
-              onClick={() => setShowLayoutPanel(true)}
-              className="lg:hidden p-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-              title="Estilos de Layout"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
-            <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+            {/* Zoom controls */}
+            <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
               <button
-                onClick={() => setZoom(Math.max(50, zoom - 10))}
-                className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded"
+                onClick={handleZoomOut}
+                className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition"
+                title="Alejar"
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
-              <span className="text-sm px-2 min-w-[3rem] text-center">{zoom}%</span>
+              <span className="text-sm px-2 min-w-[3rem] text-center font-medium">
+                {Math.round(stageScale * 100)}%
+              </span>
               <button
-                onClick={() => setZoom(Math.min(200, zoom + 10))}
-                className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded"
+                onClick={handleZoomIn}
+                className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition"
+                title="Acercar"
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
+              <button
+                onClick={handleZoomReset}
+                className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition"
+                title="Restablecer zoom"
+              >
+                <Maximize className="w-4 h-4" />
+              </button>
             </div>
 
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-            >
-              <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Añadir Imágenes</span>
-            </button>
+            {/* Image controls */}
+            <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+              <button
+                onClick={handleRotateSelected}
+                disabled={!selectedId}
+                className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Rotar 15°"
+              >
+                <RotateCw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleDeleteSelected}
+                disabled={!selectedId}
+                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Eliminar (Supr)"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
 
-            <button
-              onClick={() => setShowSaveTemplateModal(true)}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-            >
-              <BookmarkPlus className="w-4 h-4" />
-              Guardar como Plantilla
-            </button>
+            {/* Uploader */}
+            <MoodboardUploader />
 
+            {/* Save button */}
             <button
               onClick={handleSave}
-              disabled={isSaving || !title.trim()}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              disabled={saving || !title.trim()}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
             >
-              {isSaving ? (
+              {saving ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Guardando...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  <span className="hidden sm:inline">Guardar</span>
+                  Guardar
                 </>
               )}
             </button>
@@ -532,412 +262,66 @@ export default function EditMoodboardPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Panel lateral - Estilos (Desktop) */}
-        <div className="hidden lg:block w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-4 overflow-y-auto">
-          <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
-            Estilos de Layout
-          </h3>
-          <div className="space-y-2">
-            {LAYOUT_TEMPLATES.map((template) => {
-              const Icon = template.icon;
-              return (
-                <button
-                  key={template.id}
-                  onClick={() => applyLayout(template.id)}
-                  className={`w-full text-left p-3 rounded-lg border transition ${
-                    selectedLayout === template.id
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon className="w-4 h-4" />
-                    <span className="font-medium text-sm">{template.name}</span>
-                  </div>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                    {template.description}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-
-          {customTemplates.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
-                Mis Plantillas
-              </h3>
-              <div className="space-y-2">
-                {customTemplates.map((template) => (
-                  <div
-                    key={template.id}
-                    className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 transition"
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <button
-                        onClick={() => applyCustomTemplate(template)}
-                        className="flex-1 text-left"
-                      >
-                        <span className="font-medium text-sm text-neutral-900 dark:text-white block">
-                          {template.name}
-                        </span>
-                        <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                          {template.description}
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => deleteCustomTemplate(template.id)}
-                        className="p-1 text-neutral-400 hover:text-red-500 transition"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {selectedImageId && (
-            <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
-                Imagen Seleccionada
-              </h3>
-              <div className="space-y-2">
-                <button
-                  onClick={() => rotateImage(selectedImageId)}
-                  className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-                >
-                  <RotateCw className="w-4 h-4" />
-                  Rotar 90°
-                </button>
-                <button
-                  onClick={() => resizeImage(selectedImageId, 20)}
-                  className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                  Agrandar
-                </button>
-                <button
-                  onClick={() => resizeImage(selectedImageId, -20)}
-                  className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                  Reducir
-                </button>
-                <button
-                  onClick={() => removeImage(selectedImageId)}
-                  className="w-full flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          )}
+      {/* Save message toast */}
+      {saveMessage && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg animate-pulse">
+          {saveMessage}
         </div>
+      )}
 
-        {/* Panel lateral - Estilos (Mobile Drawer) */}
-        {showLayoutPanel && (
-          <div className="lg:hidden fixed inset-0 z-50 flex">
-            {/* Overlay */}
-            <div 
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-              onClick={() => setShowLayoutPanel(false)}
-            />
-            
-            {/* Drawer */}
-            <div className="relative w-80 max-w-[85vw] bg-white dark:bg-neutral-800 p-4 overflow-y-auto animate-in slide-in-from-left duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                  Estilos de Layout
-                </h3>
-                <button
-                  onClick={() => setShowLayoutPanel(false)}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+      {/* Canvas area */}
+      <div className="flex-1 relative">
+        <MoodboardCanvas />
+
+        {/* Empty state */}
+        {images.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center p-8 bg-white/80 dark:bg-neutral-800/80 rounded-xl shadow-lg backdrop-blur-sm">
+              <Upload className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                Comienza tu moodboard
+              </h3>
+              <p className="text-neutral-600 dark:text-neutral-400 mb-4 max-w-sm">
+                Añade imágenes para crear tu tablero de inspiración. Arrastra, redimensiona y rota las imágenes libremente.
+              </p>
+              <div className="flex items-center justify-center gap-2 text-sm text-neutral-500">
+                <span>Haz clic en</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">Añadir Imágenes</span>
+                <span>o arrastra archivos aquí</span>
               </div>
-
-              <div className="space-y-2">
-                {LAYOUT_TEMPLATES.map((template) => {
-                  const Icon = template.icon;
-                  return (
-                    <button
-                      key={template.id}
-                      onClick={() => {
-                        applyLayout(template.id);
-                        setShowLayoutPanel(false);
-                      }}
-                      className={`w-full text-left p-3 rounded-lg border transition ${
-                        selectedLayout === template.id
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                          : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <Icon className="w-4 h-4" />
-                        <span className="font-medium text-sm">{template.name}</span>
-                      </div>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                        {template.description}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {customTemplates.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
-                    Mis Plantillas
-                  </h3>
-                  <div className="space-y-2">
-                    {customTemplates.map((template) => (
-                      <div
-                        key={template.id}
-                        className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 transition"
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <button
-                            onClick={() => {
-                              applyCustomTemplate(template);
-                              setShowLayoutPanel(false);
-                            }}
-                            className="flex-1 text-left"
-                          >
-                            <span className="font-medium text-sm text-neutral-900 dark:text-white block">
-                              {template.name}
-                            </span>
-                            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                              {template.description}
-                            </p>
-                          </button>
-                          <button
-                            onClick={() => deleteCustomTemplate(template.id)}
-                            className="p-1 text-neutral-400 hover:text-red-500 transition"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedImageId && (
-                <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
-                    Imagen Seleccionada
-                  </h3>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        rotateImage(selectedImageId);
-                        setShowLayoutPanel(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-                    >
-                      <RotateCw className="w-4 h-4" />
-                      Rotar 90°
-                    </button>
-                    <button
-                      onClick={() => {
-                        resizeImage(selectedImageId, 20);
-                        setShowLayoutPanel(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-                    >
-                      <ZoomIn className="w-4 h-4" />
-                      Agrandar
-                    </button>
-                    <button
-                      onClick={() => {
-                        resizeImage(selectedImageId, -20);
-                        setShowLayoutPanel(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-                    >
-                      <ZoomOut className="w-4 h-4" />
-                      Reducir
-                    </button>
-                    <button
-                      onClick={() => {
-                        removeImage(selectedImageId);
-                        setShowLayoutPanel(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
 
-        {/* Canvas principal */}
-        <div className="flex-1 overflow-auto p-4 sm:p-8">
-          <div
-            ref={canvasRef}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onClick={() => setSelectedImageId(null)}
-            className={`relative bg-white dark:bg-neutral-800 rounded-lg shadow-lg mx-auto transition-all ${
-              isDragging ? "ring-2 ring-blue-500" : ""
-            }`}
-            style={{
-              width: `${800 * (zoom / 100)}px`,
-              height: `${600 * (zoom / 100)}px`,
-              minHeight: "600px",
-            }}
-          >
-            {images.length === 0 ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <Upload className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-                  <p className="text-neutral-600 dark:text-neutral-400 mb-2">
-                    Arrastra imágenes aquí o haz clic en "Añadir Imágenes"
-                  </p>
-                  <p className="text-sm text-neutral-500">
-                    Luego elige un estilo de layout o personalízalo libremente
-                  </p>
-                </div>
-              </div>
-            ) : (
-              images.map((image) => (
-                <div
-                  key={image.id}
-                  onMouseDown={(e) => handleImageMouseDown(e, image.id)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedImageId(image.id);
-                    // Traer al frente
-                    const maxZ = Math.max(...images.map(img => img.zIndex), 0);
-                    if (image.zIndex < maxZ) {
-                      setImages(prev => prev.map(img => 
-                        img.id === image.id ? { ...img, zIndex: maxZ + 1 } : img
-                      ));
-                    }
-                  }}
-                  className={`absolute transition-shadow duration-150 ${
-                    draggedImageId === image.id 
-                      ? 'cursor-grabbing opacity-90 scale-105 shadow-2xl ring-2 ring-blue-400' 
-                      : selectedImageId === image.id
-                        ? 'ring-2 ring-blue-500 shadow-xl cursor-grab'
-                        : 'hover:shadow-lg cursor-grab'
-                  }`}
-                  style={{
-                    left: `${image.x * (zoom / 100)}px`,
-                    top: `${image.y * (zoom / 100)}px`,
-                    width: `${image.width * (zoom / 100)}px`,
-                    height: `${image.height * (zoom / 100)}px`,
-                    transform: `rotate(${image.rotation}deg)`,
-                    zIndex: image.zIndex,
-                  }}
-                >
-                  <img
-                    src={image.url}
-                    alt=""
-                    className="w-full h-full object-cover rounded-lg pointer-events-none"
-                    draggable={false}
-                    style={{ 
-                      borderRadius: '8px',
-                    }}
-                  />
-                  
-                  {/* Indicador de selección con controles */}
-                  {selectedImageId === image.id && (
-                    <>
-                      {/* Controles de esquina para resize */}
-                      <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize opacity-80 hover:opacity-100" />
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-ne-resize opacity-80 hover:opacity-100" />
-                      <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-sw-resize opacity-80 hover:opacity-100" />
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize opacity-80 hover:opacity-100" />
-                    </>
-                  )}
-                </div>
-              ))
-            )}
+        {/* Selection info */}
+        {selectedId && (
+          <div className="absolute bottom-4 left-4 px-3 py-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-neutral-600 dark:text-neutral-400">
+                {images.find((img) => img.id === selectedId)?.width.toFixed(0)} x{" "}
+                {images.find((img) => img.id === selectedId)?.height.toFixed(0)} px
+              </span>
+              <button
+                onClick={handleClearSelection}
+                className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Instructions */}
+        <div className="absolute bottom-4 right-4 px-3 py-2 bg-white/80 dark:bg-neutral-800/80 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
+          <div className="text-xs text-neutral-500 space-y-1">
+            <p>🖱️ Arrastra para mover</p>
+            <p>📐 Arrastra esquinas para redimensionar</p>
+            <p>🔄 Usa el controlador de rotación</p>
+            <p>⌨️ Supr para eliminar</p>
+            <p>🖱️ Rueda del ratón para zoom</p>
           </div>
         </div>
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={(e) => handleFileSelect(e.target.files)}
-        className="hidden"
-      />
-
-      {/* Modal para guardar plantilla */}
-      {showSaveTemplateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-              Guardar como Plantilla
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Nombre de la plantilla *
-                </label>
-                <input
-                  type="text"
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  placeholder="Mi plantilla personalizada"
-                  className="w-full px-4 py-2 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Descripción
-                </label>
-                <textarea
-                  value={templateDescription}
-                  onChange={(e) => setTemplateDescription(e.target.value)}
-                  placeholder="Describe el estilo de esta plantilla..."
-                  rows={3}
-                  className="w-full px-4 py-2 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={() => {
-                    setShowSaveTemplateModal(false);
-                    setTemplateName("");
-                    setTemplateDescription("");
-                  }}
-                  className="flex-1 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveAsTemplate}
-                  disabled={!templateName.trim()}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  Guardar Plantilla
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
