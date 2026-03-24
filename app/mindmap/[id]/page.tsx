@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
-import { ArrowLeft, Share2, Download, Edit, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Share2, Edit, Network } from "lucide-react";
 import Link from "next/link";
 import SimpleMindMap from "@/components/mindmap/SimpleMindMap";
 
@@ -46,7 +46,6 @@ export default function MindMapDetailPage() {
     try {
       setLoading(true);
       
-      // Simulación de carga - en producción vendría de una API
       const mockMindMap: MindMap = {
         id: mindMapId,
         title: "Mapa Mental de Proyectos",
@@ -89,7 +88,6 @@ export default function MindMapDetailPage() {
         updated_at: "2024-01-20T15:45:00Z"
       };
 
-      // Simular delay de red
       await new Promise(resolve => setTimeout(resolve, 800));
       setMindMap(mockMindMap);
     } catch (error) {
@@ -105,40 +103,12 @@ export default function MindMapDetailPage() {
         await navigator.share({
           title: mindMap.title,
           text: mindMap.description,
-          url: '' // No URL needed for sharing in SSR
+          url: ''
         });
       } catch (error) {
-        // Fallback: show message instead of copying URL
         alert("Compartir no disponible. Usa el enlace del navegador.");
       }
     }
-  };
-
-  const handleAddNode = () => {
-    if (!mindMap) return;
-    
-    const newNode: MindMapNode = {
-      id: Date.now().toString(),
-      text: "Nuevo Nodo",
-      x: 400,
-      y: 300,
-      color: "#6B7280",
-      children: []
-    };
-
-    setMindMap(prev => prev ? {
-      ...prev,
-      nodes: [...prev.nodes, newNode]
-    } : null);
-  };
-
-  const handleDeleteNode = (nodeId: string) => {
-    if (!mindMap) return;
-    
-    setMindMap(prev => prev ? {
-      ...prev,
-      nodes: prev.nodes.filter(node => node.id !== nodeId)
-    } : null);
   };
 
   const formatDate = (dateString: string) => {
@@ -151,10 +121,16 @@ export default function MindMapDetailPage() {
 
   if (loading) {
     return (
-      <main className="max-w-6xl mx-auto p-6">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-400 mx-auto mb-4"></div>
-          <p className="text-neutral-600 dark:text-neutral-400">Cargando mapa mental...</p>
+      <main className="w-full h-screen bg-[#050505] relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[150px]" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/10 rounded-full blur-[150px]" />
+        </div>
+        <div className="relative z-10 flex items-center justify-center h-full">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 rounded-full border-2 border-cyan-500/30 border-t-cyan-400 animate-spin" />
+            <p className="text-neutral-400 text-sm">Cargando mapa mental...</p>
+          </div>
         </div>
       </main>
     );
@@ -162,52 +138,72 @@ export default function MindMapDetailPage() {
 
   if (!mindMap) {
     return (
-      <main className="max-w-4xl mx-auto p-6">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
-            Mapa mental no encontrado
-          </h2>
-          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-            El mapa mental que buscas no existe o no tienes permiso para verlo.
-          </p>
-          <Link
-            href="/mindmap"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Volver a Mapas Mentales
-          </Link>
+      <main className="w-full h-screen bg-[#050505] relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[150px]" />
+        </div>
+        <div className="relative z-10 flex items-center justify-center h-full">
+          <div className="text-center max-w-md mx-auto p-8 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl">
+            <h2 className="text-xl font-semibold text-white mb-2">
+              Mapa mental no encontrado
+            </h2>
+            <p className="text-neutral-400 mb-6">
+              El mapa mental que buscas no existe o no tienes permiso para verlo.
+            </p>
+            <Link
+              href="/mindmap"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-violet-500 text-white rounded-xl hover:opacity-90 transition-opacity"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Volver a Mapas Mentales
+            </Link>
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <div className="w-full h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+    <div className="w-full h-screen flex flex-col bg-[#050505] relative overflow-hidden">
+      {/* Ambient background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[150px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,transparent_40%,rgba(255,255,255,0.02)_40%)] bg-[length:24px_24px]" />
+      </div>
+
       {/* Header */}
-      <div className="flex-shrink-0 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-700 px-4 sm:px-6 py-3 z-10 shadow-sm">
+      <div className="relative z-10 flex-shrink-0 backdrop-blur-xl bg-white/5 border-b border-white/10 px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-4 min-w-0">
             <Link
               href="/mindmap"
-              className="flex-shrink-0 p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition"
+              className="flex-shrink-0 p-2.5 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-sm"
             >
-              <ArrowLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+              <ArrowLeft className="w-5 h-5 text-white/70" />
             </Link>
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white truncate">
-                {mindMap.title}
-              </h1>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
-                Actualizado {formatDate(mindMap.updated_at)}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-xl blur-md opacity-50" />
+                <div className="relative w-10 h-10 bg-gradient-to-br from-cyan-500 to-violet-500 rounded-xl flex items-center justify-center">
+                  <Network className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-bold text-white truncate">
+                  {mindMap.title}
+                </h1>
+                <p className="text-xs text-white/50 truncate">
+                  Actualizado {formatDate(mindMap.updated_at)}
+                </p>
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={handleShare}
-              className="p-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+              className="p-2.5 backdrop-blur-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               title="Compartir"
             >
               <Share2 className="w-4 h-4" />
@@ -215,16 +211,19 @@ export default function MindMapDetailPage() {
             
             <button
               onClick={() => router.push(`/mindmap/${mindMap.id}/edit`)}
-              className="p-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+              className="relative group p-2.5"
               title="Editar"
             >
-              <Edit className="w-4 h-4" />
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
+              <div className="relative bg-gradient-to-r from-cyan-500 to-violet-500 rounded-xl p-2.5 text-white">
+                <Edit className="w-4 h-4" />
+              </div>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mind Map Canvas - Ocupa todo el espacio disponible */}
+      {/* Mind Map Canvas */}
       <div className="flex-1 w-full relative overflow-hidden">
         <SimpleMindMap mindmapId={mindMapId} />
       </div>

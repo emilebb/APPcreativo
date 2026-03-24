@@ -5,8 +5,7 @@ import { useChatSupabase } from "@/hooks/useChatSupabase";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatInput from "@/components/chat/ChatInput";
 import ChatOptions from "@/components/chat/ChatOptions";
-import MentalStateIndicator from "@/components/chat/MentalStateIndicator";
-import { Send, Brain, CheckCircle, AlertCircle } from "lucide-react";
+import { Brain, AlertCircle } from "lucide-react";
 
 interface Message {
   role: "user" | "system";
@@ -35,12 +34,10 @@ export default function SupabaseChatContainer() {
   const [currentStep, setCurrentStep] = useState<'welcome' | 'protocol' | 'free_chat'>('welcome');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll al final de los mensajes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Mensaje de bienvenida inicial
   useEffect(() => {
     if (!isLoading && !error) {
       const welcomeMessage = isInProtocol 
@@ -57,7 +54,6 @@ export default function SupabaseChatContainer() {
     }
   }, [isLoading, error, isInProtocol, currentProtocolDay, activeProtocol?.project_title]);
 
-  // Enviar mensaje a la API
   const sendMessage = async (content: string) => {
     const userMessage: Message = {
       role: "user",
@@ -102,12 +98,10 @@ export default function SupabaseChatContainer() {
 
       setMessages(prev => [...prev, systemMessage]);
 
-      // Si estamos en un protocolo y la respuesta indica avanzar
       if (isInProtocol && data.shouldAdvanceProtocol) {
         await advanceProtocol(content);
       }
 
-      // Actualizar memoria si hay nueva información
       if (data.memoryUpdate) {
         await updateMemory(data.memoryUpdate);
       }
@@ -127,7 +121,6 @@ export default function SupabaseChatContainer() {
     }
   };
 
-  // Iniciar protocolo "primeros_7_dias"
   const startSevenDayProtocol = async (projectTitle: string) => {
     await startProtocol('primeros_7_dias', projectTitle);
     
@@ -141,29 +134,34 @@ export default function SupabaseChatContainer() {
     setCurrentStep('protocol');
   };
 
-  // Renderizado de loading
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-neutral-600">Cargando tu Creative Coach...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[150px]" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-600/10 rounded-full blur-[150px]" />
+        </div>
+        <div className="relative z-10 text-center">
+          <div className="w-12 h-12 border-2 border-violet-500/30 border-t-violet-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-400">Cargando tu Creative Coach...</p>
         </div>
       </div>
     );
   }
 
-  // Renderizado de error
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-neutral-900 mb-2">Error en el Chat</h2>
-          <p className="text-neutral-600 mb-4">{error}</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[150px]" />
+        </div>
+        <div className="relative z-10 text-center max-w-md mx-auto p-8 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Error en el Chat</h2>
+          <p className="text-neutral-400 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-gradient-to-r from-violet-500 to-cyan-500 text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             Reintentar
           </button>
@@ -173,46 +171,63 @@ export default function SupabaseChatContainer() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-900 px-4 py-10">
-      <div className="flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-[#050505] relative overflow-hidden px-4 py-10">
+      {/* Ambient background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[150px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,transparent_40%,rgba(255,255,255,0.015)_40%)] bg-[length:20px_20px]" />
+      </div>
+
+      <div className="relative z-10 flex h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-700 px-6 py-4 bg-gradient-to-r from-violet-50 to-blue-50 dark:from-violet-900/20 dark:to-blue-900/20">
-          <div className="space-y-2">
-            <div className="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
-              Creative Coach
-            </div>
-            <div className="text-base font-semibold text-neutral-900 dark:text-white">
-              {isInProtocol 
-                ? `Protocolo: Día ${currentProtocolDay}/7` 
-                : "Vamos paso a paso."
-              }
-            </div>
-            
-            {/* Indicador de progreso del protocolo */}
-            {isInProtocol && (
-              <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2 mt-2">
-                <div 
-                  className="bg-gradient-to-r from-violet-600 to-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${protocolProgress}%` }}
-                ></div>
+        <div className="flex items-center justify-between border-b border-white/5 px-6 py-5">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-xl blur-md opacity-50" />
+              <div className="relative w-11 h-11 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <Brain className="w-5 h-5 text-white" />
               </div>
-            )}
+            </div>
+            <div className="space-y-1">
+              <div className="text-xs uppercase tracking-[0.2em] text-violet-400">
+                Creative Coach
+              </div>
+              <div className="text-base font-semibold text-white">
+                {isInProtocol 
+                  ? `Protocolo: Día ${currentProtocolDay}/7` 
+                  : "Vamos paso a paso."
+                }
+              </div>
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
             {profile?.creative_mode === 'direct' && (
-              <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-1 rounded-full">
+              <span className="text-xs bg-orange-500/20 border border-orange-500/30 text-orange-400 px-2 py-1 rounded-full">
                 Rápido
               </span>
             )}
-            <span className="rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-3 py-1 text-xs uppercase tracking-[0.15em] text-white">
-              Beta
+            <span className="rounded-full bg-gradient-to-r from-violet-500/20 to-cyan-500/20 border border-violet-500/30 px-3 py-1 text-xs uppercase tracking-[0.15em] text-violet-300">
+              Premium
             </span>
           </div>
         </div>
 
+        {/* Protocol progress bar */}
+        {isInProtocol && (
+          <div className="px-6 py-3 border-b border-white/5">
+            <div className="w-full bg-white/5 rounded-full h-1.5">
+              <div 
+                className="bg-gradient-to-r from-violet-500 to-cyan-500 h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${protocolProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Messages */}
-        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6 bg-neutral-50 dark:bg-neutral-900/50">
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
           {messages.map((message, index) => (
             <ChatMessage
               key={`${message.role}-${index}`}
@@ -221,18 +236,18 @@ export default function SupabaseChatContainer() {
             />
           ))}
           {isThinking && (
-            <div className="flex items-center gap-2 text-neutral-400 dark:text-neutral-500">
-              <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <span className="text-sm italic">Pensando...</span>
+            <div className="flex items-center gap-2 text-neutral-400">
+              <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" />
+              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+              <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              <span className="text-sm italic text-white/50">Pensando...</span>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
-        <div className="border-t border-neutral-100 dark:border-neutral-700 px-6 py-4 bg-white dark:bg-neutral-800">
+        <div className="border-t border-white/5 px-6 py-4">
           {currentStep === 'welcome' && !isInProtocol && (
             <ChatOptions
               options={[

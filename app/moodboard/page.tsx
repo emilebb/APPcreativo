@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Layers, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/authProvider";
 import { projectService } from "@/lib/projectService";
@@ -65,7 +65,6 @@ export default function MoodboardsPage() {
     try {
       const newMoodboard = await projectService.createProject(user.id, "moodboard");
       
-      // Guardar moodboard inicial en localStorage para evitar 404
       const initialMoodboardData = {
         id: newMoodboard.id,
         title: newMoodboard.title,
@@ -89,106 +88,124 @@ export default function MoodboardsPage() {
 
   if (loading) {
     return (
-      <main className="max-w-6xl mx-auto p-4 sm:p-6">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-neutral-600 dark:text-neutral-400">Cargando moodboards...</p>
+      <main className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+          <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/50">Cargando moodboards...</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="max-w-6xl mx-auto p-4 sm:p-6">
-      <h1 className="sr-only">Moodboards - Crea Tableros de Inspiración Visual</h1>
-      
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
-            Moodboards
-          </div>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-            {moodboards.length} {moodboards.length === 1 ? 'moodboard' : 'moodboards'}
-          </p>
-        </div>
-        <button
-          onClick={handleCreateNew}
-          className="flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition text-sm sm:text-base"
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Moodboard
-        </button>
+    <main className="min-h-screen bg-[#050505] p-6 sm:p-8 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-violet-600/10 rounded-full blur-[120px]" />
       </div>
 
-      {moodboards.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-8 h-8 text-neutral-400" />
+      <div className="max-w-6xl mx-auto relative z-10">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <Layers className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                Moodboards
+              </h1>
+              <p className="text-white/50">
+                {moodboards.length} {moodboards.length === 1 ? 'tablero' : 'tableros'} de inspiración
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleCreateNew}
+            className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all"
+          >
+            <Plus className="w-5 h-5" />
+            Nuevo Moodboard
+          </button>
+        </div>
+
+        {moodboards.length === 0 ? (
+          <div className="text-center py-20 backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-violet-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Layers className="w-10 h-10 text-blue-400/50" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-3">
               No tienes moodboards aún
             </h3>
-            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-              Crea tu primer moodboard para organizar y visualizar tus ideas creativas
+            <p className="text-white/50 mb-8 max-w-md mx-auto">
+              Crea tu primer tablero para organizar y visualizar tus ideas creativas
             </p>
             <button
               onClick={handleCreateNew}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
             >
-              <Plus className="w-5 h-5" />
+              <Sparkles className="w-5 h-5" />
               Crear Primer Moodboard
             </button>
           </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {moodboards.map((moodboard) => (
-            <div
-              key={moodboard.id}
-              className="group relative bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-all overflow-hidden"
-            >
-              <Link
-                href={`/moodboard/${moodboard.id}`}
-                className="block p-4"
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {moodboards.map((moodboard) => (
+              <div
+                key={moodboard.id}
+                className="group relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:border-white/20 transition-all duration-300"
               >
-                <div className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg mb-3 flex items-center justify-center">
-                  <Eye className="w-12 h-12 text-neutral-400 dark:text-neutral-600" />
-                </div>
-                <h3 className="font-semibold text-neutral-900 dark:text-white mb-1 truncate">
-                  {moodboard.title}
-                </h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  {new Date(moodboard.updated_at).toLocaleDateString('es-ES', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                  })}
-                </p>
-              </Link>
-
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                 <Link
-                  href={`/moodboard/${moodboard.id}/edit`}
-                  className="p-2 bg-white dark:bg-neutral-700 rounded-lg shadow-lg hover:bg-neutral-100 dark:hover:bg-neutral-600 transition"
-                  onClick={(e) => e.stopPropagation()}
+                  href={`/moodboard/${moodboard.id}`}
+                  className="block"
                 >
-                  <Edit className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                  {/* Preview */}
+                  <div className="aspect-video bg-gradient-to-br from-blue-500/20 via-violet-500/20 to-purple-500/20 flex items-center justify-center relative">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,transparent_40%,rgba(255,255,255,0.03)_40%)] bg-[length:16px_16px]" />
+                    <Eye className="w-12 h-12 text-white/20" />
+                  </div>
+                  
+                  {/* Info */}
+                  <div className="p-5">
+                    <h3 className="font-bold text-white mb-1 truncate">
+                      {moodboard.title}
+                    </h3>
+                    <p className="text-sm text-white/40">
+                      {new Date(moodboard.updated_at).toLocaleDateString('es-ES', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
                 </Link>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(moodboard.id);
-                  }}
-                  className="p-2 bg-white dark:bg-neutral-700 rounded-lg shadow-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-                >
-                  <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                </button>
+
+                {/* Action Buttons */}
+                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Link
+                    href={`/moodboard/${moodboard.id}/edit`}
+                    className="p-2.5 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl shadow-lg hover:bg-white/20 transition-all"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Edit className="w-4 h-4 text-white" />
+                  </Link>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(moodboard.id);
+                    }}
+                    className="p-2.5 backdrop-blur-xl bg-red-500/20 border border-red-500/30 rounded-xl hover:bg-red-500/40 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   );
 }

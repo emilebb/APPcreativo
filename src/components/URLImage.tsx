@@ -30,17 +30,14 @@ export default function URLImage({
 }: URLImageProps) {
   const imageRef = useRef<any>(null);
   
-  // Usar useImage hook de react-use-konva para cargar la imagen
   const [loaded, status] = useImage(image.src, "anonymous");
 
-  // Log para debugging
   useEffect(() => {
     if (status === "failed") {
       console.error("Failed to load image:", image.src);
     }
   }, [status, image.src]);
 
-  // Si la imagen no cargó, no renderizar nada
   if (!loaded) {
     return null;
   }
@@ -69,7 +66,6 @@ export default function URLImage({
         const scaleX = node.scaleX();
         const scaleY = node.scaleY();
 
-        // Reset scale y ajustar dimensions
         node.scaleX(1);
         node.scaleY(1);
 
@@ -83,9 +79,12 @@ export default function URLImage({
           scaleY: 1,
         });
       }}
-      shadowColor={isSelected ? "#3b82f6" : undefined}
-      shadowBlur={isSelected ? 10 : 0}
-      shadowOpacity={isSelected ? 0.6 : 0}
+      shadowColor={isSelected ? "#8b5cf6" : "#000000"}
+      shadowBlur={isSelected ? 25 : 15}
+      shadowOpacity={isSelected ? 0.8 : 0.4}
+      shadowOffsetX={isSelected ? 0 : 4}
+      shadowOffsetY={isSelected ? 0 : 4}
+      cornerRadius={4}
     />
   );
 }

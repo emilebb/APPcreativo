@@ -2,14 +2,14 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/authProvider';
-import { Send, Sparkles, Loader2, User, Bot, Image, Copy, Check, AlertCircle } from 'lucide-react';
+import { Send, Sparkles, Loader2, User, Bot, Image, Copy, Check } from 'lucide-react';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  imageData?: string; // Base64 image if pasted
+  imageData?: string;
   isAnalysis?: boolean;
 }
 
@@ -52,7 +52,6 @@ export default function ChatPage() {
   // ============================================================================
   
   const handlePaste = useCallback(async (e: ClipboardEvent) => {
-    // Verificar si hay datos del portapapeles
     const items = e.clipboardData?.items;
     if (!items) {
       console.log('No clipboard data available');
@@ -70,7 +69,6 @@ export default function ChatPage() {
             continue;
           }
 
-          // Convertir imagen a base64
           const imageData = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result as string);
@@ -83,7 +81,6 @@ export default function ChatPage() {
             continue;
           }
 
-          // Mostrar imagen pegada en el chat
           const userMessage: Message = {
             id: Date.now().toString(),
             role: 'user',
@@ -95,7 +92,6 @@ export default function ChatPage() {
           setMessages(prev => [...prev, userMessage]);
           setIsAnalyzing(true);
 
-          // Enviar a la API de análisis (que SÍ soporta imágenes)
           const response = await fetch('/api/analyze-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -108,8 +104,6 @@ export default function ChatPage() {
           }
 
           const analysis: AnalysisResult = await response.json();
-
-          // Mostrar resultado del análisis
           const analysisContent = formatAnalysisResult(analysis);
           const assistantMessage: Message = {
             id: (Date.now() + 1).toString(),
@@ -138,16 +132,11 @@ export default function ChatPage() {
     }
   }, []);
 
-  // Registrar el handler de paste
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
-  // ============================================================================
-  // FORMATEAR RESULTADO DEL ANÁLISIS
-  // ============================================================================
-  
   const formatAnalysisResult = (analysis: AnalysisResult): string => {
     return `📊 **Análisis de Imagen**
 
@@ -165,10 +154,6 @@ ${analysis.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
 🏷️ **Elementos:** ${analysis.elements.join(', ')}`;
   };
 
-  // ============================================================================
-  // COPIAR COLOR AL PORTAPAPELES
-  // ============================================================================
-  
   const copyColor = async (color: string) => {
     try {
       await navigator.clipboard.writeText(color);
@@ -179,10 +164,6 @@ ${analysis.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
     }
   };
 
-  // ============================================================================
-  // ENVIAR MENSAJE DE TEXTO
-  // ============================================================================
-  
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -235,10 +216,6 @@ ${analysis.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
     }
   };
 
-  // ============================================================================
-  // AUTO-RESIZE DEL TEXTAREA
-  // ============================================================================
-  
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -253,147 +230,181 @@ ${analysis.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
     }
   };
 
-  // ============================================================================
-  // RENDERIZADO
-  // ============================================================================
-  
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-[#1a1d29]">
+    <div className="flex flex-col h-screen bg-[#050505] relative overflow-hidden">
+      {/* Ambient background effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[150px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,transparent_40%,rgba(255,255,255,0.015)_40%)] bg-[length:20px_20px]" />
+      </div>
+
       {/* Header */}
-      <div className="border-b border-neutral-200 dark:border-gray-800 bg-white dark:bg-[#252836] px-4 py-4">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-blue-600 rounded-xl flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+      <div className="relative z-10 border-b border-white/5 backdrop-blur-xl bg-white/5 px-4 py-4">
+        <div className="max-w-4xl mx-auto flex items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-2xl blur-lg opacity-50" />
+            <div className="relative w-12 h-12 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-2xl flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-neutral-900 dark:text-white">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-white via-violet-200 to-cyan-200 bg-clip-text text-transparent">
               Coach Creativo IA
             </h1>
-            <p className="text-sm text-neutral-600 dark:text-gray-400">
+            <p className="text-sm text-neutral-400">
               Siempre listo para ayudarte
             </p>
+          </div>
+          <div className="ml-auto">
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-violet-500/20 to-cyan-500/20 border border-violet-500/30 text-violet-300">
+              Premium
+            </span>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="relative z-10 flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.role === 'assistant' && (
-                <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-violet-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+                <div className="flex-shrink-0">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-xl blur-md opacity-50" />
+                    <div className="relative w-10 h-10 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                      <Bot className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
                 </div>
               )}
               
-              <div className="max-w-[85%] rounded-2xl">
-                {/* Imagen pegada */}
+              <div className="max-w-[80%]">
+                {/* Image paste preview */}
                 {message.imageData && (
-                  <div className="mb-2">
+                  <div className="mb-3">
                     <img 
                       src={message.imageData} 
                       alt="Imagen pegada"
-                      className="max-w-full max-h-64 rounded-lg object-contain"
+                      className="max-w-full max-h-64 rounded-xl object-contain border border-white/10"
                     />
                   </div>
                 )}
                 
-                {/* Contenido del mensaje */}
+                {/* Message bubble with gradient for assistant */}
                 <div
-                  className={`px-4 py-3 ${
+                  className={`relative ${
                     message.role === 'user'
-                      ? 'bg-gradient-to-r from-violet-600 to-blue-600 text-white'
-                      : 'bg-neutral-100 dark:bg-[#252836] text-neutral-900 dark:text-white border border-neutral-200 dark:border-gray-700'
-                  } rounded-2xl ${!message.imageData ? 'rounded-2xl' : 'rounded-tl-sm'}`}
+                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white'
+                      : 'bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10'
+                  } rounded-2xl px-5 py-4 ${!message.imageData ? '' : 'rounded-tl-sm'}`}
                 >
-                  {/* Si es análisis con colores, renderizar especial */}
-                  {message.isAnalysis && message.content.includes('🎨 **Paleta de Colores:**') ? (
-                    <div className="space-y-3">
-                      {message.content.split('\n\n').map((paragraph, i) => {
-                        if (paragraph.includes('🎨 **Paleta de Colores:**')) {
-                          const colors = paragraph.match(/`#[A-Fa-f0-9]{6}`/g) || [];
-                          return (
-                            <div key={i}>
-                              <p className="text-sm mb-2 whitespace-pre-wrap">{paragraph.split('🎨')[0]}</p>
-                              <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
-                                <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-2">Paleta de colores:</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {colors.map((color) => {
-                                    const cleanColor = color.replace(/`/g, '');
-                                    return (
-                                      <button
-                                        key={color}
-                                        onClick={() => copyColor(cleanColor)}
-                                        className="flex items-center gap-2 px-2 py-1 bg-white dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600 hover:scale-105 transition-transform"
-                                        title={`Copiar ${cleanColor}`}
-                                      >
-                                        <div 
-                                          className="w-5 h-5 rounded border border-neutral-300 dark:border-neutral-500"
-                                          style={{ backgroundColor: cleanColor }}
-                                        />
-                                        <span className="text-xs font-mono text-neutral-700 dark:text-neutral-300">
-                                          {cleanColor}
-                                        </span>
-                                        {copiedColor === cleanColor ? (
-                                          <Check className="w-3 h-3 text-green-500" />
-                                        ) : (
-                                          <Copy className="w-3 h-3 text-neutral-400" />
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                              {paragraph.split('🎨')[1]?.replace('**Paleta de Colores:**', '')}
-                            </div>
-                          );
-                        }
-                        return (
-                          <p key={i} className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
-                            {paragraph}
-                          </p>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                  {/* Gradient glow for assistant messages */}
+                  {message.role === 'assistant' && (
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/5 to-cyan-500/5 pointer-events-none" />
                   )}
                   
-                  <p className={`text-xs mt-2 ${
-                    message.role === 'user' ? 'text-white/70' : 'text-neutral-500 dark:text-gray-500'
-                  }`}>
-                    {message.timestamp.toLocaleTimeString('es-ES', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </p>
+                  <div className="relative z-10">
+                    {/* Analysis with colors */}
+                    {message.isAnalysis && message.content.includes('🎨 **Paleta de Colores:**') ? (
+                      <div className="space-y-4">
+                        {message.content.split('\n\n').map((paragraph, i) => {
+                          if (paragraph.includes('🎨 **Paleta de Colores:**')) {
+                            const colors = paragraph.match(/`#[A-Fa-f0-9]{6}`/g) || [];
+                            return (
+                              <div key={i}>
+                                <p className="text-sm text-white/90 mb-3 whitespace-pre-wrap leading-relaxed">{paragraph.split('🎨')[0]}</p>
+                                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4">
+                                  <p className="text-xs font-medium text-violet-300 mb-3 uppercase tracking-wider">Paleta de colores</p>
+                                  <div className="flex flex-wrap gap-3">
+                                    {colors.map((color) => {
+                                      const cleanColor = color.replace(/`/g, '');
+                                      return (
+                                        <button
+                                          key={color}
+                                          onClick={() => copyColor(cleanColor)}
+                                          className="group flex items-center gap-2 px-3 py-2 backdrop-blur-xl bg-white/5 rounded-lg border border-white/10 hover:border-violet-500/50 transition-all"
+                                          title={`Copiar ${cleanColor}`}
+                                        >
+                                          <div 
+                                            className="w-6 h-6 rounded-lg shadow-lg"
+                                            style={{ backgroundColor: cleanColor }}
+                                          />
+                                          <span className="text-sm font-mono text-white/80 group-hover:text-white transition-colors">
+                                            {cleanColor}
+                                          </span>
+                                          {copiedColor === cleanColor ? (
+                                            <Check className="w-4 h-4 text-emerald-400" />
+                                          ) : (
+                                            <Copy className="w-4 h-4 text-white/40 group-hover:text-white/80 transition-colors" />
+                                          )}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                                {paragraph.split('🎨')[1]?.replace('**Paleta de Colores:**', '')}
+                              </div>
+                            );
+                          }
+                          return (
+                            <p key={i} className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap text-white/90">
+                              {paragraph}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap text-white/90">
+                        {message.content}
+                      </p>
+                    )}
+                    
+                    <p className={`text-xs mt-3 ${
+                      message.role === 'user' ? 'text-white/60' : 'text-white/40'
+                    }`}>
+                      {message.timestamp.toLocaleTimeString('es-ES', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                  </div>
                 </div>
 
                 {message.role === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 bg-neutral-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-neutral-600 dark:text-gray-300" />
+                  <div className="flex-shrink-0 mt-2">
+                    <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+                      <User className="w-4 h-4 text-white/70" />
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           ))}
 
-          {/* Loading para mensajes */}
+          {/* Loading state */}
           {isLoading && (
-            <div className="flex gap-3 justify-start">
-              <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-violet-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+            <div className="flex gap-4 justify-start">
+              <div className="flex-shrink-0">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-xl blur-md opacity-50" />
+                  <div className="relative w-10 h-10 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                </div>
               </div>
-              <div className="bg-neutral-100 dark:bg-[#252836] rounded-2xl px-4 py-3 border border-neutral-200 dark:border-gray-700">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-violet-600" />
-                  <span className="text-sm text-neutral-600 dark:text-gray-400">
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span className="text-sm text-white/60 italic">
                     Pensando...
                   </span>
                 </div>
@@ -401,16 +412,21 @@ ${analysis.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
             </div>
           )}
 
-          {/* Loading para análisis de imagen */}
+          {/* Image analysis loading */}
           {isAnalyzing && (
-            <div className="flex gap-3 justify-start">
-              <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-violet-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+            <div className="flex gap-4 justify-start">
+              <div className="flex-shrink-0">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-xl blur-md opacity-50" />
+                  <div className="relative w-10 h-10 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                </div>
               </div>
-              <div className="bg-neutral-100 dark:bg-[#252836] rounded-2xl px-4 py-3 border border-neutral-200 dark:border-gray-700">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-violet-600" />
-                  <span className="text-sm text-neutral-600 dark:text-gray-400">
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-4 h-4 animate-spin text-violet-400" />
+                  <span className="text-sm text-white/60">
                     Analizando imagen...
                   </span>
                 </div>
@@ -423,39 +439,45 @@ ${analysis.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
       </div>
 
       {/* Input */}
-      <div className="border-t border-neutral-200 dark:border-gray-800 bg-white dark:bg-[#252836] px-4 py-4">
+      <div className="relative z-10 border-t border-white/5 backdrop-blur-xl bg-white/5 px-4 py-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1 bg-neutral-100 dark:bg-[#1a1d29] rounded-2xl border border-neutral-200 dark:border-gray-700 focus-within:border-violet-500 dark:focus-within:border-violet-500 transition-colors">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Escribe tu mensaje o pega una imagen..."
-                className="w-full bg-transparent px-4 py-3 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-gray-500 resize-none outline-none max-h-32"
-                rows={1}
-                disabled={isLoading || isAnalyzing}
-              />
+          <div className="flex gap-3 items-end">
+            <div className="flex-1 relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-500/20 to-cyan-500/20 rounded-2xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity" />
+              <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl focus-within:border-violet-500/50 transition-colors">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Escribe tu mensaje o pega una imagen..."
+                  className="w-full bg-transparent px-5 py-4 text-white placeholder-white/40 resize-none outline-none max-h-32"
+                  rows={1}
+                  disabled={isLoading || isAnalyzing}
+                />
+              </div>
             </div>
             <button
               onClick={handleSend}
               disabled={(!input.trim() || isLoading || isAnalyzing)}
-              className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="relative group flex-shrink-0"
             >
-              {isLoading || isAnalyzing ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
+              <div className="relative w-12 h-12 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all group-hover:scale-105">
+                {isLoading || isAnalyzing ? (
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5 text-white" />
+                )}
+              </div>
             </button>
           </div>
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-xs text-neutral-500 dark:text-gray-500">
+          <div className="flex items-center justify-between mt-3 px-1">
+            <p className="text-xs text-white/40">
               Enter para enviar • Ctrl+V para pegar imagen
             </p>
-            <div className="flex items-center gap-1 text-xs text-neutral-400">
-              <Image className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-xs text-white/40">
+              <Image className="w-3.5 h-3.5" />
               <span>Pega imágenes</span>
             </div>
           </div>

@@ -11,10 +11,10 @@ export default function ChatMessage({ role, content }: ChatMessageProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line ${
+      className={`max-w-[80%] rounded-2xl px-5 py-4 text-sm leading-relaxed whitespace-pre-line ${
         role === "system"
-          ? "bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-900/30 dark:to-blue-900/30 text-neutral-800 dark:text-neutral-100 border border-violet-100 dark:border-violet-800/30"
-          : "bg-gradient-to-br from-neutral-900 to-neutral-800 dark:from-neutral-700 dark:to-neutral-600 text-white ml-auto shadow-md"
+          ? "backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 text-white/90"
+          : "bg-gradient-to-r from-violet-600 to-purple-600 text-white ml-auto shadow-lg shadow-violet-500/20"
       }`}
     >
       {content}

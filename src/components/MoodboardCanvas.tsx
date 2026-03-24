@@ -188,9 +188,26 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-neutral-100 dark:bg-neutral-900 overflow-hidden"
+      className="w-full h-full overflow-hidden relative"
       style={{ cursor: "default" }}
     >
+      {/* Dot pattern background */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)`,
+          backgroundSize: '24px 24px',
+        }}
+      />
+      
+      {/* Subtle vignette effect */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(5,5,5,0.3) 100%)',
+        }}
+      />
+
       <Stage
         ref={stageRef}
         width={containerSize.width}
@@ -202,13 +219,13 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
         draggable
       >
         <Layer>
-          {/* Fondo transparente */}
+          {/* Fondo expandido para pan */}
           <Rect
-            x={-1000}
-            y={-1000}
-            width={containerSize.width / stageScale + 2000}
-            height={containerSize.height / stageScale + 2000}
-            fill="transparent"
+            x={-5000}
+            y={-5000}
+            width={10000 + containerSize.width / stageScale}
+            height={10000 + containerSize.height / stageScale}
+            fill="#0a0a0f"
           />
 
           {/* Imágenes */}
@@ -223,11 +240,10 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
             />
           ))}
 
-          {/* Transformer - se acopla automáticamente a la imagen seleccionada */}
+          {/* Transformer - Neon styled */}
           <Transformer
             ref={transformerRef}
             boundBoxFunc={(oldBox, newBox) => {
-              // Limitar tamaño mínimo
               if (newBox.width < 50 || newBox.height < 50) {
                 return oldBox;
               }
@@ -235,9 +251,11 @@ export default function MoodboardCanvas({ width = 1200, height = 800 }: Moodboar
             }}
             anchorSize={10}
             anchorCornerRadius={2}
-            borderStroke="#3b82f6"
-            anchorStroke="#3b82f6"
-            anchorFill="#ffffff"
+            borderStroke="#8b5cf6"
+            borderStrokeWidth={2}
+            anchorStroke="#8b5cf6"
+            anchorFill="#1f1f2e"
+            anchorStrokeWidth={2}
             rotateAnchorOffset={25}
             enabledAnchors={[
               "top-left",

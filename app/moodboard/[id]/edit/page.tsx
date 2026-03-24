@@ -15,6 +15,7 @@ import {
   X,
   Loader2,
   RefreshCw,
+  Layers,
 } from "lucide-react";
 import { useMoodboardStore } from "@/store/useMoodboardStore";
 import MoodboardCanvas from "@/components/MoodboardCanvas";
@@ -26,9 +27,9 @@ export default function EditMoodboardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [showLayers, setShowLayers] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Estado del store
   const {
     images,
     selectedId,
@@ -46,10 +47,6 @@ export default function EditMoodboardPage() {
     markClean,
   } = useMoodboardStore();
 
-  // ============================================================================
-  // CARGAR DATOS DEL MOODBOARD
-  // ============================================================================
-  
   useEffect(() => {
     const loadMoodboardData = async () => {
       try {
@@ -72,10 +69,6 @@ export default function EditMoodboardPage() {
     loadMoodboardData();
   }, [moodboardId, loadMoodboard]);
 
-  // ============================================================================
-  // GUARDAR MOODBOARD
-  // ============================================================================
-  
   const handleSave = useCallback(async () => {
     if (!title.trim()) {
       alert("Por favor, añade un título");
@@ -106,10 +99,6 @@ export default function EditMoodboardPage() {
     }
   }, [moodboardId, title, markClean]);
 
-  // ============================================================================
-  // AUTO-SAVE
-  // ============================================================================
-  
   useEffect(() => {
     if (!isDirty || saving) return;
 
@@ -120,10 +109,6 @@ export default function EditMoodboardPage() {
     return () => clearTimeout(timeoutId);
   }, [isDirty, saving, handleSave]);
 
-  // ============================================================================
-  // ZOOM CONTROLS
-  // ============================================================================
-  
   const handleZoomIn = () => {
     const newScale = Math.min(3, stageScale + 0.1);
     setStageScale(newScale);
@@ -138,10 +123,6 @@ export default function EditMoodboardPage() {
     setStageScale(1);
   };
 
-  // ============================================================================
-  // ROTAR IMAGEN SELECCIONADA
-  // ============================================================================
-  
   const handleRotateSelected = () => {
     if (!selectedId) return;
     const image = images.find((img) => img.id === selectedId);
@@ -150,19 +131,11 @@ export default function EditMoodboardPage() {
     }
   };
 
-  // ============================================================================
-  // ELIMINAR IMAGEN SELECCIONADA
-  // ============================================================================
-  
   const handleDeleteSelected = () => {
     if (!selectedId) return;
     deleteSelected();
   };
 
-  // ============================================================================
-  // LIMPIAR TABLERO
-  // ============================================================================
-  
   const handleClearBoard = () => {
     if (images.length === 0) return;
     if (confirm("¿Eliminar todas las imágenes del moodboard?")) {
@@ -170,10 +143,6 @@ export default function EditMoodboardPage() {
     }
   };
 
-  // ============================================================================
-  // SUBIR IMÁGENES
-  // ============================================================================
-  
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
@@ -184,10 +153,8 @@ export default function EditMoodboardPage() {
 
         const url = URL.createObjectURL(file);
 
-        // Crear imagen para obtener dimensiones
         const img = new window.Image();
         img.onload = () => {
-          // Calcular tamaño inicial (max 250px manteniendo aspecto)
           const maxSize = 250;
           let width = img.width;
           let height = img.height;
@@ -204,7 +171,6 @@ export default function EditMoodboardPage() {
             }
           }
 
-          // Posición inicial con offset
           const baseX = 100 + (images.length % 5) * 30;
           const baseY = 100 + (images.length % 5) * 30;
 
@@ -222,7 +188,6 @@ export default function EditMoodboardPage() {
         img.src = url;
       });
 
-      // Reset input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -230,134 +195,155 @@ export default function EditMoodboardPage() {
     [addImage, images.length]
   );
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-  
   if (loading) {
     return (
-      <main className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-neutral-600 dark:text-neutral-400">Cargando moodboard...</p>
+      <main className="h-screen flex items-center justify-center bg-[#050505] relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[150px]" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-rose-600/10 rounded-full blur-[150px]" />
+        </div>
+        <div className="relative z-10 text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-violet-400 mx-auto mb-4" />
+          <p className="text-neutral-400">Cargando moodboard...</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="h-screen flex flex-col bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
+    <main className="h-screen flex flex-col bg-[#050505] overflow-hidden relative">
+      {/* Ambient background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-rose-600/10 rounded-full blur-[150px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,transparent_40%,rgba(255,255,255,0.02)_40%)] bg-[length:24px_24px]" />
+      </div>
+
       {/* ================================================================ */}
-      {/* TOOLBAR */}
+      {/* FLOATING TOOLBAR */}
       {/* ================================================================ */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-4 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          {/* Izquierda */}
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/moodboard/${moodboardId}`}
-              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
-              title="Volver"
+      <div className="relative z-20 flex-shrink-0">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-3">
+          {/* Back */}
+          <Link
+            href={`/moodboard/${moodboardId}`}
+            className="p-2.5 text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+            title="Volver"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+
+          <div className="w-px h-6 bg-white/10" />
+
+          {/* Title */}
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Título del moodboard"
+            className="text-sm font-medium bg-transparent border-none outline-none text-white placeholder-white/40 w-48"
+          />
+
+          {isDirty && (
+            <span className="text-xs text-amber-400 animate-pulse">
+              Sin guardar
+            </span>
+          )}
+
+          <div className="w-px h-6 bg-white/10" />
+
+          {/* Zoom controls */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleZoomOut}
+              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              title="Alejar"
             >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Título del moodboard"
-              className="text-lg font-semibold bg-transparent border-none outline-none text-neutral-900 dark:text-white placeholder-neutral-400 w-64"
-            />
-
-            {isDirty && (
-              <span className="text-xs text-amber-600 dark:text-amber-400">
-                Sin guardar
-              </span>
-            )}
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <span className="text-xs px-2 min-w-[3rem] text-center font-medium text-white/50">
+              {Math.round(stageScale * 100)}%
+            </span>
+            <button
+              onClick={handleZoomIn}
+              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              title="Acercar"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleZoomReset}
+              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              title="Restablecer zoom"
+            >
+              <Maximize className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* Derecha */}
-          <div className="flex items-center gap-2">
-            {/* Zoom */}
-            <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
-              <button
-                onClick={handleZoomOut}
-                className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition"
-                title="Alejar"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </button>
-              <span className="text-sm px-2 min-w-[3rem] text-center font-medium">
-                {Math.round(stageScale * 100)}%
-              </span>
-              <button
-                onClick={handleZoomIn}
-                className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition"
-                title="Acercar"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleZoomReset}
-                className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition"
-                title="Restablecer zoom"
-              >
-                <Maximize className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="w-px h-6 bg-white/10" />
 
-            {/* Acciones de imagen */}
-            <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
-              <button
-                onClick={handleRotateSelected}
-                disabled={!selectedId}
-                className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Rotar 15°"
-              >
-                <RotateCw className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleDeleteSelected}
-                disabled={!selectedId}
-                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Eliminar (Supr)"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleClearBoard}
-                disabled={images.length === 0}
-                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Limpiar tablero"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Subir imágenes */}
+          {/* Image actions */}
+          <div className="flex items-center gap-1">
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition font-medium"
+              onClick={handleRotateSelected}
+              disabled={!selectedId}
+              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Rotar 15°"
             >
-              <Upload className="w-4 h-4" />
-              Añadir Imágenes
+              <RotateCw className="w-4 h-4" />
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-
-            {/* Guardar */}
             <button
-              onClick={handleSave}
-              disabled={saving || !title.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+              onClick={handleDeleteSelected}
+              disabled={!selectedId}
+              className="p-2 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Eliminar (Supr)"
             >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleClearBoard}
+              disabled={images.length === 0}
+              className="p-2 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Limpiar tablero"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowLayers(!showLayers)}
+              className={`p-2 rounded-lg transition-all ${showLayers ? 'text-violet-400 bg-violet-500/10' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              title="Capas"
+            >
+              <Layers className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="w-px h-6 bg-white/10" />
+
+          {/* Upload */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 hover:border-white/20 rounded-xl transition-all text-sm font-medium"
+          >
+            <Upload className="w-4 h-4" />
+            Añadir
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          {/* Save */}
+          <button
+            onClick={handleSave}
+            disabled={saving || !title.trim()}
+            className="relative group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-rose-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
+            <div className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-rose-500 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium">
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -369,17 +355,20 @@ export default function EditMoodboardPage() {
                   Guardar
                 </>
               )}
-            </button>
-          </div>
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* ================================================================ */}
-      {/* TOAST DE GUARDADO */}
-      {/* ================================================================ */}
+      {/* Save toast */}
       {saveMessage && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg">
-          {saveMessage}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 backdrop-blur-xl bg-emerald-500/90 border border-emerald-400/30 px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20">
+          <span className="text-sm font-medium text-white flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {saveMessage}
+          </span>
         </div>
       )}
 
@@ -389,43 +378,45 @@ export default function EditMoodboardPage() {
       <div className="flex-1 relative">
         <MoodboardCanvas />
 
-        {/* Estado vacío */}
+        {/* Empty state */}
         {images.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center p-8 bg-white/90 dark:bg-neutral-800/90 rounded-xl shadow-lg backdrop-blur-sm">
-              <Upload className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+            <div className="text-center p-10 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/20 to-rose-500/20 flex items-center justify-center mx-auto mb-5">
+                <Upload className="w-10 h-10 text-white/40" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">
                 Comienza tu moodboard
               </h3>
-              <p className="text-neutral-600 dark:text-neutral-400 mb-4 max-w-sm">
+              <p className="text-neutral-400 mb-4 max-w-sm text-sm">
                 Añade imágenes para crear tu tablero de inspiración.
               </p>
-              <p className="text-sm text-neutral-500">
-                Haz clic en <strong>Añadir Imágenes</strong> o arrastra archivos aquí
+              <p className="text-sm text-white/30">
+                Haz clic en <strong className="text-white/50">Añadir</strong> o arrastra archivos aquí
               </p>
             </div>
           </div>
         )}
 
-        {/* Info de selección */}
+        {/* Selection info */}
         {selectedId && (
-          <div className="absolute bottom-4 left-4 px-3 py-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 flex items-center gap-3">
-            <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          <div className="absolute bottom-4 left-4 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-4">
+            <span className="text-sm text-white/60">
               {images.find((img) => img.id === selectedId)?.width.toFixed(0)} x{" "}
               {images.find((img) => img.id === selectedId)?.height.toFixed(0)} px
             </span>
             <button
               onClick={clearSelection}
-              className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+              className="text-white/40 hover:text-white/70 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* Instrucciones */}
-        <div className="absolute bottom-4 right-4 px-3 py-2 bg-white/80 dark:bg-neutral-800/80 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
-          <div className="text-xs text-neutral-500 space-y-1">
+        {/* Instructions */}
+        <div className="absolute bottom-4 right-4 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+          <div className="text-xs text-white/30 space-y-1.5">
             <p>🖱️ Arrastra para mover</p>
             <p>📐 Arrastra esquinas para redimensionar</p>
             <p>🔄 Controlador para rotar</p>
