@@ -29,6 +29,8 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
+  const [editingNode, setEditingNode] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string>('');
   
   // Estados para conexión dinámica
   const [isDraggingConnection, setIsDraggingConnection] = useState(false);
@@ -205,6 +207,9 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
   const handleNodeClick = (nodeId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
+    // Si estamos en modo edición, no hacer nada
+    if (editingNode) return;
+    
     if (connectingFrom) {
       if (connectingFrom !== nodeId) {
         const exists = connections.some(
@@ -213,12 +218,51 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
         );
         
         if (!exists) {
-          setConnections([...connections, { from: connectingFrom, to: nodeId }]);
+          const updatedConnections = [...connections, { from: connectingFrom, to: nodeId }];
+          setConnections(updatedConnections);
+          syncToFirebase(nodes, updatedConnections);
         }
       }
       setConnectingFrom(null);
     } else {
       setConnectingFrom(nodeId);
+    }
+  };
+
+  // Activar modo edición con doble click
+  const handleDoubleClick = (nodeId: string, currentText: string) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingNode(nodeId);
+    setEditingText(currentText);
+  };
+
+  // Manejar cambios de texto mientras se edita
+  const handleEditChange = (text: string) => {
+    setEditingText(text);
+  };
+
+  // Guardar cambios al perder foco
+  const handleTextBlur = () => {
+    if (editingNode && editingText.trim()) {
+      const updatedNodes = nodes.map(node =>
+        node.id === editingNode ? { ...node, text: editingText.trim() } : node
+      );
+      setNodes(updatedNodes);
+      syncToFirebase(updatedNodes, connections);
+    }
+    setEditingNode(null);
+    setEditingText('');
+  };
+
+  // Manejar teclas especiales
+  const handleTextKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleTextBlur();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setEditingNode(null);
+      setEditingText('');
     }
   };
 
@@ -291,9 +335,10 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
         </div>
         <ol className="space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>1. Arrastra nodos para moverlos</li>
-          <li>2. <strong>Ctrl+Arrastra</strong> desde un nodo a otro para conectar</li>
-          <li>3. Shift+Arrastra para mover canvas</li>
-          <li>4. Rueda del mouse para zoom</li>
+          <li>2. <strong>Doble click</strong> para editar texto del nodo</li>
+          <li>3. <strong>Ctrl+Arrastra</strong> desde un nodo a otro para conectar</li>
+          <li>4. Shift+Arrastra para mover canvas</li>
+          <li>5. Rueda del mouse para zoom</li>
           {isFirebaseAvailable && (
             <li className="text-green-600 dark:text-green-400 font-medium">
               ✨ Los cambios se sincronizan en tiempo real
@@ -310,7 +355,13 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleCanvasMouseMove}
         onMouseUp={handleCanvasMouseUp}
-        onClick={() => setConnectingFrom(null)}
+        onClick={() => {
+          // Si estamos editando, guardar cambios y salir del modo edición
+          if (editingNode) {
+            handleTextBlur();
+          }
+          setConnectingFrom(null);
+        }}
       >
         {/* Contenedor con transformaciones */}
         <div
@@ -366,23 +417,43 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
                   : connectingFrom === node.id
                   ? 'ring-4 ring-blue-500 scale-110'
                   : 'hover:scale-105'
-              }`}
+              } ${editingNode === node.id ? 'ring-4 ring-yellow-400' : ''}`}
               style={{
                 left: node.x,
                 top: node.y,
                 width: 150,
-                height: 80,
-                backgroundColor: hoveredNode === node.id ? '#10b981' : '#3b82f6',
+                minHeight: 80,
+                backgroundColor: editingNode === node.id 
+                  ? '#1f2937' // Dark background when editing
+                  : hoveredNode === node.id 
+                    ? '#10b981' 
+                    : '#3b82f6',
                 borderRadius: '12px',
-                zIndex: draggingNode === node.id ? 1000 : 1
+                zIndex: draggingNode === node.id || editingNode === node.id ? 1000 : 1
               }}
               onMouseDown={(e) => handleMouseDown(e, node.id)}
               onClick={(e) => handleNodeClick(node.id, e)}
+              onDoubleClick={handleDoubleClick(node.id, node.text)}
             >
               <div className="w-full h-full flex items-center justify-center p-3">
-                <div className="text-white text-center text-sm font-bold">
-                  {node.text}
-                </div>
+                {editingNode === node.id ? (
+                  <input
+                    type="text"
+                    value={editingText}
+                    onChange={(e) => handleEditChange(e.target.value)}
+                    onBlur={handleTextBlur}
+                    onKeyDown={handleTextKeyDown}
+                    onClick={(e) => e.stopPropagation()}
+                    autoFocus
+                    className="w-full px-2 py-1 bg-white/95 dark:bg-black/40 text-gray-900 dark:text-white text-center text-sm font-bold rounded outline-none ring-2 ring-yellow-400 focus:ring-yellow-300"
+                    style={{ minWidth: '100px' }}
+                    placeholder="Escribe aquí..."
+                  />
+                ) : (
+                  <div className="text-white text-center text-sm font-bold break-words leading-tight">
+                    {node.text}
+                  </div>
+                )}
               </div>
             </div>
           ))}
