@@ -1,200 +1,93 @@
-import { db } from './firebase';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+/**
+ * projectService stub - usando localStorage
+ * Reemplaza el projectService de Firebase
+ */
+
+"use client";
 
 export interface Project {
   id: string;
   title: string;
+  type: "mindmap" | "moodboard" | "canvas";
+  ownerId: string;
   user_id: string;
-  type: "moodboard" | "mindmap" | "canvas" | "chat";
+  status: string;
   created_at: string;
   updated_at: string;
-  status: "active" | "archived";
+  data?: any;
 }
 
-// LocalStorage key for projects
-const PROJECTS_KEY = 'creationx_projects';
+const STORAGE_PREFIX = "projects";
 
-// Helper to check if Firebase is available
-function isFirebaseAvailable(): boolean {
-  return typeof window !== 'undefined' && db !== undefined;
-}
-
-// Helper to get all projects from localStorage
-function getAllProjects(): Project[] {
-  if (typeof window === 'undefined') return [];
-  
+const getProjects = (): Project[] => {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem(STORAGE_PREFIX);
+  if (!stored) return [];
   try {
-    const stored = localStorage.getItem(PROJECTS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error('Error reading projects from localStorage:', error);
+    return JSON.parse(stored);
+  } catch {
     return [];
   }
-}
+};
 
-// Helper to save all projects to localStorage
-function saveAllProjects(projects: Project[]): void {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
-  } catch (error) {
-    console.error('Error saving projects to localStorage:', error);
-  }
-}
+const saveProjects = (projects: Project[]) => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_PREFIX, JSON.stringify(projects));
+};
 
 export const projectService = {
-  async getProjects(userId: string, limit = 50): Promise<Project[]> {
-    // Intentar usar Firebase primero
-    if (isFirebaseAvailable()) {
-      try {
-        const projectsRef = collection(db!, 'projects');
-        const q = query(
-          projectsRef,
-          where('user_id', '==', userId),
-          where('status', '==', 'active'),
-          orderBy('updated_at', 'desc'),
-          firestoreLimit(limit)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const projects: Project[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          projects.push({ id: doc.id, ...doc.data() } as Project);
-        });
-        
-        console.log('✅ Proyectos cargados desde Firebase:', projects.length);
-        return projects;
-      } catch (error) {
-        console.warn('⚠️ Error cargando desde Firebase, usando localStorage:', error);
-      }
-    }
-    
-    // Fallback a localStorage
-    const allProjects = getAllProjects();
-    
-    return allProjects
-      .filter(p => p.user_id === userId && p.status === 'active')
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-      .slice(0, limit);
+  async getProjects(userId: string, limit?: number): Promise<Project[]> {
+    const projects = getProjects();
+    const userProjects = projects.filter((p) => p.ownerId === userId);
+    return limit ? userProjects.slice(0, limit) : userProjects;
   },
 
-  async createProject(
-    userId: string,
-    type: Project["type"] = "canvas"
-  ): Promise<Project> {
-    const projectData = {
-      title: "Sin título",
-      user_id: userId,
+  async getProject(projectId: string): Promise<Project | null> {
+    const projects = getProjects();
+    return projects.find((p) => p.id === projectId) || null;
+  },
+
+  async createProject(userId: string, type: Project["type"], data?: Partial<Project>): Promise<Project> {
+    const projects = getProjects();
+    const newProject: Project = {
+      id: `proj-${Date.now()}`,
+      title: data?.title || `Nuevo ${type}`,
       type,
-      status: "active" as const,
+      ownerId: userId,
+      user_id: userId,
+      status: "active",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      data: data?.data,
     };
-
-    // Intentar usar Firebase primero
-    if (isFirebaseAvailable()) {
-      try {
-        const projectsRef = collection(db!, 'projects');
-        const docRef = await addDoc(projectsRef, projectData);
-        
-        const project: Project = {
-          id: docRef.id,
-          ...projectData
-        };
-        
-        console.log('✅ Proyecto creado en Firebase:', project.id);
-        
-        // También guardar en localStorage como backup
-        const allProjects = getAllProjects();
-        allProjects.push(project);
-        saveAllProjects(allProjects);
-        
-        return project;
-      } catch (error) {
-        console.warn('⚠️ Error creando en Firebase, usando localStorage:', error);
-      }
-    }
-    
-    // Fallback a localStorage
-    const project: Project = {
-      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
-      ...projectData
-    };
-
-    const allProjects = getAllProjects();
-    allProjects.push(project);
-    saveAllProjects(allProjects);
-
-    return project;
+    projects.push(newProject);
+    saveProjects(projects);
+    return newProject;
   },
 
-  async updateProjectTitle(projectId: string, title: string): Promise<Project> {
+  async updateProject(projectId: string, updates: Partial<Project>): Promise<Project | null> {
+    const projects = getProjects();
+    const index = projects.findIndex((p) => p.id === projectId);
+    if (index === -1) return null;
+
+    projects[index] = {
+      ...projects[index],
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+    saveProjects(projects);
+    return projects[index];
+  },
+
+  async updateProjectTitle(projectId: string, title: string): Promise<Project | null> {
     return this.updateProject(projectId, { title });
   },
 
-  async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
-    // Intentar usar Firebase primero
-    if (isFirebaseAvailable()) {
-      try {
-        const projectRef = doc(db!, 'projects', projectId);
-        await updateDoc(projectRef, {
-          ...updates,
-          updated_at: new Date().toISOString()
-        });
-        
-        console.log('✅ Proyecto actualizado en Firebase:', projectId);
-      } catch (error) {
-        console.warn('⚠️ Error actualizando en Firebase:', error);
-      }
-    }
-    
-    // También actualizar en localStorage
-    const allProjects = getAllProjects();
-    const projectIndex = allProjects.findIndex(p => p.id === projectId);
-    
-    if (projectIndex === -1) {
-      throw new Error('Project not found');
-    }
-
-    allProjects[projectIndex] = {
-      ...allProjects[projectIndex],
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-    
-    saveAllProjects(allProjects);
-    
-    return allProjects[projectIndex];
-  },
-
   async deleteProject(projectId: string): Promise<boolean> {
-    // Intentar usar Firebase primero
-    if (isFirebaseAvailable()) {
-      try {
-        const projectRef = doc(db!, 'projects', projectId);
-        await deleteDoc(projectRef);
-        
-        console.log('✅ Proyecto eliminado de Firebase:', projectId);
-      } catch (error) {
-        console.warn('⚠️ Error eliminando de Firebase:', error);
-      }
-    }
-    
-    // También eliminar de localStorage
-    const allProjects = getAllProjects();
-    const filteredProjects = allProjects.filter(p => p.id !== projectId);
-    
-    saveAllProjects(filteredProjects);
-
-    // También eliminar datos relacionados en localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(`canvas-${projectId}`);
-      localStorage.removeItem(`moodboard-${projectId}`);
-      localStorage.removeItem(`mindmap-${projectId}`);
-    }
-
+    const projects = getProjects();
+    const filtered = projects.filter((p) => p.id !== projectId);
+    if (filtered.length === projects.length) return false;
+    saveProjects(filtered);
     return true;
   },
 };

@@ -1,10 +1,13 @@
+// ============================================================================
+// CREATIONX - Root Layout
+// Layout principal con ErrorBoundary y AuthProvider
+// ============================================================================
+
 import Sidebar from "@/components/Sidebar"
 import BottomNav from "@/components/BottomNav"
-import PWAInstallPrompt from "@/components/PWAInstallPrompt"
 import { Providers } from "@/components/Providers"
-import { AuthProvider } from "../src/lib/authProvider";
-import { SentryInit } from "@/components/SentryInit";
-import PWARegister from "@/components/PWARegister";
+import { AuthProvider } from "@/lib/authProvider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css"
 
 export const metadata = {
@@ -44,27 +47,27 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head />
       <body suppressHydrationWarning>
-        <SentryInit />
-        <PWARegister />
-        <AuthProvider>
-          <Providers>
-            <div className="flex h-screen bg-white dark:bg-[#212121] overflow-hidden">
-              {/* Barra Lateral estilo ChatGPT */}
-              <Sidebar />
+        {/* Error Boundary - Captura errores de providers */}
+        <ErrorBoundary>
+          {/* Auth Provider - Autenticación Firebase */}
+          <AuthProvider>
+            {/* Theme Provider - Tema oscuro/claro */}
+            <Providers>
+              <div className="flex h-screen bg-[#050505] overflow-hidden">
+                {/* Barra Lateral */}
+                <Sidebar />
 
-              {/* Área de Contenido Principal */}
-              <div className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0 pb-16 md:pb-0">
-                {children}
+                {/* Área de Contenido Principal */}
+                <main className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0 pb-16 md:pb-0">
+                  {children}
+                </main>
+                
+                {/* Bottom Navigation (solo móvil) */}
+                <BottomNav />
               </div>
-              
-              {/* Bottom Navigation (solo móvil) */}
-              <BottomNav />
-              
-              {/* PWA Install Prompt */}
-              <PWAInstallPrompt />
-            </div>
-          </Providers>
-        </AuthProvider>
+            </Providers>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

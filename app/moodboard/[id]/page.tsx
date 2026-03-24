@@ -62,7 +62,7 @@ export default function MoodboardDetailPage() {
           category: data.layout || "general",
           images: data.images.map(img => ({
             id: img.id,
-            url: img.url,
+            url: img.url_imagen || img.url,
             title: "",
             description: ""
           })),

@@ -1,101 +1,194 @@
-// @ts-nocheck
+/**
+ * authProvider stub - Auth local usando localStorage
+ * Reemplaza el authProvider de Firebase
+ */
+
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthChange, signInWithGoogle as firebaseSignIn, signOut as firebaseSignOut } from "./firebaseAuth";
-import { User as FirebaseUser } from "firebase/auth";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
-interface User {
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface User {
   id: string;
   email: string;
+  displayName: string | null;
+  photoURL: string | null;
+  emailVerified: boolean;
+  createdAt: string;
   user_metadata?: {
-    name?: string;
     avatar_url?: string;
+    full_name?: string;
+    [key: string]: any;
   };
 }
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  isLoading: boolean;
+  loading: boolean;  // alias para compatibilidad
+  isAuthenticated: boolean;
+  signInWithGoogle: () => Promise<User>;
+  signInWithEmail: (email: string, password: string) => Promise<User>;
+  signUpWithEmail: (data: { email: string; password: string; displayName?: string }) => Promise<User>;
   signOut: () => Promise<void>;
 }
 
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+// ============================================================================
+// CONTEXT
+// ============================================================================
+
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  isLoading: true,
   loading: true,
-  signInWithGoogle: async () => {},
-  signOut: async () => {},
+  isAuthenticated: false,
+  signInWithGoogle: async () => { throw new Error("Not initialized"); },
+  signInWithEmail: async () => { throw new Error("Not initialized"); },
+  signUpWithEmail: async () => { throw new Error("Not initialized"); },
+  signOut: async () => { throw new Error("Not initialized"); },
 });
 
 export const useAuth = () => useContext(AuthContext);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+// ============================================================================
+// AUTH FUNCTIONS (stubs)
+// ============================================================================
+
+const USER_STORAGE_KEY = "auth_user";
+
+const getStoredUser = (): User | null => {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(USER_STORAGE_KEY);
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+};
+
+const setStoredUser = (user: User | null) => {
+  if (typeof window === "undefined") return;
+  if (user) {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
+};
+
+export const signInWithEmail = async (email: string, password: string): Promise<User> => {
+  // Stub: crea un usuario local
+  const user: User = {
+    id: `local-${Date.now()}`,
+    email,
+    displayName: email.split("@")[0],
+    photoURL: null,
+    emailVerified: true,
+    createdAt: new Date().toISOString(),
+  };
+  setStoredUser(user);
+  return user;
+};
+
+export const signUpWithEmail = async (data: {
+  email: string;
+  password: string;
+  displayName?: string;
+}): Promise<User> => {
+  const user: User = {
+    id: `local-${Date.now()}`,
+    email: data.email,
+    displayName: data.displayName || data.email.split("@")[0],
+    photoURL: null,
+    emailVerified: false,
+    createdAt: new Date().toISOString(),
+  };
+  setStoredUser(user);
+  return user;
+};
+
+export const signInWithGoogle = async (): Promise<User> => {
+  // Stub: crea un usuario de Google local
+  const user: User = {
+    id: `google-local-${Date.now()}`,
+    email: "demo@gmail.com",
+    displayName: "Usuario Demo",
+    photoURL: null,
+    emailVerified: true,
+    createdAt: new Date().toISOString(),
+  };
+  setStoredUser(user);
+  return user;
+};
+
+export const signOut = async (): Promise<void> => {
+  setStoredUser(null);
+};
+
+export const resetPassword = async (email: string): Promise<void> => {
+  // Stub: no hace nada
+  console.log(`[Stub] Password reset email sent to: ${email}`);
+};
+
+export const onAuthChange = (callback: (user: User | null) => void): (() => void) => {
+  // Stub: escucha cambios en localStorage
+  const handler = () => {
+    callback(getStoredUser());
+  };
+  window.addEventListener("storage", handler);
+  // Llama inmediatamente con el usuario actual
+  callback(getStoredUser());
+  return () => window.removeEventListener("storage", handler);
+};
+
+export const isFirebaseAvailable = (): boolean => false;
+
+export const getFirebaseError = (error: any): string => {
+  return error?.message || "An error occurred";
+};
+
+// ============================================================================
+// PROVIDER
+// ============================================================================
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Escuchar cambios en la autenticación de Firebase
-    const unsubscribe = onAuthChange((firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        // Usuario autenticado con Firebase
-        const mappedUser: User = {
-          id: firebaseUser.uid,
-          email: firebaseUser.email || 'usuario@creationx.app',
-          user_metadata: {
-            name: firebaseUser.displayName || 'Usuario Creativo',
-            avatar_url: firebaseUser.photoURL || ''
-          }
-        };
-        setUser(mappedUser);
-        console.log('✅ Usuario autenticado con Firebase:', mappedUser.email);
-      } else {
-        // No hay usuario autenticado, usar usuario simulado
-        const mockUserId = localStorage.getItem('mock_user_id') || `user-${Date.now()}`;
-        
-        if (!localStorage.getItem('mock_user_id')) {
-          localStorage.setItem('mock_user_id', mockUserId);
-        }
+    // Carga el usuario del localStorage
+    const storedUser = getStoredUser();
+    setUser(storedUser);
+    setIsLoading(false);
 
-        const mockUser: User = {
-          id: mockUserId,
-          email: 'usuario@creationx.app',
-          user_metadata: {
-            name: 'Usuario Creativo',
-            avatar_url: ''
-          }
-        };
+    // Escucha cambios en localStorage
+    const handleStorage = () => {
+      setUser(getStoredUser());
+    };
+    window.addEventListener("storage", handleStorage);
 
-        setUser(mockUser);
-        console.log('ℹ️ Usando usuario simulado (sin Firebase)');
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const signInWithGoogle = async () => {
-    try {
-      await firebaseSignIn();
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
-      throw error;
-    }
+  const value: AuthContextType = {
+    user,
+    isLoading,
+    loading: isLoading,
+    isAuthenticated: !!user,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    signOut,
   };
 
-  const signOut = async () => {
-    try {
-      await firebaseSignOut();
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      throw error;
-    }
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+export default AuthProvider;

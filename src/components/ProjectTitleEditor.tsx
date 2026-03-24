@@ -20,8 +20,10 @@ export default function ProjectTitleEditor({ project, onUpdate }: ProjectTitleEd
     setLoading(true);
     try {
       const updatedProject = await projectService.updateProjectTitle(project.id, title.trim());
-      setTitle(updatedProject.title);
-      onUpdate?.(updatedProject);
+      if (updatedProject) {
+        setTitle(updatedProject.title);
+        onUpdate?.(updatedProject);
+      }
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating title:", error);

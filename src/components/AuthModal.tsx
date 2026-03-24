@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/lib/authProvider";
 
 export default function AuthModal({ onClose }: { onClose?: () => void }) {
   const auth = useAuth();

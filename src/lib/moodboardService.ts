@@ -1,214 +1,314 @@
-import { db } from './firebase';
-import { doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
+/**
+ * moodboardService - usando Supabase (SQL)
+ * Reemplaza localStorage con upsert a moodboard_items
+ */
 
-interface MoodboardImage {
+"use client";
+
+import { supabase } from './supabase';
+
+export interface MoodboardItem {
   id: string;
-  url: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  zIndex: number;
+  posicion_x: number;
+  posicion_y: number;
+  url_imagen: string;
+  url: string; // alias para compatibilidad, siempre igual a url_imagen
+  proyecto_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
-interface Moodboard {
-  id: string;
+export interface MoodboardData {
+  id: string; // projectId
   title: string;
   description?: string;
-  user_id: string;
-  layout: string;
-  images: MoodboardImage[];
+  layout?: string;
+  images: MoodboardItem[];
+  ownerId: string;
   createdAt: string;
   updatedAt: string;
 }
 
-// Verificar si Firebase está disponible
-function isFirebaseAvailable(): boolean {
-  return typeof window !== 'undefined' && db !== undefined;
+// Project ID management
+let currentProjectId: string | null = null;
+let currentUserId: string | null = null;
+
+export function setProjectId(id: string, userId?: string) {
+  currentProjectId = id;
+  if (userId) currentUserId = userId;
 }
 
-// Clave de localStorage para moodboards
-const MOODBOARDS_KEY = 'creationx_moodboards';
+export function getProjectId(): string | null {
+  return currentProjectId;
+}
 
 const moodboardService = {
-  async getMoodboard(id: string): Promise<Moodboard | null> {
-    if (typeof window === 'undefined') return null;
-    
-    // Intentar Firebase primero
-    if (isFirebaseAvailable()) {
-      try {
-        const moodboardRef = doc(db!, 'moodboards', id);
-        const docSnap = await getDoc(moodboardRef);
-        
-        if (docSnap.exists()) {
-          console.log('✅ Moodboard cargado desde Firebase:', id);
-          return { id: docSnap.id, ...docSnap.data() } as Moodboard;
-        }
-      } catch (error) {
-        console.warn('⚠️ Error cargando desde Firebase:', error);
-      }
-    }
-    
-    // Fallback a localStorage
+  async getMoodboard(projectId: string): Promise<MoodboardData | null> {
     try {
-      const stored = localStorage.getItem(`moodboard-${id}`);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (error) {
-      console.error("Error loading moodboard from localStorage:", error);
-    }
+      // Obtener proyecto
+      const { data: project, error: projectError } = await supabase
+        .from('proyectos')
+        .select('*')
+        .eq('id', projectId)
+        .single();
 
-    return null;
-  },
+      if (projectError || !project) {
+        console.error('Error fetching project:', projectError);
+        return null;
+      }
 
-  async saveMoodboard(moodboard: Moodboard): Promise<boolean> {
-    if (typeof window === 'undefined') return false;
-    
-    // Sincronizar a Firebase
-    if (isFirebaseAvailable()) {
-      try {
-        const moodboardRef = doc(db!, 'moodboards', moodboard.id);
-        await setDoc(moodboardRef, {
-          ...moodboard,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-        console.log('✅ Moodboard guardado en Firebase:', moodboard.id);
-      } catch (error) {
-        console.warn('⚠️ Error guardando en Firebase:', error);
-      }
-    }
-    
-    // Siempre guardar en localStorage como backup
-    try {
-      localStorage.setItem(`moodboard-${moodboard.id}`, JSON.stringify({
-        ...moodboard,
-        updatedAt: new Date().toISOString()
-      }));
+      // Obtener items del moodboard
+      const { data: itemsRaw, error: itemsError } = await supabase
+        .from('moodboard_items')
+        .select('*')
+        .eq('proyecto_id', projectId)
+        .order('created_at', { ascending: true });
       
-      // Actualizar lista de moodboards en localStorage
-      const allMoodboards = this.getAllMoodboardsFromStorage();
-      const existingIndex = allMoodboards.findIndex(m => m.id === moodboard.id);
-      if (existingIndex >= 0) {
-        allMoodboards[existingIndex] = { ...moodboard, updatedAt: new Date().toISOString() };
-      } else {
-        allMoodboards.push({ ...moodboard, updatedAt: new Date().toISOString() });
+      const items = itemsRaw?.map(item => ({
+        ...item,
+        url: item.url_imagen || '',
+      })) as MoodboardItem[];
+
+      if (itemsError) {
+        console.error('Error fetching moodboard items:', itemsError);
+        return null;
       }
-      localStorage.setItem(MOODBOARDS_KEY, JSON.stringify(allMoodboards));
-      
-      return true;
+
+      return {
+        id: project.id,
+        title: project.nombre,
+        description: '', // La tabla proyectos no tiene description, podríamos agregarla
+        layout: '',
+        images: items || [],
+        ownerId: project.user_id,
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+      };
     } catch (error) {
-      console.error("Error saving moodboard to localStorage:", error);
-      return false;
+      console.error('Unexpected error fetching moodboard:', error);
+      return null;
     }
   },
 
-  async getMoodboardsByUser(userId: string): Promise<Moodboard[]> {
-    if (typeof window === 'undefined') return [];
-    
-    // Intentar Firebase primero
-    if (isFirebaseAvailable()) {
-      try {
-        const moodboardsRef = collection(db!, 'moodboards');
-        const q = query(moodboardsRef, where('user_id', '==', userId));
-        const querySnapshot = await getDocs(q);
-        
-        const moodboards: Moodboard[] = [];
-        querySnapshot.forEach((doc) => {
-          moodboards.push({ id: doc.id, ...doc.data() } as Moodboard);
+  async getMoodboards(userId: string): Promise<MoodboardData[]> {
+    try {
+      // Obtener proyectos de tipo moodboard del usuario
+      const { data: projects, error: projectsError } = await supabase
+        .from('proyectos')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('tipo', 'moodboard');
+
+      if (projectsError || !projects) {
+        console.error('Error fetching projects:', projectsError);
+        return [];
+      }
+
+      const moodboards: MoodboardData[] = [];
+      
+      for (const project of projects) {
+        const { data: items } = await supabase
+          .from('moodboard_items')
+          .select('*')
+          .eq('proyecto_id', project.id);
+
+        moodboards.push({
+          id: project.id,
+          title: project.nombre,
+          description: '',
+          layout: '',
+          images: items?.map(item => ({ ...item, url: item.url_imagen || '' })) || [],
+          ownerId: project.user_id,
+          createdAt: project.created_at,
+          updatedAt: project.updated_at,
         });
-        
-        console.log('✅ Moodboards cargados desde Firebase:', moodboards.length);
-        return moodboards.sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-      } catch (error) {
-        console.warn('⚠️ Error cargando moodboards desde Firebase:', error);
       }
-    }
-    
-    // Fallback a localStorage
-    return this.getAllMoodboardsFromStorage()
-      .filter(m => m.user_id === userId)
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  },
 
-  getAllMoodboardsFromStorage(): Moodboard[] {
-    try {
-      const stored = localStorage.getItem(MOODBOARDS_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
+      return moodboards;
+    } catch (error) {
+      console.error('Unexpected error fetching moodboards:', error);
       return [];
     }
   },
 
-  async getAllMoodboards(): Promise<Moodboard[]> {
-    if (typeof window === 'undefined') return [];
-    
-    // Intentar Firebase primero
-    if (isFirebaseAvailable()) {
-      try {
-        const moodboardsRef = collection(db!, 'moodboards');
-        const querySnapshot = await getDocs(moodboardsRef);
-        
-        const moodboards: Moodboard[] = [];
-        querySnapshot.forEach((doc) => {
-          moodboards.push({ id: doc.id, ...doc.data() } as Moodboard);
-        });
-        
-        return moodboards.sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-      } catch (error) {
-        console.warn('⚠️ Error cargando todos los moodboards:', error);
+  async createMoodboard(data: Omit<MoodboardData, "id" | "createdAt" | "updatedAt">): Promise<MoodboardData> {
+    try {
+      // Crear proyecto
+      const { data: project, error: projectError } = await supabase
+        .from('proyectos')
+        .insert({
+          nombre: data.title,
+          tipo: 'moodboard',
+          user_id: data.ownerId,
+        })
+        .select()
+        .single();
+
+      if (projectError || !project) {
+        throw new Error(`Error creating project: ${projectError?.message}`);
       }
+
+      // Insertar items si los hay
+      const itemsToInsert = data.images.map((img: any) => ({
+        posicion_x: img.posicion_x || img.x || 0,
+        posicion_y: img.posicion_y || img.y || 0,
+        url_imagen: img.url_imagen || img.url || img.src || '',
+        proyecto_id: project.id,
+      }));
+
+      if (itemsToInsert.length > 0) {
+        const { error: itemsError } = await supabase
+          .from('moodboard_items')
+          .insert(itemsToInsert);
+
+        if (itemsError) {
+          console.error('Error inserting moodboard items:', itemsError);
+        }
+      }
+
+      // Obtener items insertados
+      const { data: items } = await supabase
+        .from('moodboard_items')
+        .select('*')
+        .eq('proyecto_id', project.id);
+
+      return {
+        id: project.id,
+        title: project.nombre,
+        description: data.description,
+        layout: data.layout,
+        images: items?.map(item => ({ ...item, url: item.url_imagen || '' })) || [],
+        ownerId: project.user_id,
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+      };
+    } catch (error) {
+      console.error('Unexpected error creating moodboard:', error);
+      // Fallback: crear moodboard mock
+      return {
+        id: `mood-${Date.now()}`,
+        title: data.title,
+        description: data.description,
+        layout: data.layout,
+        images: data.images,
+        ownerId: data.ownerId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
     }
-    
-    return this.getAllMoodboardsFromStorage()
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   },
 
-  async deleteMoodboard(id: string): Promise<boolean> {
-    if (typeof window === 'undefined') return false;
-    
-    // Eliminar de Firebase
-    if (isFirebaseAvailable()) {
-      try {
-        await deleteDoc(doc(db!, 'moodboards', id));
-        console.log('✅ Moodboard eliminado de Firebase:', id);
-      } catch (error) {
-        console.warn('⚠️ Error eliminando de Firebase:', error);
-      }
-    }
-    
-    // Eliminar de localStorage
+  async updateMoodboard(moodboardId: string, updates: Partial<MoodboardData>): Promise<MoodboardData | null> {
     try {
-      localStorage.removeItem(`moodboard-${id}`);
-      
-      // Actualizar lista en localStorage
-      const allMoodboards = this.getAllMoodboardsFromStorage()
-        .filter(m => m.id !== id);
-      localStorage.setItem(MOODBOARDS_KEY, JSON.stringify(allMoodboards));
-      
+      // Actualizar proyecto
+      if (updates.title) {
+        await supabase
+          .from('proyectos')
+          .update({ nombre: updates.title })
+          .eq('id', moodboardId);
+      }
+
+      // Si hay nuevas imágenes, hacer upsert
+      if (updates.images) {
+        // Eliminar items existentes y reemplazar
+        await supabase
+          .from('moodboard_items')
+          .delete()
+          .eq('proyecto_id', moodboardId);
+
+        const itemsToInsert = updates.images.map((img: any) => ({
+          posicion_x: img.posicion_x || img.x || 0,
+          posicion_y: img.posicion_y || img.y || 0,
+          url_imagen: img.url_imagen || img.url || img.src || '',
+          proyecto_id: moodboardId,
+        }));
+
+        if (itemsToInsert.length > 0) {
+          await supabase
+            .from('moodboard_items')
+            .insert(itemsToInsert);
+        }
+      }
+
+      // Obtener moodboard actualizado
+      return await this.getMoodboard(moodboardId);
+    } catch (error) {
+      console.error('Unexpected error updating moodboard:', error);
+      return null;
+    }
+  },
+
+  async deleteMoodboard(moodboardId: string): Promise<boolean> {
+    try {
+      // Los items se eliminarán en cascade por la foreign key
+      const { error } = await supabase
+        .from('proyectos')
+        .delete()
+        .eq('id', moodboardId);
+
+      if (error) {
+        console.error('Error deleting moodboard:', error);
+        return false;
+      }
+
       return true;
     } catch (error) {
-      console.error("Error deleting moodboard from localStorage:", error);
+      console.error('Unexpected error deleting moodboard:', error);
       return false;
     }
   },
 
-  extractColorsFromImage(imageUrl: string): string[] {
-    const mockColors = [
-      "#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A",
-      "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E2",
-      "#F8B500", "#E74C3C", "#3498DB", "#2ECC71",
-      "#9B59B6", "#1ABC9C", "#E67E22", "#34495E"
-    ];
+  // Función para upsert de un item individual (para cuando se mueve un elemento)
+  async upsertItem(
+    projectId: string,
+    imageUrl: string,
+    x: number,
+    y: number,
+    itemId?: string
+  ): Promise<MoodboardItem | null> {
+    try {
+      if (itemId) {
+        // Actualizar item existente
+        const { data, error } = await supabase
+          .from('moodboard_items')
+          .update({
+            posicion_x: x,
+            posicion_y: y,
+            url_imagen: imageUrl,
+          })
+          .eq('id', itemId)
+          .eq('proyecto_id', projectId)
+          .select()
+          .single();
 
-    return mockColors
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 6);
+        if (error) {
+          console.error('Error updating moodboard item:', error);
+          return null;
+        }
+        return data as MoodboardItem;
+      } else {
+        // Insertar nuevo item
+        const { data, error } = await supabase
+          .from('moodboard_items')
+          .insert({
+            proyecto_id: projectId,
+            url_imagen: imageUrl,
+            posicion_x: x,
+            posicion_y: y,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error inserting moodboard item:', error);
+          return null;
+        }
+        return data as MoodboardItem;
+      }
+    } catch (error) {
+      console.error('Unexpected error upserting moodboard item:', error);
+      return null;
+    }
   },
 };
 

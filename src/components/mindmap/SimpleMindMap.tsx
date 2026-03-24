@@ -2,8 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Minus, Maximize2, Users } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import { doc, onSnapshot, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface Node {
   id: string;
@@ -53,35 +51,20 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   
   const [activeUsers, setActiveUsers] = useState<number>(1);
-  const [isFirebaseAvailable, setIsFirebaseAvailable] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const syncToFirebase = async (updatedNodes?: Node[], updatedConnections?: Connection[]) => {
-    if (!isFirebaseAvailable || !db || !mindmapId) return;
-
-    if (syncTimeoutRef.current) {
-      clearTimeout(syncTimeoutRef.current);
+  const saveToLocal = (updatedNodes?: Node[], updatedConnections?: Connection[]) => {
+    if (!mindmapId) return;
+    try {
+      localStorage.setItem(`mindmap-${mindmapId}`, JSON.stringify({
+        nodes: updatedNodes || nodes,
+        connections: updatedConnections || connections
+      }));
+    } catch (error) {
+      console.warn('Error guardando localmente:', error);
     }
-
-    syncTimeoutRef.current = setTimeout(async () => {
-      if (!db) return;
-      try {
-        setIsSyncing(true);
-        const mapRef = doc(db, 'mindmaps', mindmapId);
-        await updateDoc(mapRef, {
-          nodes: updatedNodes || nodes,
-          connections: updatedConnections || connections,
-          updatedAt: serverTimestamp()
-        });
-      } catch (error) {
-        console.warn('⚠️ Error sincronizando:', error);
-      } finally {
-        setIsSyncing(false);
-      }
-    }, 500);
   };
 
   const getNodeColor = (nodeId: string) => {
@@ -107,7 +90,7 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
     };
     const updatedNodes = [...nodes, newNode];
     setNodes(updatedNodes);
-    syncToFirebase(updatedNodes, connections);
+    saveToLocal(updatedNodes, connections);
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -160,7 +143,7 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
         node.id === draggingNode ? { ...node, x, y } : node
       );
       setNodes(updatedNodes);
-      syncToFirebase(updatedNodes, connections);
+      saveToLocal(updatedNodes, connections);
     }
   };
 
@@ -174,7 +157,7 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
       if (!exists) {
         const updatedConnections = [...connections, { from: connectingFrom, to: hoveredNode }];
         setConnections(updatedConnections);
-        syncToFirebase(nodes, updatedConnections);
+        saveToLocal(nodes, updatedConnections);
       }
     }
     
@@ -229,7 +212,7 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
         if (!exists) {
           const updatedConnections = [...connections, { from: connectingFrom, to: nodeId }];
           setConnections(updatedConnections);
-          syncToFirebase(nodes, updatedConnections);
+          saveToLocal(nodes, updatedConnections);
         }
       }
       setConnectingFrom(null);
@@ -254,7 +237,7 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
         node.id === editingNode ? { ...node, text: editingText.trim() } : node
       );
       setNodes(updatedNodes);
-      syncToFirebase(updatedNodes, connections);
+      saveToLocal(updatedNodes, connections);
     }
     setEditingNode(null);
     setEditingText('');
@@ -299,18 +282,13 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
         <span className="text-sm font-medium text-white/80">Agregar Nodo</span>
       </button>
 
-      {/* Collaboration indicator */}
+      {/* Mode indicator */}
       <div className="absolute top-4 left-56 z-20 flex items-center gap-3 px-4 py-2.5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl">
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-cyan-400" />
           <span className="text-sm font-medium text-white">{activeUsers}</span>
         </div>
-        {isFirebaseAvailable && (
-          <div className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-yellow-500 animate-pulse' : 'bg-emerald-500'}`} />
-        )}
-        {!isFirebaseAvailable && (
-          <span className="text-xs text-white/40">Local</span>
-        )}
+        <span className="text-xs text-white/40">Local</span>
       </div>
 
       {/* Zoom controls */}
@@ -345,11 +323,6 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
       <div className="absolute top-4 right-4 z-20 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 text-sm max-w-xs">
         <div className="font-bold mb-2 flex items-center gap-2 text-white">
           Cómo usar:
-          {isFirebaseAvailable && (
-            <span className="text-xs px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-full">
-              Colaborativo
-            </span>
-          )}
         </div>
         <ol className="space-y-1 text-white/50">
           <li>1. Arrastra nodos para moverlos</li>

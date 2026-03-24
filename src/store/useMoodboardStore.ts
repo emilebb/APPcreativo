@@ -1,6 +1,15 @@
+// ============================================================================
+// CREATIONX - Moodboard Store
+// Store de Zustand para el Moodboard
+// ============================================================================
+
 "use client";
 
 import { create } from "zustand";
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 export interface MoodboardImage {
   id: string;
@@ -16,14 +25,19 @@ export interface MoodboardImage {
 
 interface MoodboardState {
   // Estado
+  projectId: string | null;
+  ownerId: string | null;
   images: MoodboardImage[];
   selectedId: string | null;
   title: string;
   isDirty: boolean;
+  isLoading: boolean;
+  isSaving: boolean;
+  error: string | null;
   stageScale: number;
   stagePosition: { x: number; y: number };
 
-  // Acciones
+  // Acciones locales
   setTitle: (title: string) => void;
   setImages: (images: MoodboardImage[]) => void;
   addImage: (image: Omit<MoodboardImage, "id">) => string;
@@ -36,21 +50,39 @@ interface MoodboardState {
   setStageScale: (scale: number) => void;
   setStagePosition: (position: { x: number; y: number }) => void;
   markClean: () => void;
-  loadMoodboard: (data: { title?: string; images: MoodboardImage[] }) => void;
+
+  // Acciones asíncronas
+  saveToLocal: () => Promise<boolean>;
+  loadFromLocal: (projectId: string) => Promise<boolean>;
+  loadMoodboard: (projectId: string | { title: string; images: MoodboardImage[] }) => Promise<boolean>;  // alias para compatibilidad
+  initProject: (projectId: string, ownerId: string) => Promise<void>;
 }
+
+// ============================================================================
+// HELPERS
+// ============================================================================
 
 const generateId = () => `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+// ============================================================================
+// STORE
+// ============================================================================
+
 export const useMoodboardStore = create<MoodboardState>((set, get) => ({
   // Estado inicial
+  projectId: null,
+  ownerId: null,
   images: [],
   selectedId: null,
   title: "Sin título",
   isDirty: false,
+  isLoading: false,
+  isSaving: false,
+  error: null,
   stageScale: 1,
   stagePosition: { x: 0, y: 0 },
 
-  // Acciones
+  // Acciones locales
   setTitle: (title) => set({ title, isDirty: true }),
 
   setImages: (images) => set({ images, isDirty: true }),
@@ -62,6 +94,13 @@ export const useMoodboardStore = create<MoodboardState>((set, get) => ({
       selectedId: id,
       isDirty: true,
     }));
+    
+    // Auto-save si hay proyecto activo
+    const state = get();
+    if (state.projectId) {
+      setTimeout(() => get().saveToLocal(), 100);
+    }
+    
     return id;
   },
 
@@ -72,6 +111,12 @@ export const useMoodboardStore = create<MoodboardState>((set, get) => ({
       ),
       isDirty: true,
     }));
+    
+    // Auto-save
+    const state = get();
+    if (state.projectId) {
+      setTimeout(() => get().saveToLocal(), 100);
+    }
   },
 
   deleteImage: (id) => {
@@ -84,22 +129,14 @@ export const useMoodboardStore = create<MoodboardState>((set, get) => ({
 
   deleteSelected: () => {
     const { selectedId, deleteImage } = get();
-    if (selectedId) {
-      deleteImage(selectedId);
-    }
+    if (selectedId) deleteImage(selectedId);
   },
 
   setSelected: (id) => set({ selectedId: id }),
 
   clearSelection: () => set({ selectedId: null }),
 
-  clearBoard: () => {
-    set({
-      images: [],
-      selectedId: null,
-      isDirty: true,
-    });
-  },
+  clearBoard: () => set({ images: [], selectedId: null, isDirty: true }),
 
   setStageScale: (scale) => set({ stageScale: scale }),
 
@@ -107,31 +144,77 @@ export const useMoodboardStore = create<MoodboardState>((set, get) => ({
 
   markClean: () => set({ isDirty: false }),
 
-  loadMoodboard: (data) => {
+  // Acciones asíncronas
+  saveToLocal: async () => {
+    const { projectId, images, title } = get();
+    
+    if (!projectId) {
+      return false;
+    }
+
+    set({ isSaving: true });
+
+    try {
+      localStorage.setItem(`moodboard-${projectId}`, JSON.stringify({ images, title }));
+      set({ isDirty: false, isSaving: false, error: null });
+      console.log("Moodboard guardado localmente");
+      return true;
+    } catch (error: any) {
+      console.error("Error guardando:", error);
+      set({ isSaving: false, error: error.message });
+      return false;
+    }
+  },
+
+  loadFromLocal: async (projectId: string) => {
+    set({ isLoading: true });
+
+    try {
+      const stored = localStorage.getItem(`moodboard-${projectId}`);
+      if (stored) {
+        const data = JSON.parse(stored);
+        set({
+          projectId,
+          title: data.title || "Sin título",
+          images: data.images || [],
+          isDirty: false,
+          isLoading: false,
+        });
+        return true;
+      }
+
+      set({ isLoading: false });
+      return false;
+    } catch (error: any) {
+      console.error("Error cargando:", error);
+      set({ isLoading: false, error: error.message });
+      return false;
+    }
+  },
+
+  // Alias para compatibilidad
+  loadMoodboard: async (dataOrId: string | { title: string; images: MoodboardImage[] }) => {
+    if (typeof dataOrId === 'string') {
+      return get().loadFromLocal(dataOrId);
+    }
+    // Carga datos directamente
     set({
-      title: data.title || "Sin título",
-      images: data.images || [],
-      selectedId: null,
+      title: dataOrId.title || "Sin título",
+      images: dataOrId.images || [],
       isDirty: false,
     });
+    return true;
+  },
+
+  initProject: async (projectId, ownerId) => {
+    set({ projectId, ownerId, isLoading: true });
+    await get().loadFromLocal(projectId);
+    set({ isLoading: false });
   },
 }));
 
-// Selector para serializar (para guardar en localStorage/Firebase)
+// Selector para serializar
 export const useSerializeMoodboard = () => {
   const { title, images } = useMoodboardStore.getState();
-  return {
-    title,
-    images: images.map((img) => ({
-      id: img.id,
-      src: img.src,
-      x: img.x,
-      y: img.y,
-      width: img.width,
-      height: img.height,
-      rotation: img.rotation,
-      scaleX: img.scaleX,
-      scaleY: img.scaleY,
-    })),
-  };
+  return { title, images };
 };
