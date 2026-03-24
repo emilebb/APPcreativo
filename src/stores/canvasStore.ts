@@ -37,6 +37,9 @@ export interface CanvasElement {
   
   // Para líneas y freeform
   points?: number[];
+  
+  // Para círculos
+  radius?: number;
 }
 
 export interface StyleConfig {
