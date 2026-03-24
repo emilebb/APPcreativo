@@ -273,7 +273,7 @@ export function getSuggestedAction(blockType: BlockType): {
       title: 'Genera tu primera idea',
       description: 'Dile al Coach qué quieres crear y obtén 3 ideas para empezar',
       cta: 'Hablar con Coach IA',
-      tool: '/chat/bloqueo'
+      tool: '/chat'
     },
     too_many_ideas: {
       title: 'Elige UNA idea ahora',
@@ -285,7 +285,7 @@ export function getSuggestedAction(blockType: BlockType): {
       title: 'Define "terminado"',
       description: 'Establece criterios claros de cuándo algo está listo',
       cta: 'Consultar Coach',
-      tool: '/chat/bloqueo'
+      tool: '/chat'
     },
     lack_inspiration: {
       title: 'Crea Moodboard',
@@ -309,7 +309,7 @@ export function getSuggestedAction(blockType: BlockType): {
       title: 'Simplifica el alcance',
       description: 'Define la versión más simple que puedes hacer',
       cta: 'Consultar Coach',
-      tool: '/chat/bloqueo'
+      tool: '/chat'
     },
     none: {
       title: 'Sigue creando',

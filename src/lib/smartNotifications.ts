@@ -75,7 +75,7 @@ export const NOTIFICATION_TRIGGERS: NotificationTrigger[] = [
       message: 'Parece que estás atorado. ¿Quieres que el Coach te ayude?',
       action: {
         label: 'Hablar con Coach',
-        url: '/chat/bloqueo'
+        url: '/chat'
       },
       priority: 'high'
     }
