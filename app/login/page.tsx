@@ -20,7 +20,7 @@ function LoginContent() {
       if (from && from.startsWith('/') && !from.startsWith('/login') && !from.startsWith('/signup') && !from.startsWith('/auth')) {
         router.replace(from)
       } else {
-        router.replace('/explore')
+        router.replace('/chat')
       }
     }
   }, [user, authLoading, router, searchParams])
@@ -48,7 +48,7 @@ function LoginContent() {
           setError("Tu email aún no está confirmado. Puedes usar la app, pero te recomendamos confirmar tu email pronto.")
           // Redirigir después de un momento
           setTimeout(() => {
-            router.push('/explore')
+            router.push('/chat')
           }, 2000)
         } else if (error.message.includes('Invalid login credentials')) {
           setError("Email o contraseña incorrectos. ¿No tienes cuenta? ")
