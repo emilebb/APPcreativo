@@ -41,7 +41,7 @@ export default function ProjectPage() {
             router.push(`/mindmap/${projectId}`);
             break;
           case 'canvas':
-            router.push(`/canvas/${projectId}`);
+            // Canvas redirect removed - page not implemented
             break;
           default:
             // Stay on this page for other types

@@ -72,7 +72,7 @@ export default function Sidebar() {
       console.log('Project created successfully:', project)
       
       const routes = {
-        canvas: `/canvas/${project.id}`,
+        canvas: `/canvas`, // Canvas simple, sin ID específico
         moodboard: `/moodboard/${project.id}`,
         mindmap: `/mindmap/${project.id}`
       }
@@ -164,17 +164,27 @@ export default function Sidebar() {
                 Proyectos Recientes
               </h3>
               <div className="space-y-2">
-                {projects.slice(0, 5).map((project) => (
-                  <Link
-                    key={project.id}
-                    href={`/canvas/${project.id}`}
-                    className="flex items-center gap-2 p-2 rounded-lg text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Folder className="w-4 h-4" />
-                    <span className="truncate">{project.title}</span>
-                  </Link>
-                ))}
+                {projects.slice(0, 5).map((project) => {
+                  // Determinar la ruta según el tipo de proyecto
+                  const projectRoutes = {
+                    canvas: '/canvas',
+                    moodboard: `/moodboard/${project.id}`,
+                    mindmap: `/mindmap/${project.id}`
+                  };
+                  const href = projectRoutes[project.type as keyof typeof projectRoutes] || '/';
+                  
+                  return (
+                    <Link
+                      key={project.id}
+                      href={href}
+                      className="flex items-center gap-2 p-2 rounded-lg text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Folder className="w-4 h-4" />
+                      <span className="truncate">{project.title}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
