@@ -84,17 +84,11 @@ export default function HomePage() {
               detecta bloqueos y genera ideas, planes y contenido al instante.
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 px-4 mb-10">
-              <Link
-                href="/start"
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-2xl shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02] transition-all text-center"
-              >
-                Comenzar Gratis
-              </Link>
+            {/* CTA Button */}
+            <div className="flex justify-center px-4 mb-10">
               <Link
                 href="/auth/login"
-                className="w-full sm:w-auto px-8 py-4 backdrop-blur-xl bg-white/5 border border-white/20 text-white rounded-2xl font-bold text-lg hover:bg-white/10 hover:border-white/30 transition-all text-center"
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-2xl shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02] transition-all text-center"
               >
                 Iniciar Sesión
               </Link>
