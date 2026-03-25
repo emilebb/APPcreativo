@@ -94,7 +94,7 @@ export const projectServiceSupabase = {
         tipo: type,
         user_id: userId,
         estado: 'active',
-        descripcion: data?.description || '',
+        descripcion: data?.title || '', // Usar title como description
         data: data?.data || null
       };
 
