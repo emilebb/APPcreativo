@@ -258,14 +258,14 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
     // Get canvas bounds
     const rect = canvasRef.current.getBoundingClientRect();
 
-    // Normalize coordinates: subtract canvas position, subtract pan, divide by scale
-    const normalizedX = (e.clientX - rect.left - panOffset.x) / scale;
-    const normalizedY = (e.clientY - rect.top - panOffset.y) / scale;
+    // Store SCREEN coordinates (not normalized) - we'll render outside the scaled container
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
 
     setContextMenu({
       show: true,
-      x: normalizedX,
-      y: normalizedY,
+      x: screenX,
+      y: screenY,
       nodeId
     });
   };
@@ -556,8 +556,8 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
           <div
             className="fixed z-[9999] backdrop-blur-xl bg-[#1a1a2e]/95 border border-white/10 rounded-xl shadow-2xl py-2 min-w-[160px]"
             style={{
-              left: contextMenu.x * scale + panOffset.x,
-              top: contextMenu.y * scale + panOffset.y
+              left: contextMenu.x,
+              top: contextMenu.y
             }}
             onClick={(e) => e.stopPropagation()}
           >
