@@ -1,6 +1,4 @@
 "use client";
-export const dynamic = 'force-dynamic';
-export const revalidate = 0; // Esto asegura que sea un número y no una función
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from "next/navigation";
