@@ -1,26 +1,21 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Validar variables de entorno
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables');
-}
+// Exportamos la instancia para usarla en toda la app
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
-const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
-
-// Context con valor por defecto para evitar undefined
 const AuthContext = createContext({
   user: null,
   session: null,
   loading: true,
   isInitialLoading: true,
   isAuthenticated: false,
-  error: null, // 🔥 NUEVO: Estado de error
+  error: null,
   signOut: () => {},
-  randomQuote: "La creatividad es la inteligencia divirtiéndose..."
+  randomQuote: ""
 });
 
 export function AuthProvider({ children }) {
@@ -28,17 +23,12 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [error, setError] = useState(null); // 🔥 NUEVO: Estado de error
+  const [error, setError] = useState(null);
 
-  // Frases de inspiración creativa
   const inspirationalQuotes = [
     "La creatividad es la inteligencia divirtiéndose...",
     "Cada gran proyecto comienza con una simple idea...",
-    "Tu imaginación es tu única limitación...",
-    "El arte de crear es el arte de soñar...",
     "Transformamos ideas en realidades digitales...",
-    "La innovación nace de la audacia...",
-    "Cada línea de código es una pincelada...",
     "Diseña el futuro que quieres ver..."
   ];
 
@@ -48,36 +38,20 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
-    let subscription = null; // 🔥 NUEVO: Referencia explícita
 
-    // 1. Obtener sesión inicial
     const initializeAuth = async () => {
       try {
-        // Obtener sesión inicial
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
         
         if (mounted) {
-          if (error) {
-            console.error('Error getting session:', error);
-            setError(error);
-            setUser(null);
-            setSession(null);
-          } else {
-            setError(null);
-            setUser(session?.user || null);
-            setSession(session);
-          }
-          
-          // IMPORTANTE: Garantiza que loading pase a false
-          setLoading(false);
-          setIsInitialLoading(false);
+          if (sessionError) throw sessionError;
+          setSession(initialSession);
+          setUser(initialSession?.user || null);
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
+      } catch (err) {
+        if (mounted) setError(err);
+      } finally {
         if (mounted) {
-          setError(error);
-          setUser(null);
-          setSession(null);
           setLoading(false);
           setIsInitialLoading(false);
         }
@@ -86,52 +60,38 @@ export function AuthProvider({ children }) {
 
     initializeAuth();
 
-    // 2. Escuchar cambios de estado (Crucial para el login/logout)
-    subscription = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!mounted) return;
-        
-        console.log('Auth state changed:', event, session?.user?.email);
-        
-        try {
-          if (event === 'SIGNED_IN') {
-            setError(null);
-            setUser(session?.user || null);
-            setSession(session);
-          } else if (event === 'SIGNED_OUT') {
-            setError(null);
-            setUser(null);
-            setSession(null);
-          }
-          
-          // IMPORTANTE: Garantiza que loading pase a false en cualquier cambio
-          setLoading(false);
-          setIsInitialLoading(false);
-        } catch (err) {
-          console.error('Auth state change error:', err);
-          if (mounted) {
-            setError(err);
-          }
-        }
+    // 🔄 ESCUCHA TOTAL: Cubrimos todos los eventos de Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!mounted) return;
+
+      console.log(`🔔 Auth Event: ${event}`);
+
+      // Actualizamos estados para cualquier evento relevante
+      if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED', 'TOKEN_REFRESHED'].includes(event)) {
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
+        setError(null);
       }
-    );
+
+      setLoading(false);
+      setIsInitialLoading(false);
+    });
 
     return () => {
       mounted = false;
-      // 🔥 NUEVO: Cleanup explícito y seguro
-      if (subscription?.subscription) {
-        subscription.subscription.unsubscribe();
-      }
+      subscription?.unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
     try {
-      setError(null);
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-      setError(error);
+      setLoading(true);
+      const { error: signError } = await supabase.auth.signOut();
+      if (signError) throw signError;
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,7 +101,7 @@ export function AuthProvider({ children }) {
     loading,
     isInitialLoading,
     isAuthenticated: !!user,
-    error, // 🔥 NUEVO: Exponer estado de error
+    error,
     signOut,
     randomQuote
   };
@@ -153,10 +113,8 @@ export function AuthProvider({ children }) {
   );
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
-}
+};
