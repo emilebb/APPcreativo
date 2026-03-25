@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
+import { supabase } from "@/lib/supabase";
 import { Sparkles, Palette, Layout, MessageSquare, ArrowRight, CheckCircle2 } from "lucide-react";
 
 type OnboardingStep = 'welcome' | 'goal' | 'style' | 'ready';
@@ -14,6 +15,8 @@ export default function WelcomePage() {
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [selectedGoal, setSelectedGoal] = useState<CreativeGoal | null>(null);
   const [userName, setUserName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [coachTone, setCoachTone] = useState<'Direct' | 'Calm'>('Direct');
 
   const goals = [
     { id: 'design' as CreativeGoal, icon: Layout, title: 'Diseño & UX', desc: 'Interfaces, branding, productos digitales' },
@@ -36,28 +39,57 @@ export default function WelcomePage() {
     setStep('style');
   };
 
-  const handleComplete = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('onboarding_completed', 'true');
-      localStorage.setItem('user_name', userName);
-      localStorage.setItem('creative_goal', selectedGoal || '');
+  const handleComplete = async () => {
+    if (!user) {
+      alert('Debes iniciar sesión para guardar tu progreso');
+      router.push('/login');
+      return;
     }
-    
-    switch (selectedGoal) {
-      case 'design':
-        router.push('/canvas');
-        break;
-      case 'art':
-        router.push('/canvas');
-        break;
-      case 'content':
-        router.push('/moodboard/new');
-        break;
-      case 'business':
-        router.push('/mindmap/new');
-        break;
-      default:
-        router.push('/explore');
+
+    setIsSaving(true);
+    try {
+      // Guardar en Supabase
+      const { error } = await supabase.from('profiles').upsert({
+        id: user.id,
+        user_name: userName,
+        creative_role: selectedGoal,
+        main_goal: goals.find(g => g.id === selectedGoal)?.title || '',
+        preferred_style: 'Modern & Clean', // Default
+        coach_tone: coachTone,
+        onboarding_completed: true,
+        updated_at: new Date().toISOString()
+      });
+
+      if (error) throw error;
+
+      // Guardar en local para redundancia/fallback
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('onboarding_completed', 'true');
+        localStorage.setItem('user_name', userName);
+        localStorage.setItem('creative_goal', selectedGoal || '');
+        localStorage.setItem('coach_tone', coachTone);
+      }
+      
+      // Redirección
+      switch (selectedGoal) {
+        case 'design':
+        case 'art':
+          router.push('/canvas');
+          break;
+        case 'content':
+          router.push('/moodboard/new');
+          break;
+        case 'business':
+          router.push('/mindmap/new');
+          break;
+        default:
+          router.push('/explore');
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Hubo un error al guardar tu perfil. Inténtalo de nuevo.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -161,7 +193,10 @@ export default function WelcomePage() {
 
             <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
               <button
-                onClick={() => setStep('ready')}
+                onClick={() => {
+                  setCoachTone('Direct');
+                  setStep('ready');
+                }}
                 className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-left hover:bg-white/10 hover:border-violet-500/30 transition-all"
               >
                 <div className="text-5xl mb-5">⚡</div>
@@ -174,7 +209,10 @@ export default function WelcomePage() {
               </button>
 
               <button
-                onClick={() => setStep('ready')}
+                onClick={() => {
+                  setCoachTone('Calm');
+                  setStep('ready');
+                }}
                 className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-left hover:bg-white/10 hover:border-violet-500/30 transition-all"
               >
                 <div className="text-5xl mb-5">🧘</div>
