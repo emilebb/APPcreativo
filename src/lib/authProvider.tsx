@@ -176,9 +176,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (session?.user) {
         setUser(mapSupabaseUser(session.user));
-        if (event === 'SIGNED_IN') {
-          router.push('/explore');
-        }
+        // Don't auto-redirect - let the component that initiated login handle it
       } else {
         setUser(null);
         if (event === 'SIGNED_OUT') {

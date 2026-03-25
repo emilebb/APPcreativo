@@ -40,8 +40,14 @@ export default function ExplorePage() {
   }, [profile?.start_tool, router, hasRedirected]);
 
   useEffect(() => {
+    // Wait for auth to finish loading before deciding what to show
+    if (authLoading) {
+      return;
+    }
+
+    // If not authenticated, redirect to login
     if (!user) {
-      setLoading(false);
+      router.push('/login');
       return;
     }
 
@@ -73,7 +79,18 @@ export default function ExplorePage() {
     p.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (authLoading || loading) {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+          <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/50">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
