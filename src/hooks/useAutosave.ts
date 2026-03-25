@@ -2,7 +2,36 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import debounce from 'lodash.debounce';
+
+// Implementación manual de debounce para evitar dependencias externas
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): {
+  (...args: Parameters<T>): void;
+  cancel: () => void;
+} {
+  let timeout: NodeJS.Timeout | null = null;
+  
+  const debounced = (...args: Parameters<T>) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    
+    timeout = setTimeout(() => {
+      func(...args);
+    }, wait);
+  };
+
+  debounced.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
+
+  return debounced;
+}
 
 export type SaveStatus = 'saved' | 'saving' | 'error' | 'idle';
 
