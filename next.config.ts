@@ -100,8 +100,7 @@ const nextConfig: NextConfig = pwaConfig({
   experimental: {
     optimizePackageImports: ['framer-motion', 'lucide-react']
   },
-  // Evita errores de prerenderizado en páginas que usan hooks de Auth
-  eslint: { ignoreDuringBuilds: true },
+  // eslint: { ignoreDuringBuilds: true }, // <--- ELIMINADO: Next.js 16 incompatible
   typescript: { ignoreBuildErrors: true },
 });
 
