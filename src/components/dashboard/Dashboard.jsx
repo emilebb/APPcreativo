@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Plus, Trash2, Palette, Brain, Layout, Sparkles, Loader2 } from 'lucide-react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function Dashboard({ user }) {
   const [projects, setProjects] = useState([]);
@@ -12,7 +16,6 @@ export default function Dashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const supabase = createClientComponentClient();
 
   // Cargar proyectos desde Supabase
   useEffect(() => {
