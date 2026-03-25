@@ -3,6 +3,8 @@
 export const dynamic = 'force-dynamic';
 
 import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/authProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '@ai-sdk/react';
 import { TextStreamChatTransport } from 'ai';
@@ -57,8 +59,32 @@ function getMessageText(message: ChatMessage): string {
 // ============================================================================
 
 function ChatContent() {
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [input, setInput] = useState('');
   const promptSentRef = useRef(false);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return (
+      <div className="h-screen bg-[#050505] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white/50">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect
+  }
   
   const { messages, status, sendMessage } = useChat({
     transport: new TextStreamChatTransport({

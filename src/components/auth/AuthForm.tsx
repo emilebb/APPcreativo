@@ -57,8 +57,10 @@ export default function AuthForm({ initialMode = 'login' }: { initialMode?: Auth
         });
 
         if (error) throw error;
+        
+        // Small delay to allow auth state to propagate, then navigate
+        await new Promise(resolve => setTimeout(resolve, 100));
         router.push('/explore');
-        router.refresh();
       }
     } catch (error: any) {
       let errorText = error.message;
