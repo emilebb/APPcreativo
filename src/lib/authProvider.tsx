@@ -58,6 +58,8 @@ const AuthContext = createContext<AuthContextType>({
   resetPassword: async () => { throw new Error("Not initialized"); },
 });
 
+import { useRouter } from "next/navigation";
+
 export const useAuth = () => useContext(AuthContext);
 
 // ============================================================================
@@ -149,6 +151,7 @@ export const getFirebaseError = (error: any): string => {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     // Obtener sesión actual
@@ -169,10 +172,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth Event:", event);
+      
       if (session?.user) {
         setUser(mapSupabaseUser(session.user));
+        if (event === 'SIGNED_IN') {
+          router.push('/explore');
+        }
       } else {
         setUser(null);
+        if (event === 'SIGNED_OUT') {
+          router.push('/login');
+        }
       }
       // Asegurar que isLoading sea false después del primer evento
       setIsLoading(false);

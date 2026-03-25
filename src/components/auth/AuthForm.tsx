@@ -57,7 +57,7 @@ export default function AuthForm({ initialMode = 'login' }: { initialMode?: Auth
         });
 
         if (error) throw error;
-        router.push('/dashboard');
+        router.push('/explore');
         router.refresh();
       }
     } catch (error: any) {
