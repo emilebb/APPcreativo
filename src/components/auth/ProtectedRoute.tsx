@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, message }: ProtectedRouteProps) {
-  const { user, loading, isAuthChecking } = useAuth();
+  const { user, loading, isAuthChecking, isExiting } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -23,7 +23,11 @@ export default function ProtectedRoute({ children, message }: ProtectedRouteProp
 
   // Mientras Supabase verifica la sesión, mostramos la LoadingScreen profesional
   if (isAuthChecking || loading) {
-    return <LoadingScreen message={message} />;
+    return (
+      <div className={`transition-opacity duration-500 ${isExiting ? 'opacity-0' : 'opacity-100'}`}>
+        <LoadingScreen message={message} />
+      </div>
+    );
   }
 
   // Si no hay sesión, no renderizamos nada (el useEffect se encargará de redirigir)

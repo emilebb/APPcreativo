@@ -31,6 +31,7 @@ interface AuthContextType {
   isLoading: boolean;
   loading: boolean;  // alias para compatibilidad
   isAuthChecking: boolean; // Nuevo estado para controlar el parpadeo
+  isExiting: boolean; // Para la transición suave de salida
   isAuthenticated: boolean;
   signInWithGoogle: () => Promise<User>;
   signInWithEmail: (email: string, password: string) => Promise<User>;
@@ -52,6 +53,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   loading: true,
   isAuthChecking: true,
+  isExiting: false,
   isAuthenticated: false,
   signInWithGoogle: async () => { throw new Error("Not initialized"); },
   signInWithEmail: async () => { throw new Error("Not initialized"); },
@@ -154,6 +156,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthChecking, setIsAuthChecking] = useState(true); // Nuevo estado para evitar parpadeo
+  const [isExiting, setIsExiting] = useState(false); // Para la transición suave de salida
   const router = useRouter();
 
   useEffect(() => {
@@ -193,9 +196,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Si acaba de iniciar sesión, lo mandamos a explorar automáticamente
         if (event === 'SIGNED_IN') {
           console.log("AuthProvider: SIGNED_IN detected, redirecting to explore");
+          
+          // Esperamos un poco y activamos la animación de salida
           setTimeout(() => {
-            router.push('/explore');
-          }, 100); // Pequeño delay para asegurar que el estado se actualizó
+            setIsExiting(true); // Clase CSS para hacer fade-out
+            setTimeout(() => {
+              router.push('/explore');
+            }, 500); // Quitamos el componente del DOM después de la animación
+          }, 1500); // Tiempo total de carga
         }
       } else {
         console.log("AuthProvider: Setting user to null");
@@ -219,6 +227,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading,
     loading: isLoading,
     isAuthChecking,
+    isExiting,
     isAuthenticated: !!user,
     signInWithGoogle,
     signInWithEmail,

@@ -1,16 +1,40 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 
 interface LoadingScreenProps {
   message?: string;
   showLogo?: boolean;
 }
 
+// El "Script de Bienvenida" del Coach Creativo
+const coachMessages = [
+  "Buscando el hilo de tus ideas...",
+  "Desbloqueando nuevos lienzos creativos...",
+  "Sincronizando con tu flujo de trabajo...",
+  "Preparando el motor de inspiración...",
+  "Organizando tus proyectos en el Canvas...",
+  "Tu Copiloto Creativo se está activando...",
+  "Afilando las herramientas de diseño...",
+  "Cargando tu universo visual...",
+  "Conectando neuronas creativas...",
+  "Calibrando tu espacio de innovación...",
+  "Desempolvando lienzos digitales...",
+  "Preparando el taller creativo...",
+  "Sintonizando con tu frecuencia creativa...",
+  "Activando el modo inspiración...",
+  "Organizando tu ecosistema de ideas..."
+];
+
 const LoadingScreen = ({ 
-  message = "Sincronizando tu espacio de trabajo...",
+  message,
   showLogo = true 
 }: LoadingScreenProps) => {
+  // Elegimos el mensaje aleatorio si no se proporciona uno específico
+  const [randomMessage] = useState(() => 
+    message || coachMessages[Math.floor(Math.random() * coachMessages.length)]
+  );
+
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050505]">
       {/* Contenedor del Logo con Animación de Pulso */}
@@ -41,29 +65,40 @@ const LoadingScreen = ({
         </div>
       </div>
 
-      {/* Texto de Estado */}
-      <div className="mt-12 text-center max-w-sm">
+      {/* Texto de Estado con Personalidad del Coach */}
+      <div className="mt-12 text-center max-w-sm px-6">
         {showLogo && (
-          <h2 className="text-2xl font-bold text-white tracking-wider mb-2">
-            Creativo<span className="text-violet-500">X</span> AI
+          <h2 className="text-sm font-bold text-violet-400 tracking-[0.3em] uppercase mb-4">
+            CreativoX AI
           </h2>
         )}
-        <p className="text-gray-400 text-sm animate-pulse font-light">
-          {message}
-        </p>
+        
+        {/* Mensaje del Coach con animación de fade-in */}
+        <div className="relative">
+          <p className="text-white text-lg font-light italic animate-[fade-in_0.8s_ease-out]">
+            "{randomMessage}"
+          </p>
+          
+          {/* Indicador de que el Coach está "trabajando" */}
+          <div className="mt-3 flex justify-center gap-1">
+            <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-[bounce_1.4s_infinite]"></div>
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-[bounce_1.4s_infinite_0.2s]"></div>
+            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-[bounce_1.4s_infinite_0.4s]"></div>
+          </div>
+        </div>
         
         {/* Estados de carga dinámicos */}
-        <div className="mt-4 space-y-1">
+        <div className="mt-6 space-y-1 opacity-60">
           <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-            <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-[bounce_1s_infinite]"></div>
+            <div className="w-1 h-1 bg-violet-500 rounded-full"></div>
             <span>Verificando sesión</span>
           </div>
           <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-[bounce_1s_infinite_0.2s]"></div>
+            <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
             <span>Preparando tu espacio</span>
           </div>
           <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-[bounce_1s_infinite_0.4s]"></div>
+            <div className="w-1 h-1 bg-purple-500 rounded-full"></div>
             <span>Optimizando experiencia</span>
           </div>
         </div>
@@ -91,6 +126,11 @@ const LoadingScreen = ({
           0%, 100% { transform: translateY(0px) translateX(0px); }
           33% { transform: translateY(-30px) translateX(20px); }
           66% { transform: translateY(20px) translateX(-20px); }
+        }
+        
+        @keyframes fade-in {
+          0% { opacity: 0; transform: translateY(10px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
