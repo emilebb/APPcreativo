@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
@@ -6,6 +6,13 @@ import { TextStreamChatTransport } from "ai";
 import { ArrowUp, User, Zap } from "lucide-react";
 import AuthGuard from "@/components/auth/AuthGuard";
 import { useAuth } from "@/lib/authProvider";
+
+// Tipos para los mensajes
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  parts: Array<{ type: string; text?: string }>;
+}
 
 function TypingIndicator() {
   return (
@@ -95,6 +102,11 @@ Estoy aquí para ayudarte a:
     textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
   }, []);
 
+  // Extraer texto del mensaje
+  const getMessageText = (message: ChatMessage) => {
+    return message.parts?.[0]?.text || '';
+  };
+
   return (
     <div className="h-screen bg-[#050505] flex flex-col">
       {/* Header */}
@@ -119,7 +131,7 @@ Estoy aquí para ayudarte a:
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto py-6 px-6">
-          {messages.map((message) => (
+          {(messages as ChatMessage[]).map((message) => (
             <div
               key={message.id}
               className={`flex gap-4 mb-6 ${
@@ -140,7 +152,7 @@ Estoy aquí para ayudarte a:
                 }`}
               >
                 <p className="text-white/90 text-sm whitespace-pre-wrap">
-                  {message.parts?.[0]?.text || ''}
+                  {getMessageText(message)}
                 </p>
               </div>
 
@@ -202,6 +214,7 @@ Estoy aquí para ayudarte a:
               </button>
             </div>
           </form>
+          
           <p className="text-xs text-white/20 text-center mt-3">
             CreativoX AI puede cometer errores. Considera verificar información importante.
           </p>
