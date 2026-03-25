@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Plus, Minus, Maximize2, Users } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Plus, Minus, Maximize2, Users, Search, Copy, Camera } from 'lucide-react';
 
 interface Node {
   id: string;
@@ -51,6 +51,18 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   
   const [activeUsers, setActiveUsers] = useState<number>(1);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    show: boolean;
+    x: number;
+    y: number;
+    nodeId: string | null;
+  }>({ show: false, x: 0, y: 0, nodeId: null });
+
+  // Click vs drag detection
+  const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
+  const DRAG_THRESHOLD = 5;
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -175,6 +187,9 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
+    // Track mouse position for click vs drag detection
+    mouseDownPos.current = { x: e.clientX, y: e.clientY };
+
     if (e.ctrlKey || e.metaKey) {
       setIsDraggingConnection(true);
       setConnectingFrom(nodeId);
@@ -201,6 +216,18 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
     e.stopPropagation();
     
     if (editingNode) return;
+
+    // Check if this was actually a drag (not a click)
+    if (mouseDownPos.current) {
+      const dx = Math.abs(e.clientX - mouseDownPos.current.x);
+      const dy = Math.abs(e.clientY - mouseDownPos.current.y);
+      // If moved more than threshold, it was a drag - don't treat as click
+      if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+        mouseDownPos.current = null;
+        return;
+      }
+      mouseDownPos.current = null;
+    }
     
     if (connectingFrom) {
       if (connectingFrom !== nodeId) {
@@ -219,6 +246,58 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
     } else {
       setConnectingFrom(nodeId);
     }
+  };
+
+  // Handle right-click for context menu
+  const handleContextMenu = (nodeId: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!canvasRef.current) return;
+
+    // Get canvas bounds
+    const rect = canvasRef.current.getBoundingClientRect();
+
+    // Normalize coordinates: subtract canvas position, subtract pan, divide by scale
+    const normalizedX = (e.clientX - rect.left - panOffset.x) / scale;
+    const normalizedY = (e.clientY - rect.top - panOffset.y) / scale;
+
+    setContextMenu({
+      show: true,
+      x: normalizedX,
+      y: normalizedY,
+      nodeId
+    });
+  };
+
+  // Close context menu
+  const closeContextMenu = () => {
+    setContextMenu({ show: false, x: 0, y: 0, nodeId: null });
+  };
+
+  // Context menu actions
+  const handleContextMenuAction = (action: 'search' | 'copy' | 'snapshot') => {
+    if (!contextMenu.nodeId) return;
+
+    const node = nodes.find(n => n.id === contextMenu.nodeId);
+    if (!node) return;
+
+    switch (action) {
+      case 'search':
+        // Open search with node text
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(node.text)}`, '_blank');
+        break;
+      case 'copy':
+        // Copy node text to clipboard
+        navigator.clipboard.writeText(node.text);
+        break;
+      case 'snapshot':
+        // Could implement screenshot functionality
+        alert('Función de instantáneacoming soon');
+        break;
+    }
+
+    closeContextMenu();
   };
 
   const handleDoubleClick = (nodeId: string, currentText: string) => (e: React.MouseEvent) => {
@@ -346,6 +425,7 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
             handleTextBlur();
           }
           setConnectingFrom(null);
+          closeContextMenu();
         }}
       >
         <div
@@ -430,6 +510,7 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
                 onMouseDown={(e) => handleMouseDown(e, node.id)}
                 onClick={(e) => handleNodeClick(node.id, e)}
                 onDoubleClick={handleDoubleClick(node.id, node.text)}
+                onContextMenu={handleContextMenu(node.id)}
               >
                 {/* Glow effect */}
                 <div 
@@ -469,6 +550,40 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
             );
           })}
         </div>
+
+        {/* Context Menu - Outside scaled container to avoid zoom issues */}
+        {contextMenu.show && (
+          <div
+            className="fixed z-[9999] backdrop-blur-xl bg-[#1a1a2e]/95 border border-white/10 rounded-xl shadow-2xl py-2 min-w-[160px]"
+            style={{
+              left: contextMenu.x * scale + panOffset.x,
+              top: contextMenu.y * scale + panOffset.y
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => handleContextMenuAction('search')}
+              className="w-full px-4 py-2.5 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-3 transition-colors"
+            >
+              <Search className="w-4 h-4 text-cyan-400" />
+              Buscar
+            </button>
+            <button
+              onClick={() => handleContextMenuAction('copy')}
+              className="w-full px-4 py-2.5 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-3 transition-colors"
+            >
+              <Copy className="w-4 h-4 text-violet-400" />
+              Copiar
+            </button>
+            <button
+              onClick={() => handleContextMenuAction('snapshot')}
+              className="w-full px-4 py-2.5 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-3 transition-colors"
+            >
+              <Camera className="w-4 h-4 text-pink-400" />
+              Instantánea
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
