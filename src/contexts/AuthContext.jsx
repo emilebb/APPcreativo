@@ -15,7 +15,9 @@ const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 const AuthContext = createContext({
   user: null,
   session: null,
+  loading: true,
   isInitialLoading: true,
+  isAuthenticated: false,
   signOut: () => {},
   randomQuote: "La creatividad es la inteligencia divirtiéndose..."
 });
@@ -23,6 +25,7 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Frases de inspiración creativa
@@ -44,6 +47,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
+    // 1. Obtener sesión inicial
     const initializeAuth = async () => {
       try {
         // Obtener sesión inicial
@@ -58,15 +62,17 @@ export function AuthProvider({ children }) {
             setUser(session?.user || null);
             setSession(session);
           }
+          
+          // IMPORTANTE: Garantiza que loading pase a false
+          setLoading(false);
+          setIsInitialLoading(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
           setUser(null);
           setSession(null);
-        }
-      } finally {
-        if (mounted) {
+          setLoading(false);
           setIsInitialLoading(false);
         }
       }
@@ -74,7 +80,7 @@ export function AuthProvider({ children }) {
 
     initializeAuth();
 
-    // Escuchar cambios de autenticación
+    // 2. Escuchar cambios de estado (Crucial para el login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!mounted) return;
@@ -88,6 +94,10 @@ export function AuthProvider({ children }) {
           setUser(null);
           setSession(null);
         }
+        
+        // IMPORTANTE: Garantiza que loading pase a false en cualquier cambio
+        setLoading(false);
+        setIsInitialLoading(false);
       }
     );
 
@@ -108,7 +118,9 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     session,
+    loading,
     isInitialLoading,
+    isAuthenticated: !!user,
     signOut,
     randomQuote
   };

@@ -17,22 +17,22 @@ export default function Dashboard({ user }) {
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Cargar proyectos desde Supabase
+  // Cargar proyectos desde Supabase con limpieza
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const { data, error } = await supabase
-          .from('proyectos')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('estado', 'active')
-          .order('created_at', { ascending: false });
+        // Usar el nuevo servicio seguro
+        const { default: projectsSecure } = await import("@/lib/projectsSecure");
+        const { data, error } = await projectsSecure.getSecureProjects(user.id);
 
         if (error) throw error;
         setProjects(data || []);
         setFilteredProjects(data || []);
       } catch (error) {
         console.error('Error loading projects:', error);
+        // En caso de error, mostrar array vacío para evitar "fantasmas"
+        setProjects([]);
+        setFilteredProjects([]);
       } finally {
         setLoading(false);
       }
@@ -41,7 +41,7 @@ export default function Dashboard({ user }) {
     if (user?.id) {
       loadProjects();
     }
-  }, [user?.id, supabase]);
+  }, [user?.id]);
 
   // Filtrar proyectos (búsqueda sobre copia del estado)
   useEffect(() => {
@@ -96,26 +96,17 @@ export default function Dashboard({ user }) {
       // 1. Validación previa: ¿Hay usuario?
       if (!user?.id) throw new Error("Sesión no encontrada");
 
-      // 2. Preparar datos con estructura correcta
-      const newProject = {
-        nombre: `Nuevo ${type}`,
-        tipo: type,
-        user_id: user.id,
-        estado: 'active',
-        descripcion: '',
-        data: null
-      };
-
-      // 3. Insertar en Supabase con select para obtener el ID
-      const { data, error } = await supabase
-        .from('proyectos')
-        .insert(newProject)
-        .select()
-        .single();
+      // 2. Usar el servicio seguro
+      const { default: projectsSecure } = await import("@/lib/projectsSecure");
+      const { data, error } = await projectsSecure.createSecureProject(
+        user.id, 
+        `Nuevo ${type}`, 
+        type as 'moodboard' | 'mindmap' | 'canvas'
+      );
 
       if (error) throw error;
 
-      // 4. NAVEGACIÓN SEGURA: Solo si 'data' existe y tiene ID
+      // 3. NAVEGACIÓN SEGURA: Solo si 'data' existe y tiene ID
       if (data?.id) {
         window.location.href = `/${type}/${data.id}`;
       } else {
@@ -139,7 +130,7 @@ export default function Dashboard({ user }) {
         window.location.href = '/login';
       }
     }
-  }, [user?.id, supabase]);
+  }, [user?.id]);
 
   // Obtener icono según tipo
   const getProjectIcon = (type) => {
