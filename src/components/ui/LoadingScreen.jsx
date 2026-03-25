@@ -5,6 +5,10 @@ import { motion } from 'framer-motion';
 import { Sparkles, Zap, BrainCircuit } from 'lucide-react';
 
 export default function LoadingScreen({ quote }) {
+  // Frase por defecto si no se proporciona
+  const defaultQuote = "La creatividad es la inteligencia divirtiéndose...";
+  const displayQuote = quote || defaultQuote;
+
   return (
     <div className="fixed inset-0 bg-[#0a0a0c] flex items-center justify-center z-50">
       {/* Background Effects */}
@@ -97,12 +101,14 @@ export default function LoadingScreen({ quote }) {
           transition={{ delay: 0.5, duration: 0.5 }}
           className="relative"
         >
-          <div className="absolute inset-0 bg-[#9333ea]/10 blur-xl" />
-          <div className="relative bg-[#16161a]/50 backdrop-blur-sm border border-[#a855f7]/20 rounded-xl p-4">
-            <Sparkles className="w-4 h-4 text-[#a855f7] mx-auto mb-2" />
-            <p className="text-white/80 text-sm italic leading-relaxed">
-              {quote}
-            </p>
+          <div className="relative">
+            <div className="absolute inset-0 bg-[#9333ea]/10 blur-xl" />
+            <div className="relative bg-[#16161a]/50 backdrop-blur-sm border border-[#a855f7]/20 rounded-xl p-4">
+              <Sparkles className="w-4 h-4 text-[#a855f7] mx-auto mb-2" />
+              <p className="text-white/80 text-sm italic leading-relaxed">
+                {displayQuote}
+              </p>
+            </div>
           </div>
         </motion.div>
 

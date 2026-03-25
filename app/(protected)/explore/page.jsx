@@ -1,36 +1,34 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from "next/navigation";
+import { useEffect } from 'react';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import Dashboard from '@/components/dashboard/Dashboard';
 
+export const viewport = {
+  themeColor: '#a855f7',
+  width: 'device-width',
+  initialScale: 1,
+};
+
+export const metadata = {
+  title: 'Explorar - CreacionX',
+  description: 'Gestiona tus proyectos creativos',
+};
+
 export default function ExplorePage() {
-  const { user, isInitialLoading, randomQuote } = useAuth();
-  const [isClient, setIsClient] = useState(false);
+  const { user, isInitialLoading } = useAuth();
+  const router = useRouter();
 
-  // Evitar renderizado en servidor
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // No renderizar nada en el servidor
-  if (!isClient) {
-    return null;
-  }
-
-  // Mostrar Loading Screen mientras se inicializa la autenticación
-  if (isInitialLoading) {
-    return <LoadingScreen quote={randomQuote} />;
-  }
-
-  // Redirigir si no hay usuario
-  if (!user) {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+    if (!isInitialLoading && !user) {
+      router.push("/login");
     }
-    return null;
-  }
+  }, [user, isInitialLoading, router]);
+
+  if (isInitialLoading) return <LoadingScreen />;
+  if (!user) return null; // Evita renderizado protegido sin usuario
 
   return <Dashboard user={user} />;
 }
