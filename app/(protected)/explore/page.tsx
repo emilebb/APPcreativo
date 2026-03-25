@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
-import { projectService } from "@/lib/projectService";
+import { useProjects } from '@/hooks/useProjects';
 import { Search, Palette, Trash2, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
@@ -16,11 +16,12 @@ function ExploreContent() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const router = useRouter();
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [hasRedirected, setHasRedirected] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<any | null>(null);
+  
+  // Usar el hook personalizado con refresco optimista
+  const { projects, loading, error, createProject, deleteProject, searchProjects } = useProjects(user?.id || '');
 
   useEffect(() => {
     if (!profile?.start_tool || hasRedirected) return;
@@ -32,48 +33,25 @@ function ExploreContent() {
       canvas: '/canvas',
       explore: '/explore'
     };
-
-    const targetRoute = routes[profile.start_tool];
+    const targetRoute = routes[profile.start_tool as keyof typeof routes];
     if (targetRoute) {
       setHasRedirected(true);
       router.push(targetRoute);
     }
   }, [profile?.start_tool, router, hasRedirected]);
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        if (!user?.id) return;
-        const data = await projectService.getProjects(user.id);
-        setProjects(data);
-      } catch (error) {
-        console.error("Error loading projects:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Solo cargar proyectos si tenemos un user.id válido
-    if (user?.id) {
-      loadProjects();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
   const handleDelete = async (id: string) => {
     try {
-      await projectService.deleteProject(id);
-      setProjects(prev => prev.filter(p => p.id !== id));
       setProjectToDelete(null);
+      await deleteProject(id);
+      console.log("Proyecto eliminado correctamente");
     } catch (error) {
       console.error("Error deleting project:", error);
     }
   };
 
-  const filtered = projects.filter(p =>
-    p.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Usar búsqueda derivada
+  const filteredProjects = searchProjects(searchTerm);
 
   if (loading) {
     return (
@@ -81,6 +59,22 @@ function ExploreContent() {
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
           <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white/50">Cargando proyectos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="backdrop-blur-xl bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center">
+          <p className="text-red-400">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+          >
+            Reintentar
+          </button>
         </div>
       </div>
     );
@@ -142,7 +136,7 @@ function ExploreContent() {
               onClick={async () => {
                 if (!user) return;
                 try {
-                  const project = await projectService.createProject(user.id, 'moodboard');
+                  const project = await projectServiceSupabase.createProject(user.id, 'moodboard');
                   const initialMoodboardData = {
                     id: project.id,
                     title: project.title,
