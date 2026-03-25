@@ -56,14 +56,28 @@ export async function middleware(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Si no hay sesión y trata de entrar a áreas privadas, mandarlo al login
-  if (!session && (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/chat'))) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // Si no hay sesión y trata de entrar a áreas protegidas, mandarlo al login
+  // Actualizamos las rutas para que coincidan con nuestra estructura
+  const protectedRoutes = ['/dashboard', '/chat', '/explore', '/canvas', '/moodboard', '/mindmap', '/settings']
+  
+  if (!session && protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
+    // Permitir acceso a /login y / (landing)
+    if (request.nextUrl.pathname !== '/login' && request.nextUrl.pathname !== '/') {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
   }
 
   return response
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/chat/:path*'],
+  matcher: [
+    '/dashboard/:path*', 
+    '/chat/:path*', 
+    '/explore/:path*', 
+    '/canvas/:path*', 
+    '/moodboard/:path*', 
+    '/mindmap/:path*', 
+    '/settings/:path*'
+  ],
 }

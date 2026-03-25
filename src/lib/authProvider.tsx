@@ -160,9 +160,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Obtener sesión actual
     const getInitialSession = async () => {
       try {
+        console.log("AuthProvider: Getting initial session...");
         const { data: { session } } = await supabase.auth.getSession();
+        console.log("AuthProvider: Session data:", session);
         if (session?.user) {
+          console.log("AuthProvider: User found, setting user:", session.user.email);
           setUser(mapSupabaseUser(session.user));
+        } else {
+          console.log("AuthProvider: No session found");
         }
       } catch (error) {
         console.error("Error getting session:", error);
@@ -176,12 +181,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth Event:", event);
+      console.log("Auth Event:", event, "Session:", session);
       
       if (session?.user) {
+        console.log("AuthProvider: Setting user from event:", session.user.email);
         setUser(mapSupabaseUser(session.user));
         // Don't auto-redirect - let the component that initiated login handle it
       } else {
+        console.log("AuthProvider: Setting user to null");
         setUser(null);
         if (event === 'SIGNED_OUT') {
           router.push('/login');
