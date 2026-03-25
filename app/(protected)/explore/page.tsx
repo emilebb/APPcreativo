@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authProvider";
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects } from "@/hooks/useProjects";
+import AuthGuard from "@/components/auth/AuthGuard";
 import { Search, Palette, Trash2, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
@@ -186,32 +187,18 @@ function ExploreContent() {
                   Eliminar
                 </button>
               </div>
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleDelete(projectToDelete.id)}
-                className="flex-1 px-5 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
-              >
-                Eliminar
-              </button>
-              <button
-                onClick={() => setProjectToDelete(null)}
-                className="flex-1 px-5 py-3 backdrop-blur-xl bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/20 transition-colors"
-              >
-                Cancelar
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </main>
   );
 }
 
 export default function ExplorePage() {
   return (
-    <ProtectedRoute message="Preparando tu espacio creativo...">
+    <AuthGuard requireAuth={true}>
       <ExploreContent />
-    </ProtectedRoute>
+    </AuthGuard>
   );
 }
