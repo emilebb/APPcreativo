@@ -90,24 +90,51 @@ export default function Dashboard({ user }) {
     }
   }, [projects, filteredProjects, isDeleting, supabase]);
 
-  // Crear nuevo proyecto con validación segura
+  // Crear nuevo proyecto con Optimistic UI
   const handleCreateProject = useCallback(async (type) => {
     try {
       // 1. Validación previa: ¿Hay usuario?
       if (!user?.id) throw new Error("Sesión no encontrada");
 
-      // 2. Usar el servicio seguro
+      // 2. Crear proyecto optimista con ID temporal
+      const tempId = `tmp_${Date.now()}`;
+      const optimisticProject = {
+        id: tempId,
+        nombre: `Nuevo ${type}`,
+        tipo: type,
+        user_id: user.id,
+        estado: 'active',
+        descripcion: '',
+        data: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        isOptimistic: true // 🔥 NUEVO: Marcar como temporal
+      };
+
+      // 3. Añadir optimistamente a la UI
+      setProjects(prev => [optimisticProject, ...prev]);
+      setFilteredProjects(prev => [optimisticProject, ...prev]);
+
+      // 4. Usar el servicio seguro para crear en Supabase
       const { default: projectsSecure } = await import("@/lib/projectsSecure");
       const { data, error } = await projectsSecure.createSecureProject(
         user.id, 
         `Nuevo ${type}`, 
-        type as 'moodboard' | 'mindmap' | 'canvas'
+        type
       );
 
       if (error) throw error;
 
-      // 3. NAVEGACIÓN SEGURA: Solo si 'data' existe y tiene ID
+      // 5. Reemplazar temporal con el real
       if (data?.id) {
+        setProjects(prev => prev.map(p => 
+          p.id === tempId ? { ...data, isOptimistic: false } : p
+        ));
+        setFilteredProjects(prev => prev.map(p => 
+          p.id === tempId ? { ...data, isOptimistic: false } : p
+        ));
+
+        // 6. NAVEGACIÓN SEGURA: Solo si 'data' existe y tiene ID
         window.location.href = `/${type}/${data.id}`;
       } else {
         throw new Error("No se pudo obtener el ID del proyecto creado");
@@ -116,7 +143,11 @@ export default function Dashboard({ user }) {
     } catch (error) {
       console.error('Error creating project:', error);
       
-      // 5. Error handling con mensaje específico
+      // 7. Rollback: Eliminar proyectos optimistas
+      setProjects(prev => prev.filter(p => !p.isOptimistic));
+      setFilteredProjects(prev => prev.filter(p => !p.isOptimistic));
+      
+      // 8. Error handling con mensaje específico
       const errorMessage = error.message.includes("Sesión no encontrada") 
         ? "Tu sesión ha expirado. Por favor, inicia sesión nuevamente."
         : error.message.includes("duplicate key") 
@@ -125,7 +156,7 @@ export default function Dashboard({ user }) {
       
       alert(errorMessage);
       
-      // 6. Si es error de sesión, redirigir al login
+      // 9. Si es error de sesión, redirigir al login
       if (error.message.includes("Sesión no encontrada")) {
         window.location.href = '/login';
       }

@@ -18,6 +18,7 @@ const AuthContext = createContext({
   loading: true,
   isInitialLoading: true,
   isAuthenticated: false,
+  error: null, // 🔥 NUEVO: Estado de error
   signOut: () => {},
   randomQuote: "La creatividad es la inteligencia divirtiéndose..."
 });
@@ -27,6 +28,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [error, setError] = useState(null); // 🔥 NUEVO: Estado de error
 
   // Frases de inspiración creativa
   const inspirationalQuotes = [
@@ -46,6 +48,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
+    let subscription = null; // 🔥 NUEVO: Referencia explícita
 
     // 1. Obtener sesión inicial
     const initializeAuth = async () => {
@@ -56,9 +59,11 @@ export function AuthProvider({ children }) {
         if (mounted) {
           if (error) {
             console.error('Error getting session:', error);
+            setError(error);
             setUser(null);
             setSession(null);
           } else {
+            setError(null);
             setUser(session?.user || null);
             setSession(session);
           }
@@ -70,6 +75,7 @@ export function AuthProvider({ children }) {
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          setError(error);
           setUser(null);
           setSession(null);
           setLoading(false);
@@ -81,37 +87,51 @@ export function AuthProvider({ children }) {
     initializeAuth();
 
     // 2. Escuchar cambios de estado (Crucial para el login/logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    subscription = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!mounted) return;
         
         console.log('Auth state changed:', event, session?.user?.email);
         
-        if (event === 'SIGNED_IN') {
-          setUser(session?.user || null);
-          setSession(session);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setSession(null);
+        try {
+          if (event === 'SIGNED_IN') {
+            setError(null);
+            setUser(session?.user || null);
+            setSession(session);
+          } else if (event === 'SIGNED_OUT') {
+            setError(null);
+            setUser(null);
+            setSession(null);
+          }
+          
+          // IMPORTANTE: Garantiza que loading pase a false en cualquier cambio
+          setLoading(false);
+          setIsInitialLoading(false);
+        } catch (err) {
+          console.error('Auth state change error:', err);
+          if (mounted) {
+            setError(err);
+          }
         }
-        
-        // IMPORTANTE: Garantiza que loading pase a false en cualquier cambio
-        setLoading(false);
-        setIsInitialLoading(false);
       }
     );
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      // 🔥 NUEVO: Cleanup explícito y seguro
+      if (subscription?.subscription) {
+        subscription.subscription.unsubscribe();
+      }
     };
   }, []);
 
   const signOut = async () => {
     try {
+      setError(null);
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
+      setError(error);
     }
   };
 
@@ -121,6 +141,7 @@ export function AuthProvider({ children }) {
     loading,
     isInitialLoading,
     isAuthenticated: !!user,
+    error, // 🔥 NUEVO: Exponer estado de error
     signOut,
     randomQuote
   };
