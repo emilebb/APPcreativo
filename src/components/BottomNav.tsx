@@ -21,10 +21,10 @@ export default function BottomNav() {
       active: pathname === '/start'
     },
     {
-      href: '/chat',
+      href: '/creative-coach',
       icon: Lightbulb,
       label: 'Ideas',
-      active: pathname === '/chat' || pathname?.startsWith('/chat')
+      active: pathname === '/creative-coach' || pathname?.startsWith('/creative-coach')
     },
     {
       href: '/profile',
