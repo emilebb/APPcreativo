@@ -1,101 +1,15 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useChat } from '@ai-sdk/react';
+import { TextStreamChatTransport } from 'ai';
 import {
-  Send,
   Sparkles,
   User,
   Zap,
   ArrowUp,
 } from 'lucide-react';
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  isStreaming?: boolean;
-}
-
-// ============================================================================
-// TYPEWRITER COMPONENT
-// ============================================================================
-
-function TypewriterText({ text, onComplete }: { text: string; onComplete?: () => void }) {
-  const [displayedText, setDisplayedText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, 10); // Velocidad de escritura
-      return () => clearTimeout(timeout);
-    } else if (!isComplete) {
-      setIsComplete(true);
-      onComplete?.();
-    }
-  }, [currentIndex, text, isComplete, onComplete]);
-
-  // Reset when text changes
-  useEffect(() => {
-    setDisplayedText('');
-    setCurrentIndex(0);
-    setIsComplete(false);
-  }, [text]);
-
-  // Render markdown simple
-  const renderMarkdown = (content: string) => {
-    let html = content;
-    
-    // Headers
-    html = html.replace(/^### (.+)$/gm, '<h3 class="text-base font-semibold text-white mt-4 mb-2">$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold text-white mt-4 mb-2">$1</h2>');
-    
-    // Bold
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
-    
-    // Italic
-    html = html.replace(/\*(.+?)\*/g, '<em class="text-white/70">$1</em>');
-    
-    // Lists
-    html = html.replace(/^- (.+)$/gm, '<li class="ml-4 text-white/70 list-disc my-1">$1</li>');
-    html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 text-white/70 list-decimal my-1">$1</li>');
-    
-    // Code inline
-    html = html.replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 bg-white/10 rounded text-violet-300 font-mono text-sm">$1</code>');
-    
-    // Arrow bullets
-    html = html.replace(/^→ (.+)$/gm, '<div class="flex items-center gap-2 ml-4 my-1"><span class="text-violet-400">→</span><span class="text-white/70">$1</span></div>');
-    
-    // Line breaks
-    html = html.replace(/\n\n/g, '</p><p class="mt-2">');
-    html = html.replace(/\n/g, '<br/>');
-    
-    return html;
-  };
-
-  return (
-    <div 
-      className="prose prose-invert prose-sm max-w-none
-        [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-white [&_h2]:mt-4 [&_h2]:mb-2
-        [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-4 [&_h3]:mb-2
-        [&_strong]:text-white [&_strong]:font-semibold
-        [&_em]:text-white/70
-        [&_li]:text-white/70 [&_li]:my-1
-        [&_p]:text-white/70 [&_p]:my-1
-        [&_code]:bg-white/10 [&_code]:text-violet-300 [&_code]:font-mono [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded"
-      dangerouslySetInnerHTML={{ __html: renderMarkdown(displayedText) }}
-    />
-  );
-}
 
 // ============================================================================
 // TYPING INDICATOR
@@ -125,29 +39,55 @@ function TypingIndicator() {
 }
 
 // ============================================================================
+// HELPER: Extract text from message parts
+// ============================================================================
+
+type MessagePart = { type: string; text?: string };
+type ChatMessage = { id: string; role: string; parts: MessagePart[] };
+
+function getMessageText(message: ChatMessage): string {
+  const textPart = message.parts.find(p => p.type === 'text');
+  return textPart?.text ?? '';
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
 export default function CreativeCoachChat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: `¡Hola! 👋 Soy **CreativoX AI**, tu Coach Creativo Inteligente.
-
+  const [input, setInput] = useState('');
+  
+  const { messages, status, sendMessage } = useChat({
+    transport: new TextStreamChatTransport({
+      api: '/api/chat',
+    }),
+    messages: [
+      {
+        id: 'welcome',
+        role: 'assistant',
+        parts: [{ type: 'text', text: `¡Hola! 👋 Soy **CreativoX AI**, tu Coach Creativo Inteligente.
+  
 Estoy aquí para ayudarte a:
 - 🎨 Diseñar y crear con claridad
 - 💡 Generar ideas innovadoras
 - 🧠 Superar bloqueos creativos
 - 📊 Estructurar tus proyectos
 
-¿Cómo puedo ayudarte hoy?`,
-      timestamp: new Date(),
-    },
-  ]);
+¿Cómo puedo ayudarte hoy?` }],
+      },
+    ],
+  });
+
+  const isLoading = status === 'submitted' || status === 'streaming';
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim() && !isLoading) {
+      sendMessage({ text: input });
+      setInput('');
+    }
+  };
   
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -170,71 +110,6 @@ Estoy aquí para ayudarte a:
       inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 200)}px`;
     }
   }, [input]);
-
-  // Send message
-  const sendMessage = async (content: string) => {
-    if (!content.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: content.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
-      });
-
-      const data = await response.json();
-
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: data.message || 'Lo siento, hubo un error. Intenta de nuevo.',
-        timestamp: new Date(),
-        isStreaming: true,
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error:', error);
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: '⚠️ Hubo un problema de conexión. Pero no te preocupes, intenta de nuevo.',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle form submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    sendMessage(input);
-  };
-
-  // Handle stream complete
-  const handleStreamComplete = (messageId: string) => {
-    setMessages(prev => prev.map(m => 
-      m.id === messageId ? { ...m, isStreaming: false } : m
-    ));
-  };
 
   return (
     <div className="h-screen bg-[#050505] flex flex-col">
@@ -265,7 +140,7 @@ Estoy aquí para ayudarte a:
       >
         <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6">
           <AnimatePresence mode="popLayout">
-            {messages.map((message, index) => (
+            {(messages as ChatMessage[]).map((message) => (
               <motion.div
                 key={message.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -291,12 +166,7 @@ Estoy aquí para ayudarte a:
                   }`}
                 >
                   {message.role === 'user' ? (
-                    <p className="text-white/90 text-sm whitespace-pre-wrap">{message.content}</p>
-                  ) : message.isStreaming ? (
-                    <TypewriterText 
-                      text={message.content} 
-                      onComplete={() => handleStreamComplete(message.id)}
-                    />
+                    <p className="text-white/90 text-sm whitespace-pre-wrap">{getMessageText(message)}</p>
                   ) : (
                     <div 
                       className="prose prose-invert prose-sm max-w-none
@@ -307,7 +177,13 @@ Estoy aquí para ayudarte a:
                         [&_li]:text-white/70 [&_li]:my-1
                         [&_p]:text-white/70 [&_p]:my-1
                         [&_code]:bg-white/10 [&_code]:text-violet-300 [&_code]:font-mono [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded"
-                      dangerouslySetInnerHTML={{ __html: message.content.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>').replace(/\*(.+?)\*/g, '<em class="text-white/70">$1</em>').replace(/\n\n/g, '</p><p class="mt-2">').replace(/\n/g, '<br/>') }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: getMessageText(message)
+                          .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+                          .replace(/\*(.+?)\*/g, '<em class="text-white/70">$1</em>')
+                          .replace(/\n\n/g, '</p><p class="mt-2 text-white/70">')
+                          .replace(/\n/g, '<br/>') 
+                      }}
                     />
                   )}
                 </div>
@@ -324,7 +200,7 @@ Estoy aquí para ayudarte a:
 
           {/* Typing Indicator */}
           <AnimatePresence>
-            {isLoading && messages[messages.length - 1]?.role === 'user' && (
+            {isLoading && (messages[messages.length - 1] as ChatMessage)?.role === 'user' && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -357,7 +233,10 @@ Estoy aquí para ayudarte a:
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    handleSubmit(e);
+                    if (input.trim() && !isLoading) {
+                      const event = new Event('submit', { cancelable: true }) as any;
+                      handleSubmit(event);
+                    }
                   }
                 }}
                 placeholder="Pregúntale algo a CreativoX..."
