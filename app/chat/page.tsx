@@ -22,23 +22,26 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1.5 px-4 py-3">
-      {[0, 1, 2].map((i) => (
-        <motion.span
-          key={i}
-          className="w-2 h-2 bg-violet-400/60 rounded-full"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.4, 1, 0.4],
-          }}
-          transition={{
-            duration: 0.8,
-            repeat: Infinity,
-            delay: i * 0.15,
-          }}
-        />
-      ))}
-      <span className="text-sm text-white/40 ml-2">CreativoX está pensando...</span>
+    <div className="flex items-center gap-2 px-4 py-3">
+      <div className="flex gap-1">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-2 h-2 bg-violet-400 rounded-full"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 1.2,
+              repeat: Infinity,
+              delay: i * 0.2,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+      </div>
+      <span className="text-sm text-white/50 font-light">CreativoX está pensando...</span>
     </div>
   );
 }
@@ -86,15 +89,30 @@ Estoy aquí para ayudarte a:
     ],
   });
 
-  // ... rest of the component code (I'll need to find the rest)
-
   const isLoading = status === 'submitted' || status === 'streaming';
+
+  // Placeholder dinámico según el estado
+  const getPlaceholder = () => {
+    if (isLoading) return "CreativoX está analizando tu mensaje...";
+    if (messages.length > 1) return "Continúa la conversación...";
+    return "Pregúntale algo a CreativoX...";
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() && !isLoading) {
-      sendMessage({ text: input });
-      setInput('');
+      const messageToSend = input.trim();
+      
+      // 1. LIMPIAR INPUT INMEDIATAMENTE
+      setInput(''); 
+      
+      // 2. ENVIAR MENSAJE (isLoading se manejará automáticamente por useChat)
+      sendMessage({ text: messageToSend });
+      
+      // 3. ENFOCAR INPUT DESPUÉS DE ENVIAR
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
   
@@ -102,11 +120,15 @@ Estoy aquí para ayudarte a:
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto scroll
+  // Auto scroll mejorado
   const scrollToBottom = useCallback(() => {
+    // Scroll inmediato para mejor UX
+    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+    
+    // Segundo scroll suave después de un pequeño delay para asegurar que el contenido se renderizó
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    }, 50);
   }, []);
 
   useEffect(() => {
@@ -134,6 +156,13 @@ Estoy aquí para ayudarte a:
       inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 200)}px`;
     }
   }, [input]);
+
+  // Limpiar input si hay texto pendiente cuando termina de cargar
+  useEffect(() => {
+    if (!isLoading && input.trim()) {
+      setInput('');
+    }
+  }, [isLoading, input]);
 
   return (
     <div className="h-screen bg-[#050505] flex flex-col">
@@ -263,7 +292,7 @@ Estoy aquí para ayudarte a:
                     }
                   }
                 }}
-                placeholder="Pregúntale algo a CreativoX..."
+                placeholder={getPlaceholder()}
                 rows={1}
                 className="flex-1 bg-transparent text-white placeholder:text-white/30 
                            resize-none outline-none py-3 px-4 max-h-48
