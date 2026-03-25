@@ -4,18 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from "next/navigation";
 import { useEffect } from 'react';
 import LoadingScreen from '@/components/ui/LoadingScreen';
-import CreativeCoach from '@/components/creative/CreativeCoach';
-
-export const viewport = {
-  themeColor: '#a855f7',
-  width: 'device-width',
-  initialScale: 1,
-};
-
-export const metadata = {
-  title: 'Creative Coach - CreacionX',
-  description: 'Tu asistente creativo inteligente',
-};
+import CreativeCoach from '@/components/creative/CreativeCoachOptimized';
 
 export default function CreativeCoachPage() {
   const { user, isInitialLoading } = useAuth();
@@ -33,9 +22,7 @@ export default function CreativeCoachPage() {
   return (
     <div className="h-screen bg-[#0d0d10]">
       <CreativeCoach 
-        projectId={null}
-        projectType="general"
-        projectData={null}
+        projectContext={null}
       />
     </div>
   );
