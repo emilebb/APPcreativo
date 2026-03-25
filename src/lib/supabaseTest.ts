@@ -15,9 +15,12 @@ export async function testSupabaseConnection(): Promise<{
 
   try {
     // 1. Test de conexión básica (sin auth)
-    console.log('🔍 Probando conexión básica...')
+    console.log('🔍 Probando conexión básica...');
+    console.log('📡 Usando URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('🔑 Usando Anon Key (comienzo):', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...');
+    
     const { data: health, error: healthError } = await supabase
-      .from('proyectos')
+      .from('projects') // Cambiado de 'proyectos' a 'projects' basado en el esquema visto en CREATE_PROJECTS_TABLE.sql
       .select('count')
       .limit(1)
       .single()

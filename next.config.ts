@@ -76,6 +76,10 @@ const pwaConfig = withPWA({
       }
     },
     {
+      urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+      handler: "NetworkOnly",
+    },
+    {
       urlPattern: /.*/i,
       handler: "NetworkFirst",
       options: {
