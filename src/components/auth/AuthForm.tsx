@@ -58,8 +58,10 @@ export default function AuthForm({ initialMode = 'login' }: { initialMode?: Auth
 
         if (error) throw error;
         
-        // Small delay to allow auth state to propagate, then navigate
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // IMPORTANTE: No uses window.location.href, usa el router de tu app
+        // Y asegúrate de esperar un momento a que el estado se propague
+        console.log("Login exitoso, redirigiendo...");
+        await new Promise(resolve => setTimeout(resolve, 300)); // Dar tiempo para que el estado se propague
         router.push('/explore');
       }
     } catch (error: any) {

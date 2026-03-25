@@ -30,6 +30,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   loading: boolean;  // alias para compatibilidad
+  isAuthChecking: boolean; // Nuevo estado para controlar el parpadeo
   isAuthenticated: boolean;
   signInWithGoogle: () => Promise<User>;
   signInWithEmail: (email: string, password: string) => Promise<User>;
@@ -50,6 +51,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   loading: true,
+  isAuthChecking: true,
   isAuthenticated: false,
   signInWithGoogle: async () => { throw new Error("Not initialized"); },
   signInWithEmail: async () => { throw new Error("Not initialized"); },
@@ -151,6 +153,7 @@ export const getFirebaseError = (error: any): string => {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthChecking, setIsAuthChecking] = useState(true); // Nuevo estado para evitar parpadeo
   const router = useRouter();
 
   useEffect(() => {
@@ -165,6 +168,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error("Error getting session:", error);
       } finally {
         setIsLoading(false);
+        setIsAuthChecking(false); // Terminamos de verificar la autenticación
       }
     };
 
@@ -185,6 +189,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       // Asegurar que isLoading sea false después del primer evento
       setIsLoading(false);
+      setIsAuthChecking(false); // Terminamos de verificar la autenticación
     });
 
     return () => subscription.unsubscribe();
@@ -194,6 +199,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     isLoading,
     loading: isLoading,
+    isAuthChecking,
     isAuthenticated: !!user,
     signInWithGoogle,
     signInWithEmail,
