@@ -11,6 +11,12 @@ export const metadata = {
   description: 'Plataforma creativa inteligente para diseñadores y desarrolladores',
 };
 
+// 404 metadata
+export const notFoundMetadata = {
+  title: '404 - Proyecto No Encontrado | CreacionX',
+  description: 'Este proyecto no existe o ha sido eliminado. Crea algo nuevo en CreacionX.',
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
