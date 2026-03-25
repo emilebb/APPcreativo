@@ -69,9 +69,13 @@ Estoy aquí para ayudarte a:
     setIsTyping(true);
 
     try {
-      // 5. Llamar a Edge Function de Supabase
-      const { data, error } = await supabase.functions.invoke('creative-coach', {
-        body: {
+      // 5. Llamar a API Route en lugar de Edge Function
+      const response = await fetch('/api/creative-coach', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           message: userMessage.content,
           projectContext: {
             id: projectId,
@@ -79,12 +83,14 @@ Estoy aquí para ayudarte a:
             data: projectData
           },
           conversationHistory: messages.slice(-5) // Últimos 5 mensajes para contexto
-        }
+        })
       });
 
-      if (error) {
-        throw new Error(error.message);
+      if (!response.ok) {
+        throw new Error('Failed to get response from Creative Coach');
       }
+
+      const data = await response.json();
 
       // 6. Añadir respuesta de la IA
       const assistantMessage = {
