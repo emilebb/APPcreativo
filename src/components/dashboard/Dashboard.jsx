@@ -90,9 +90,13 @@ export default function Dashboard({ user }) {
     }
   }, [projects, filteredProjects, isDeleting, supabase]);
 
-  // Crear nuevo proyecto
+  // Crear nuevo proyecto con validación segura
   const handleCreateProject = useCallback(async (type) => {
     try {
+      // 1. Validación previa: ¿Hay usuario?
+      if (!user?.id) throw new Error("Sesión no encontrada");
+
+      // 2. Preparar datos con estructura correcta
       const newProject = {
         nombre: `Nuevo ${type}`,
         tipo: type,
@@ -102,6 +106,7 @@ export default function Dashboard({ user }) {
         data: null
       };
 
+      // 3. Insertar en Supabase con select para obtener el ID
       const { data, error } = await supabase
         .from('proyectos')
         .insert(newProject)
@@ -110,12 +115,29 @@ export default function Dashboard({ user }) {
 
       if (error) throw error;
 
-      // Redirigir al nuevo proyecto
-      window.location.href = `/${type}/${data.id}`;
+      // 4. NAVEGACIÓN SEGURA: Solo si 'data' existe y tiene ID
+      if (data?.id) {
+        window.location.href = `/${type}/${data.id}`;
+      } else {
+        throw new Error("No se pudo obtener el ID del proyecto creado");
+      }
 
     } catch (error) {
       console.error('Error creating project:', error);
-      alert('Error al crear el proyecto. Intenta de nuevo.');
+      
+      // 5. Error handling con mensaje específico
+      const errorMessage = error.message.includes("Sesión no encontrada") 
+        ? "Tu sesión ha expirado. Por favor, inicia sesión nuevamente."
+        : error.message.includes("duplicate key") 
+        ? "Ya existe un proyecto con ese nombre."
+        : "No pudimos conectar con el servidor. Reintenta en un momento.";
+      
+      alert(errorMessage);
+      
+      // 6. Si es error de sesión, redirigir al login
+      if (error.message.includes("Sesión no encontrada")) {
+        window.location.href = '/login';
+      }
     }
   }, [user?.id, supabase]);
 

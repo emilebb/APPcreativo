@@ -1,12 +1,17 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Heart, Share2, Download, Palette, Grid3X3, List, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { createClient } from '@supabase/supabase-js';
 
-export const dynamic = "force-dynamic";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface MoodboardImage {
   id: string;
@@ -31,57 +36,115 @@ interface Moodboard {
 }
 
 export default function MoodboardDetailPage() {
-  const { user } = useAuth();
+  const auth = useAuth();
   const router = useRouter();
   const params = useParams();
   const moodboardId = params.id as string;
   
   const [moodboard, setMoodboard] = useState<Moodboard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "masonry">("grid");
   const [selectedImage, setSelectedImage] = useState<MoodboardImage | null>(null);
 
+  // REGLA DE ORO: No buscar nada si la auth no ha terminado
   useEffect(() => {
-    if (moodboardId && user) {
-      loadMoodboard();
+    if (auth?.isInitialLoading) return;
+    if (!auth?.user) {
+      router.push('/login');
+      return;
     }
-  }, [moodboardId, user]);
 
-  const loadMoodboard = async () => {
-    try {
-      setLoading(true);
-      
-      const { default: moodboardService } = await import("@/lib/moodboardService");
-      const data = await moodboardService.getMoodboard(moodboardId);
-      
-      if (data) {
+    const fetchMoodboard = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+
+        // Buscar en Supabase con seguridad: solo proyectos del usuario
+        const { data, error } = await supabase
+          .from('proyectos')
+          .select('*')
+          .eq('id', moodboardId)
+          .eq('user_id', auth.user.id) // Seguridad: solo mis proyectos
+          .eq('estado', 'active')
+          .single();
+
+        if (error || !data) {
+          console.error('Moodboard not found:', error?.message);
+          setError(true);
+          return;
+        }
+
+        // Convertir datos de Supabase al formato esperado
         const loadedMoodboard: Moodboard = {
           id: data.id,
-          title: data.title,
-          description: data.description,
-          category: data.layout || "general",
-          images: data.images.map(img => ({
-            id: img.id,
-            url: img.url_imagen || img.url,
-            title: "",
-            description: ""
-          })),
+          title: data.nombre || 'Sin título',
+          description: data.descripcion || '',
+          category: data.tipo || 'moodboard',
+          images: [], // TODO: Cargar imágenes desde data.images
           tags: [],
-          created_at: data.createdAt,
-          updated_at: data.updatedAt,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
           color_palette: [],
           is_public: false,
           likes: 0,
           is_liked: false
         };
+
         setMoodboard(loadedMoodboard);
+
+      } catch (error) {
+        console.error('Error loading moodboard:', error);
+        setError(true);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading moodboard:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchMoodboard();
+  }, [moodboardId, auth?.user, auth?.isInitialLoading, router]);
+
+  if (auth?.isInitialLoading || loading) {
+    return (
+      <main className="max-w-6xl mx-auto p-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-white/60">Cargando moodboard...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !moodboard) {
+    return (
+      <main className="max-w-4xl mx-auto p-6">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-white mb-2">
+            Moodboard no encontrado
+          </h2>
+          <p className="text-white/60 mb-6">
+            El moodboard que buscas no existe, fue eliminado o no tienes permiso para verlo.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/explore"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Ir al Dashboard
+            </Link>
+            <Link
+              href="/moodboard/new"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all border border-white/20"
+            >
+              <Palette className="w-4 h-4" />
+              Crear Nuevo
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   const handleLike = async () => {
     if (!moodboard) return;
