@@ -6,6 +6,7 @@
 "use client";
 
 import { supabase } from './supabase';
+import { uploadImage } from './storageService';
 
 export interface MoodboardItem {
   id: string;
@@ -308,6 +309,18 @@ const moodboardService = {
     } catch (error) {
       console.error('Unexpected error upserting moodboard item:', error);
       return null;
+    }
+  },
+
+  // Sube múltiples imágenes y devuelve las URLs públicas
+  async uploadMoodboardImages(files: File[], userId: string): Promise<string[]> {
+    try {
+      const uploadPromises = files.map(file => uploadImage(file, userId));
+      const urls = await Promise.all(uploadPromises);
+      return urls;
+    } catch (error) {
+      console.error('Error uploading moodboard images:', error);
+      throw error;
     }
   },
 };
