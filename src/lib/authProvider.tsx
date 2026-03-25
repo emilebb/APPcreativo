@@ -32,6 +32,7 @@ interface AuthContextType {
   loading: boolean;  // alias para compatibilidad
   isAuthChecking: boolean; // Nuevo estado para controlar el parpadeo
   isExiting: boolean; // Para la transición suave de salida
+  sessionConfirmed: boolean; // Confirmación de sesión estable
   isAuthenticated: boolean;
   signInWithGoogle: () => Promise<User>;
   signInWithEmail: (email: string, password: string) => Promise<User>;
@@ -54,6 +55,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   isAuthChecking: true,
   isExiting: false,
+  sessionConfirmed: false,
   isAuthenticated: false,
   signInWithGoogle: async () => { throw new Error("Not initialized"); },
   signInWithEmail: async () => { throw new Error("Not initialized"); },
@@ -157,29 +159,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthChecking, setIsAuthChecking] = useState(true); // Nuevo estado para evitar parpadeo
   const [isExiting, setIsExiting] = useState(false); // Para la transición suave de salida
+  const [sessionConfirmed, setSessionConfirmed] = useState(false); // Nuevo estado para confirmación de sesión
   const router = useRouter();
 
   useEffect(() => {
+    let mounted = true; // Prevenir actualizaciones de estado si el componente se desmonta
+    
     // Obtener sesión actual
     const getInitialSession = async () => {
       try {
         console.log("AuthProvider: Getting initial session...");
         const { data: { session } } = await supabase.auth.getSession();
         console.log("AuthProvider: Session data:", session);
-        if (session?.user) {
-          console.log("AuthProvider: User found, setting user:", session.user.email);
-          setUser(mapSupabaseUser(session.user));
-        } else {
-          console.log("AuthProvider: No session found");
+        
+        if (mounted) {
+          if (session?.user) {
+            console.log("AuthProvider: User found, setting user:", session.user.email);
+            setUser(mapSupabaseUser(session.user));
+            setSessionConfirmed(true);
+          } else {
+            console.log("AuthProvider: No session found");
+            setSessionConfirmed(false);
+          }
         }
       } catch (error) {
         console.error("Error getting session:", error);
+        if (mounted) {
+          setSessionConfirmed(false);
+        }
       } finally {
-        // Un pequeño delay extra para suavidad visual
-        setTimeout(() => {
-          setIsLoading(false);
-          setIsAuthChecking(false); // Terminamos de verificar la autenticación
-        }, 800);
+        if (mounted) {
+          // Un pequeño delay extra para suavidad visual
+          setTimeout(() => {
+            setIsLoading(false);
+            setIsAuthChecking(false); // Terminamos de verificar la autenticación
+          }, 800);
+        }
       }
     };
 
@@ -189,9 +204,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth Event:", event, "Session:", session);
       
+      if (!mounted) return;
+      
       if (session?.user) {
         console.log("AuthProvider: Setting user from event:", session.user.email);
         setUser(mapSupabaseUser(session.user));
+        setSessionConfirmed(true);
         
         // Si acaba de iniciar sesión, lo mandamos a explorar automáticamente
         if (event === 'SIGNED_IN') {
@@ -208,18 +226,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         console.log("AuthProvider: Setting user to null");
         setUser(null);
+        setSessionConfirmed(false);
         if (event === 'SIGNED_OUT') {
           router.push('/login');
         }
       }
       // Asegurar que isLoading sea false después del primer evento
       setTimeout(() => {
-        setIsLoading(false);
-        setIsAuthChecking(false); // Terminamos de verificar la autenticación
+        if (mounted) {
+          setIsLoading(false);
+          setIsAuthChecking(false); // Terminamos de verificar la autenticación
+        }
       }, 800);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const value: AuthContextType = {
@@ -228,6 +252,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading: isLoading,
     isAuthChecking,
     isExiting,
+    sessionConfirmed,
     isAuthenticated: !!user,
     signInWithGoogle,
     signInWithEmail,

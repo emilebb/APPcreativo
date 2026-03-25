@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/authProvider'
+import AuthGuard from '@/components/auth/AuthGuard'
 
 import AuthForm from '@/components/auth/AuthForm'
 
@@ -24,7 +25,9 @@ export default function LoginPage() {
         </div>
       </div>
     }>
-      <LoginContent />
+      <AuthGuard requireAuth={false} redirectTo="/explore">
+        <LoginContent />
+      </AuthGuard>
     </Suspense>
   )
 }
