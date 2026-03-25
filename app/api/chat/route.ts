@@ -119,5 +119,5 @@ export async function POST(req: Request) {
     system: `${SYSTEM_PROMPT}\n\n${contextString}`,
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }
