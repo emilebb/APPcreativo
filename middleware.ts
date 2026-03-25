@@ -56,19 +56,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Si no hay sesión y trata de entrar a áreas protegidas, mandarlo al login
-  // Actualizamos las rutas para que coincidan con nuestra estructura
-  const protectedRoutes = ['/dashboard', '/chat', '/explore', '/canvas', '/moodboard', '/mindmap', '/settings']
-  
-  // Solo redirigir si no hay sesión y no estamos ya en login o landing
-  if (!session && protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
-    // Permitir acceso a /login y / (landing)
-    if (request.nextUrl.pathname !== '/login' && request.nextUrl.pathname !== '/') {
-      console.log("Middleware: No session, redirecting to login from:", request.nextUrl.pathname);
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
-
+  // Solo manejar casos específicos, dejar que ProtectedRoute maneje la protección
   // Si hay sesión y está en login, redirigir a explore
   if (session && request.nextUrl.pathname === '/login') {
     console.log("Middleware: Has session, redirecting from login to explore");
@@ -79,14 +67,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/dashboard/:path*', 
-    '/chat/:path*', 
-    '/explore/:path*', 
-    '/canvas/:path*', 
-    '/moodboard/:path*', 
-    '/mindmap/:path*', 
-    '/settings/:path*',
-    '/login'
-  ],
+  matcher: ['/login'],
 }

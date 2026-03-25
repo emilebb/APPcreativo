@@ -186,7 +186,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (session?.user) {
         console.log("AuthProvider: Setting user from event:", session.user.email);
         setUser(mapSupabaseUser(session.user));
-        // Don't auto-redirect - let the component that initiated login handle it
+        
+        // Si acaba de iniciar sesión, lo mandamos a explorar automáticamente
+        if (event === 'SIGNED_IN') {
+          console.log("AuthProvider: SIGNED_IN detected, redirecting to explore");
+          setTimeout(() => {
+            router.push('/explore');
+          }, 100); // Pequeño delay para asegurar que el estado se actualizó
+        }
       } else {
         console.log("AuthProvider: Setting user to null");
         setUser(null);

@@ -14,6 +14,7 @@ import {
   Zap,
   ArrowUp,
 } from 'lucide-react';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 // ============================================================================
 // TYPING INDICATOR
@@ -59,44 +60,10 @@ function getMessageText(message: ChatMessage): string {
 // ============================================================================
 
 function ChatContent() {
-  const { user, isLoading: authLoading, isAuthChecking } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [input, setInput] = useState('');
   const promptSentRef = useRef(false);
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isAuthChecking && !user) {
-      router.push('/login');
-    }
-  }, [user, isAuthChecking, router]);
-
-  // Mostrar pantalla de carga mientras verificamos autenticación
-  if (isAuthChecking) {
-    return (
-      <div className="h-screen bg-[#050505] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white/50">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (authLoading) {
-    return (
-      <div className="h-screen bg-[#050505] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white/50">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect
-  }
   
   const { messages, status, sendMessage } = useChat({
     transport: new TextStreamChatTransport({
@@ -329,4 +296,10 @@ Estoy aquí para ayudarte a:
   );
 }
 
-export default ChatContent;
+export default function ChatPage() {
+  return (
+    <ProtectedRoute>
+      <ChatContent />
+    </ProtectedRoute>
+  );
+}

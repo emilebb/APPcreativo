@@ -51,31 +51,18 @@ export default function AuthForm({ initialMode = 'login' }: { initialMode?: Auth
           text: '¡Registro exitoso! Por favor, revisa tu correo electrónico para confirmar tu cuenta.' 
         });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
-        
-        // IMPORTANTE: Usar window.location.href como fallback si router.push no funciona
-        // Y asegúrate de esperar un momento a que el estado se propague
-        console.log("Login exitoso, redirigiendo...");
-        await new Promise(resolve => setTimeout(resolve, 500)); // Dar más tiempo para que el estado se propague
-        
-        // Intentar con router primero, si no funciona usar window.location
-        try {
-          router.push('/explore');
-          // Si router.push no funciona, usar window.location como fallback
-          setTimeout(() => {
-            if (window.location.pathname === '/login') {
-              console.log("Router.push no funcionó, usando window.location");
-              window.location.href = '/explore';
-            }
-          }, 100);
-        } catch (error) {
-          console.log("Error con router, usando window.location:", error);
-          window.location.href = '/explore';
+
+        if (data.user) {
+          // Forzamos un pequeño delay o usamos el navigate solo si hay sesión
+          console.log("Login exitoso");
+          // Dejamos que el AuthProvider maneje la redirección automáticamente
+          // cuando reciba el evento SIGNED_IN
         }
       }
     } catch (error: any) {

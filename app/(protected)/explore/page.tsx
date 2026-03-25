@@ -10,9 +10,10 @@ import { Search, Palette, Trash2, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
 import { useProfile } from "@/lib/useProfile";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-export default function ExplorePage() {
-  const { user, loading: authLoading, isAuthChecking } = useAuth();
+function ExploreContent() {
+  const { user } = useAuth();
   const { profile } = useProfile();
   const router = useRouter();
   const [projects, setProjects] = useState<any[]>([]);
@@ -40,17 +41,6 @@ export default function ExplorePage() {
   }, [profile?.start_tool, router, hasRedirected]);
 
   useEffect(() => {
-    // Wait for auth checking to finish before deciding what to show
-    if (isAuthChecking) {
-      return;
-    }
-
-    // If not authenticated, redirect to login
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
     const loadProjects = async () => {
       try {
         const data = await projectService.getProjects(user.id);
@@ -66,7 +56,7 @@ export default function ExplorePage() {
     if (user?.id) {
       loadProjects();
     }
-  }, [user, isAuthChecking, router]);
+  }, [user]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -81,18 +71,6 @@ export default function ExplorePage() {
   const filtered = projects.filter(p =>
     p.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  // Mostrar pantalla de carga mientras verificamos autenticación
-  if (isAuthChecking) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-          <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/50">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -254,5 +232,13 @@ export default function ExplorePage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <ProtectedRoute>
+      <ExploreContent />
+    </ProtectedRoute>
   );
 }
