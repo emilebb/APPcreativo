@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { testSupabaseConnection } from '@/lib/supabaseTest'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -10,6 +11,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [diagnosticResult, setDiagnosticResult] = useState<string | null>(null)
   const router = useRouter()
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -41,12 +43,24 @@ export default function RegisterPage() {
     })
 
     if (error) {
-      setError(error.message)
+      console.error('Supabase signUp error:', error)
+      setError(`Error: ${error.message} (Código: ${error.status || 'desconocido'})`)
     } else {
       alert('¡Revisa tu correo para confirmar tu cuenta!')
       router.push('/login')
     }
     setLoading(false)
+  }
+
+  const handleDiagnostic = async () => {
+    setDiagnosticResult('Ejecutando diagnóstico...')
+    try {
+      const result = await testSupabaseConnection()
+      setDiagnosticResult(JSON.stringify(result, null, 2))
+      console.log('Diagnóstico Supabase:', result)
+    } catch (err) {
+      setDiagnosticResult(`Error en diagnóstico: ${err}`)
+    }
   }
 
   return (
@@ -105,6 +119,23 @@ export default function RegisterPage() {
         <p className="mt-8 text-center text-gray-500 text-sm">
           ¿Ya tienes cuenta? <Link href="/login" className="text-violet-400 hover:underline">Inicia sesión</Link>
         </p>
+        
+        {/* Botón de diagnóstico */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <button
+            type="button"
+            onClick={handleDiagnostic}
+            className="w-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-gray-300 font-medium py-3 rounded-xl transition-all text-sm"
+          >
+            🔍 Diagnosticar Conexión Supabase
+          </button>
+          
+          {diagnosticResult && (
+            <div className="mt-4 p-4 bg-black/40 border border-white/10 rounded-xl text-xs font-mono text-gray-400 max-h-40 overflow-y-auto">
+              <pre>{diagnosticResult}</pre>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
