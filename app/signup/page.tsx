@@ -1,174 +1,111 @@
-"use client";
+'use client'
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import Link from "next/link";
+export default function RegisterPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
 
-export default function SignupPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const router = useRouter();
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    // Validaciones
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
-      setLoading(false);
-      return;
+      setError('Las contraseñas no coinciden')
+      return
     }
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
-      setLoading(false);
-      return;
+    
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres')
+      return
     }
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/confirm-email`,
-          // Activar confirmación personalizada
-          data: {
-            user_name: email.split('@')[0],
-            app_name: 'CreationX'
-          }
+    
+    setLoading(true)
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${location.origin}/auth/callback`,
+        data: {
+          user_name: email.split('@')[0],
+          app_name: 'CreationX'
         }
-      });
+      },
+    })
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setSuccess(true);
-        // Mostrar mensaje de confirmación requerida
-        setTimeout(() => {
-          router.push("/login");
-        }, 3000);
-      }
-    } catch (err) {
-      setError("Error al crear cuenta. Inténtalo de nuevo.");
-    } finally {
-      setLoading(false);
+    if (error) {
+      setError(error.message)
+    } else {
+      alert('¡Revisa tu correo para confirmar tu cuenta!')
+      router.push('/login')
     }
-  };
-
-  if (success) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a12 12 0 0 1-.673.042L3 15.5a12 12 0 0 0 1 .673-.042L12 8l-7.89 4.26z"></path>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 1 1-9 9 9 9 0 0 1-9-9"></path>
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Revisa tu Email!</h2>
-            <p className="text-gray-600 mb-4">
-              Hemos enviado un email de confirmación a <strong>{email}</strong>
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              Revisa tu bandeja de entrada (y carpeta de spam) y haz click en el enlace de confirmación.
-            </p>
-            <p className="text-sm text-gray-600">
-              Serás redirigido al login automáticamente...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    setLoading(false)
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Crear Cuenta</h1>
-          <p className="text-gray-600">Únete a CreationX y empieza a crear</p>
-        </div>
-
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-[0_0_50px_rgba(139,92,246,0.1)]">
+        <h1 className="text-4xl font-extrabold text-white mb-2 text-center tracking-tight">Únete a CreationX</h1>
+        <p className="text-gray-400 text-center mb-10 text-sm">Empieza a diseñar tu visión creativa hoy.</p>
+        
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
-
-        <form onSubmit={handleSignup} className="space-y-6">
+        
+        <form onSubmit={handleRegister} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
+            <label className="text-xs uppercase tracking-widest text-gray-500 font-bold ml-1 mb-2 block">Email Corporativo / Personal</label>
+            <input 
+              type="email" 
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all"
+              placeholder="creativo@rbr.com"
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="tu@email.com"
             />
           </div>
-
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
+            <label className="text-xs uppercase tracking-widest text-gray-500 font-bold ml-1 mb-2 block">Contraseña Maestra</label>
+            <input 
+              type="password" 
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all"
+              placeholder="Mínimo 8 caracteres"
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Mínimo 6 caracteres"
+              minLength={8}
             />
           </div>
-
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              Confirmar Contraseña
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
+            <label className="text-xs uppercase tracking-widest text-gray-500 font-bold ml-1 mb-2 block">Confirmar Contraseña</label>
+            <input 
+              type="password" 
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all"
+              placeholder="Repite tu contraseña"
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              minLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Repite tu contraseña"
+              minLength={8}
             />
           </div>
-
-          <button
-            type="submit"
+          
+          <button 
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl shadow-violet-900/20"
           >
-            {loading ? "Creando cuenta..." : "Crear Cuenta"}
+            {loading ? 'Procesando...' : 'Crear Cuenta Pro'}
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            ¿Ya tienes cuenta?{" "}
-            <Link href="/login" className="text-blue-600 hover:text-blue-500 font-medium">
-              Inicia Sesión
-            </Link>
-          </p>
-        </div>
+        <p className="mt-8 text-center text-gray-500 text-sm">
+          ¿Ya tienes cuenta? <Link href="/login" className="text-violet-400 hover:underline">Inicia sesión</Link>
+        </p>
       </div>
     </div>
-  );
+  )
 }
