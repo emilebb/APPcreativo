@@ -1,13 +1,24 @@
-"use client";
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// Validar variables de entorno
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const AuthContext = createContext();
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables');
+}
+
+const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+
+// Context con valor por defecto para evitar undefined
+const AuthContext = createContext({
+  user: null,
+  session: null,
+  isInitialLoading: true,
+  signOut: () => {},
+  randomQuote: "La creatividad es la inteligencia divirtiéndose..."
+});
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
