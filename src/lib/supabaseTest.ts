@@ -60,12 +60,17 @@ export async function testSupabaseConnection(): Promise<{
       results.storage = { success: false, error: storageError.message }
     } else {
       const assetsBucket = buckets?.find(b => b.name === 'assets')
+      const uploadsBucket = buckets?.find(b => b.name === 'uploads')
       results.storage = { 
         success: true, 
         buckets: buckets?.map(b => b.name),
         assetsExists: !!assetsBucket,
-        assetsPublic: assetsBucket?.public
+        assetsPublic: assetsBucket?.public,
+        uploadsExists: !!uploadsBucket,
+        uploadsPublic: uploadsBucket?.public
       }
+      if (!assetsBucket) errors.push('Falta el bucket "assets" en Storage');
+      if (!uploadsBucket) errors.push('Falta el bucket "uploads" en Storage');
     }
 
     return {
