@@ -58,11 +58,25 @@ export default function AuthForm({ initialMode = 'login' }: { initialMode?: Auth
 
         if (error) throw error;
         
-        // IMPORTANTE: No uses window.location.href, usa el router de tu app
+        // IMPORTANTE: Usar window.location.href como fallback si router.push no funciona
         // Y asegúrate de esperar un momento a que el estado se propague
         console.log("Login exitoso, redirigiendo...");
-        await new Promise(resolve => setTimeout(resolve, 300)); // Dar tiempo para que el estado se propague
-        router.push('/explore');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Dar más tiempo para que el estado se propague
+        
+        // Intentar con router primero, si no funciona usar window.location
+        try {
+          router.push('/explore');
+          // Si router.push no funciona, usar window.location como fallback
+          setTimeout(() => {
+            if (window.location.pathname === '/login') {
+              console.log("Router.push no funcionó, usando window.location");
+              window.location.href = '/explore';
+            }
+          }, 100);
+        } catch (error) {
+          console.log("Error con router, usando window.location:", error);
+          window.location.href = '/explore';
+        }
       }
     } catch (error: any) {
       let errorText = error.message;

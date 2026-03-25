@@ -60,11 +60,19 @@ export async function middleware(request: NextRequest) {
   // Actualizamos las rutas para que coincidan con nuestra estructura
   const protectedRoutes = ['/dashboard', '/chat', '/explore', '/canvas', '/moodboard', '/mindmap', '/settings']
   
+  // Solo redirigir si no hay sesión y no estamos ya en login o landing
   if (!session && protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
     // Permitir acceso a /login y / (landing)
     if (request.nextUrl.pathname !== '/login' && request.nextUrl.pathname !== '/') {
+      console.log("Middleware: No session, redirecting to login from:", request.nextUrl.pathname);
       return NextResponse.redirect(new URL('/login', request.url))
     }
+  }
+
+  // Si hay sesión y está en login, redirigir a explore
+  if (session && request.nextUrl.pathname === '/login') {
+    console.log("Middleware: Has session, redirecting from login to explore");
+    return NextResponse.redirect(new URL('/explore', request.url))
   }
 
   return response
@@ -78,6 +86,7 @@ export const config = {
     '/canvas/:path*', 
     '/moodboard/:path*', 
     '/mindmap/:path*', 
-    '/settings/:path*'
+    '/settings/:path*',
+    '/login'
   ],
 }
