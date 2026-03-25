@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '@ai-sdk/react';
@@ -54,8 +56,9 @@ function getMessageText(message: ChatMessage): string {
 // MAIN COMPONENT
 // ============================================================================
 
-export default function CreativeCoachChat() {
+function ChatContent() {
   const [input, setInput] = useState('');
+  const promptSentRef = useRef(false);
   
   const { messages, status, sendMessage } = useChat({
     transport: new TextStreamChatTransport({
@@ -77,6 +80,8 @@ Estoy aquí para ayudarte a:
       },
     ],
   });
+
+  // ... rest of the component code (I'll need to find the rest)
 
   const isLoading = status === 'submitted' || status === 'streaming';
 
@@ -102,6 +107,20 @@ Estoy aquí para ayudarte a:
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Handle prompt from URL (e.g., from Mindmap)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const prompt = urlParams.get('prompt');
+    if (prompt && !promptSentRef.current) {
+      promptSentRef.current = true;
+      const decodedPrompt = decodeURIComponent(prompt);
+      // Small delay to ensure chat is ready
+      setTimeout(() => {
+        sendMessage({ text: decodedPrompt });
+      }, 500);
+    }
+  }, [sendMessage]);
 
   // Auto resize textarea
   useEffect(() => {
@@ -271,3 +290,5 @@ Estoy aquí para ayudarte a:
     </div>
   );
 }
+
+export default ChatContent;

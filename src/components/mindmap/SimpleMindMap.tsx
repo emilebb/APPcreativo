@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Plus, Minus, Maximize2, Users, Search, Copy, Camera } from 'lucide-react';
+import { Plus, Minus, Maximize2, Users, Search, Copy, Camera, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Node {
   id: string;
@@ -30,6 +31,8 @@ const NODE_COLORS = [
 ];
 
 export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapProps) {
+  const router = useRouter();
+  
   const [nodes, setNodes] = useState<Node[]>([
     { id: '1', x: 400, y: 300, text: 'Idea Principal', color: NODE_COLORS[0].bg }
   ]);
@@ -77,6 +80,51 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
     } catch (error) {
       console.warn('Error guardando localmente:', error);
     }
+  };
+
+  // Extract mindmap data for AI context
+  const getMindmapDataForAI = () => {
+    const nodesData = nodes.map(node => {
+      const connectedTo = connections
+        .filter(c => c.from === node.id || c.to === node.id)
+        .map(c => c.from === node.id ? c.to : c.from);
+      
+      return {
+        texto: node.text,
+        conexiones: connectedTo.map(id => nodes.find(n => n.id === id)?.text || 'Nodo').join(', ')
+      };
+    });
+
+    return {
+      total_nodos: nodes.length,
+      total_conexiones: connections.length,
+      nodos: nodesData
+    };
+  };
+
+  // Ask AI for feedback on the mindmap
+  const handleAskAI = () => {
+    const mindmapData = getMindmapDataForAI();
+    
+    // Create a detailed prompt with the mindmap context
+    const prompt = `Analiza mi mapa mental y dame feedback:
+
+**Mi Mapa Mental:**
+- Nodos: ${mindmapData.total_nodos}
+- Conexiones: ${mindmapData.total_conexiones}
+
+**Contenido:**
+${mindmapData.nodos.map((n, i) => `${i + 1}. "${n.texto}" → Conectado a: ${n.conexiones || 'ninguno'}`).join('\n')}
+
+Por favor:
+1. Evalúa la estructura y coherencia del mapa mental
+2. Identifica posibles mejoras o nodos faltantes
+3. Sugiere cómo expandir o conectar mejor las ideas
+4. Dame recomendaciones específicas para mejorar este brainstorming`;
+
+    // Navigate to chat with the prompt as query param
+    const encodedPrompt = encodeURIComponent(prompt);
+    router.push(`/chat?prompt=${encodedPrompt}`);
   };
 
   const getNodeColor = (nodeId: string) => {
@@ -359,6 +407,20 @@ export default function SimpleMindMap({ mindmapId = 'demo-map' }: SimpleMindMapP
           </div>
         </div>
         <span className="text-sm font-medium text-white/80">Agregar Nodo</span>
+      </button>
+
+      {/* Ask AI button */}
+      <button
+        onClick={handleAskAI}
+        className="absolute top-4 left-60 z-20 group flex items-center gap-2 px-4 py-2.5 backdrop-blur-xl bg-gradient-to-r from-violet-600/20 to-cyan-600/20 border border-violet-500/30 rounded-xl hover:bg-gradient-to-r hover:from-violet-600/30 hover:to-cyan-600/30 transition-all"
+      >
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
+          <div className="relative flex items-center justify-center w-8 h-8 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-lg">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+        </div>
+        <span className="text-sm font-medium text-white/80">Ask AI</span>
       </button>
 
       {/* Mode indicator */}
