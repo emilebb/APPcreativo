@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, projectContext, conversationHistory } = await request.json();
+    const { message, projectContext } = await request.json();
 
     // Aquí integrarías con tu servicio de IA (OpenAI, Claude, etc.)
     // Por ahora, una respuesta simulada
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     // Lógica simple basada en el mensaje
     if (message.toLowerCase().includes('idea') || message.toLowerCase().includes('inspiración')) {
-      response = `💡 **Ideas Creativas para tu ${projectContext?.type || 'proyecto'}**
+      response = `💡 **Ideas Creativas para tu proyecto**
 
 Basado en tu contexto, te sugiero:
 
@@ -29,13 +29,12 @@ Entiendo perfectamente esa sensación. Aquí tienes algunas estrategias probadas
 • **Haz un ejercicio de libre escritura**: Escribe sin parar durante 10 minutos
 • **Camina y observa**: El movimiento físico estimula el pensamiento creativo
 • **Establece micro-objetivos**: Divide el gran problema en piezas manejables
-• **Revisa proyectos anteriores**: A veces la solución está en tu trabajo previo
 
 ¿Cuál de estas estrategias te gustaría intentar primero?`;
     } else if (message.toLowerCase().includes('proyecto') || message.toLowerCase().includes('trabajo')) {
       response = `🚀 **Optimizando tu Proyecto Actual**
 
-Analizando tu ${projectContext?.type || 'proyecto'}, te recomiendo:
+Analizando tu proyecto actual, te recomiendo:
 
 • **Define tu objetivo principal**: ¿Qué quieres lograr con este proyecto?
 • **Identifica tu audiencia**: ¿Para quién estás creando?
@@ -59,7 +58,7 @@ Como tu Creative Coach, puedo ayudarte con:
 ¿En qué área específica te gustaría que nos enfoquemos? Cuéntame más sobre tu proyecto o desafío actual.`;
     }
 
-    return NextResponse.json({ response });
+    return NextResponse.json({ reply: response });
   } catch (error) {
     console.error('Error in creative-coach API:', error);
     return NextResponse.json(
