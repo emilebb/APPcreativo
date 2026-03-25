@@ -235,7 +235,7 @@ export default function CanvasBoard() {
   }, [tool, getPointerPosition, selectElement, addElement, strokeColor, strokeWidth]);
 
   // ---------------------------------------------------------------------------
-  // MOUSE MOVE - Dibujar
+  // MOUSE MOVE - Dibujar (Optimizado para eliminar lag)
   // ---------------------------------------------------------------------------
   
   const handleMouseMove = useCallback((e: any) => {
@@ -244,11 +244,15 @@ export default function CanvasBoard() {
     const pos = getPointerPosition();
     if (!pos) return;
     
-    setCurrentPoints((prev) => [...prev, pos.x, pos.y]);
-    updateElement(drawingId, {
-      points: [...currentPoints, pos.x, pos.y],
+    // Optimización: usar requestAnimationFrame para evitar llamadas excesivas
+    requestAnimationFrame(() => {
+      setCurrentPoints((prev) => {
+        const newPoints = [...prev, pos.x, pos.y];
+        updateElement(drawingId, { points: newPoints });
+        return newPoints;
+      });
     });
-  }, [isDrawing, tool, drawingId, getPointerPosition, currentPoints, updateElement]);
+  }, [isDrawing, tool, drawingId, getPointerPosition, updateElement]);
 
   // ---------------------------------------------------------------------------
   // MOUSE UP - Terminar
