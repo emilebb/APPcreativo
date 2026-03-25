@@ -298,7 +298,7 @@ Estoy aquí para ayudarte a:
 
 export default function ChatPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute message="Conectando con tu coach creativo...">
       <ChatContent />
     </ProtectedRoute>
   );

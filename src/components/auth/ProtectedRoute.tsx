@@ -3,12 +3,14 @@
 import { useAuth } from "@/lib/authProvider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import LoadingScreen from "@/components/ui/LoadingScreen";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  message?: string;
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, message }: ProtectedRouteProps) {
   const { user, loading, isAuthChecking } = useAuth();
   const router = useRouter();
 
@@ -19,16 +21,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [user, loading, isAuthChecking, router]);
 
-  // Mientras Supabase verifica la sesión, mostramos un spinner
+  // Mientras Supabase verifica la sesión, mostramos la LoadingScreen profesional
   if (isAuthChecking || loading) {
-    return (
-      <div className="h-screen bg-[#050505] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white/50">Cargando CreativoX...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message={message} />;
   }
 
   // Si no hay sesión, no renderizamos nada (el useEffect se encargará de redirigir)

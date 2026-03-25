@@ -43,6 +43,7 @@ function ExploreContent() {
   useEffect(() => {
     const loadProjects = async () => {
       try {
+        if (!user?.id) return;
         const data = await projectService.getProjects(user.id);
         setProjects(data);
       } catch (error) {
@@ -55,6 +56,8 @@ function ExploreContent() {
     // Solo cargar proyectos si tenemos un user.id válido
     if (user?.id) {
       loadProjects();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
@@ -237,7 +240,7 @@ function ExploreContent() {
 
 export default function ExplorePage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute message="Preparando tu espacio creativo...">
       <ExploreContent />
     </ProtectedRoute>
   );

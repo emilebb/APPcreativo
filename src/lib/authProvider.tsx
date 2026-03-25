@@ -172,8 +172,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } catch (error) {
         console.error("Error getting session:", error);
       } finally {
-        setIsLoading(false);
-        setIsAuthChecking(false); // Terminamos de verificar la autenticación
+        // Un pequeño delay extra para suavidad visual
+        setTimeout(() => {
+          setIsLoading(false);
+          setIsAuthChecking(false); // Terminamos de verificar la autenticación
+        }, 800);
       }
     };
 
@@ -202,8 +205,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       }
       // Asegurar que isLoading sea false después del primer evento
-      setIsLoading(false);
-      setIsAuthChecking(false); // Terminamos de verificar la autenticación
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsAuthChecking(false); // Terminamos de verificar la autenticación
+      }, 800);
     });
 
     return () => subscription.unsubscribe();
