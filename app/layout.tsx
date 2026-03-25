@@ -8,6 +8,7 @@ import BottomNav from "@/components/BottomNav"
 import { Providers } from "@/components/Providers"
 import { AuthProvider } from "@/lib/authProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import AuthLoader from "@/components/AuthLoader";
 import "./globals.css"
 
 export const metadata = {
@@ -53,18 +54,20 @@ export default function RootLayout({
           <AuthProvider>
             {/* Theme Provider - Tema oscuro/claro */}
             <Providers>
-              <div className="flex h-screen bg-[#050505] overflow-hidden">
-                {/* Barra Lateral */}
-                <Sidebar />
+              <AuthLoader>
+                <div className="flex h-screen bg-[#050505] overflow-hidden">
+                  {/* Barra Lateral */}
+                  <Sidebar />
 
-                {/* Área de Contenido Principal */}
-                <main className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0 pb-16 md:pb-0">
-                  {children}
-                </main>
-                
-                {/* Bottom Navigation (solo móvil) */}
-                <BottomNav />
-              </div>
+                  {/* Área de Contenido Principal */}
+                  <main className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0 pb-16 md:pb-0">
+                    {children}
+                  </main>
+                  
+                  {/* Bottom Navigation (solo móvil) */}
+                  <BottomNav />
+                </div>
+              </AuthLoader>
             </Providers>
           </AuthProvider>
         </ErrorBoundary>
