@@ -59,17 +59,29 @@ function getMessageText(message: ChatMessage): string {
 // ============================================================================
 
 function ChatContent() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isAuthChecking } = useAuth();
   const router = useRouter();
   const [input, setInput] = useState('');
   const promptSentRef = useRef(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!isAuthChecking && !user) {
       router.push('/login');
     }
-  }, [user, authLoading, router]);
+  }, [user, isAuthChecking, router]);
+
+  // Mostrar pantalla de carga mientras verificamos autenticación
+  if (isAuthChecking) {
+    return (
+      <div className="h-screen bg-[#050505] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white/50">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (authLoading) {
     return (
